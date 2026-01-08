@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "edu.albertogonzalez.gymtonic"
+    namespace = "edu.gymtonic_app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "edu.albertogonzalez.gymtonic"
+        applicationId = "edu.gymtonic_app"
         minSdk = 29
         targetSdk = 36
         versionCode = 1

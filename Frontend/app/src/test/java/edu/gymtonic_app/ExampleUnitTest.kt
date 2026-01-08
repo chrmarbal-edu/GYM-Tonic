@@ -1,4 +1,4 @@
-package edu.albertogonzalez.gymtonic
+package edu.gymtonic_app
 
 import org.junit.Test
 

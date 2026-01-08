@@ -1,4 +1,4 @@
-package edu.albertogonzalez.gymtonic.ui.theme
+package edu.gymtonic_app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
