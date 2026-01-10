@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -40,6 +41,29 @@ android {
 }
 
 dependencies {
+    //Iconos
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
+
+// ROOM dependencies
+    implementation("androidx.room:room-runtime:2.7.2")
+    implementation("androidx.room:room-ktx:2.7.2") // Soporte para Coroutines y Kotlin Extensions.
+    ksp("androidx.room:room-compiler:2.7.2") // KSP para procesamiento de anotaciones.
+
+// ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
+
+// Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.9.3")
+// Retrofit2
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+
+// Conversor para JSON (Gson)
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+
+// Corutinas (para llamadas asíncronas)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
