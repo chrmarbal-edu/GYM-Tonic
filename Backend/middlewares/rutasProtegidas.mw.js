@@ -1,7 +1,7 @@
 const AppError = require("../utils/AppError")
 
-const checkProfile = (req,profile) =>{
-    if(req.session && req.session.userLogued && req.session.userLogued.data && req.session.userLogued.data.profile && req.session.userLogued.data.profile == profile){
+const checkRole = (req, role) =>{
+    if(req.session && req.session.userLogued && req.session.userLogued.data && req.session.userLogued.data.user_role && req.session.userLogued.data.user_role == role){
         return true
     }else{
         return false
@@ -9,7 +9,7 @@ const checkProfile = (req,profile) =>{
 }
 
 exports.requireAdmin = (req,res,next) =>{
-    if(checkProfile(req,"Administrador")){
+    if(checkRole(req,1)){
         next()
     }else{
         next(new AppError("No estás autorizado",403))

@@ -58,25 +58,28 @@ user.updateById = async function (id, updateUser, result) {
 
         const request = pool.request()
         request.input("id", sql.Int, id)
-        request.input("username", sql.VarChar, updateUser.user_username)
-        request.input("name", sql.VarChar, updateUser.user_name)
-        request.input("email", sql.VarChar, updateUser.user_email)
+        request.input("username", sql.NVarChar, updateUser.user_username)
+        request.input("name", sql.NVarChar, updateUser.user_name)
+        request.input("password", sql.NVarChar, updateUser.user_password)
+        request.input("email", sql.NVarChar, updateUser.user_email)
         request.input("height", sql.Decimal(5,2), updateUser.user_height)
         request.input("weight", sql.Decimal(5,2), updateUser.user_weight)
         request.input("objective", sql.Int, updateUser.user_objective)
         request.input("points", sql.Int, updateUser.user_points)
-        request.input("role", sql.VarChar, updateUser.user_role)
+        request.input("role", sql.Int, updateUser.user_role)
 
         const sqlQuery = `
             UPDATE Users SET
                 user_username = @username,
                 user_name = @name,
+                user_password = @password,
                 user_email = @email,
                 user_height = @height,
                 user_weight = @weight,
                 user_objective = @objective,
                 user_points = @points,
                 user_role = @role
+            OUTPUT INSERTED.*
             WHERE user_id = @id
         `
 
@@ -95,15 +98,15 @@ user.create = async function (newUser, result) {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("username", sql.VarChar, newUser.user_username)
-        request.input("name", sql.VarChar, newUser.user_name)
-        request.input("password", sql.VarChar, newUser.user_password)
+        request.input("username", sql.NVarChar, newUser.user_username)
+        request.input("name", sql.NVarChar, newUser.user_name)
+        request.input("password", sql.NVarChar, newUser.user_password)
         request.input("birthdate", sql.Date, newUser.user_birthdate)
-        request.input("email", sql.VarChar, newUser.user_email)
+        request.input("email", sql.NVarChar, newUser.user_email)
         request.input("height", sql.Decimal(5,2), newUser.user_height)
         request.input("weight", sql.Decimal(5,2), newUser.user_weight)
         request.input("objective", sql.Int, newUser.user_objective)
-        request.input("role", sql.VarChar, newUser.user_role)
+        request.input("role", sql.Int, newUser.user_role)
 
         const sqlQuery = `
             INSERT INTO Users (
