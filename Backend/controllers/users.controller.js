@@ -55,85 +55,82 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
     const {id} = req.params
     // const userLogued = req.session.userLogued.data
     let { username, name, currentPassword = "", newPassword = "", email, height, weight, objective} = req.body
-
-    let completeUser = {}
     
     // BUSCAMOS USUARIO
-    await userModel.findById(id, async function(err,objetoDatos){
+    await userModel.findById(id, async function(err,userFounded){
         if(err){
             next(new AppError(err, 500))
-        }else{
-            // ACTUALIZAMOS Y LE METEMOS EL OBJETODATOS PARA LUEGO SOLO SOBREESCRIBIR LOS DATOS QUE NOS INTERESAN        
-            completeUser = objetoDatos[0]
-        }
-        
-        // USERNAME
-        if(username && username != ""){
-            completeUser.username = username
-        }
+        }else{       
+            console.log(userFounded)
 
-        // PASSWORD
-        if(newPassword){
-            if(newPassword.length < 8){
-                next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
-            } else if(!newPassword.match(/[A-Z]/)){
-                next(new AppError("La contraseña debe tener al menos una mayúscula",400))
-            } else if(!newPassword.match(/[a-z]/)){
-                next(new AppError("La contraseña debe tener al menos una minúscula",400))
-            } else if(!newPassword.match(/[/\d/]/)){
-                next(new AppError("La contraseña debe tener al menos un número",400))
-            } else if(!newPassword.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
-                next(new AppError("La contraseña debe tener al menos un carácter especial",400))
-            } else{
-                const validado = await bcrypt.compareLogin(currentPassword, completeUser.password)
-                if(validado){
-                    completeUser.password = await bcrypt.hashPassword(newPassword)
+             // USERNAME
+            if(username && username != ""){
+                userFounded.user_username = username
+            }
+
+            // PASSWORD
+            if(newPassword){
+                if(newPassword.length < 8){
+                    next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
+                } else if(!newPassword.match(/[A-Z]/)){
+                    next(new AppError("La contraseña debe tener al menos una mayúscula",400))
+                } else if(!newPassword.match(/[a-z]/)){
+                    next(new AppError("La contraseña debe tener al menos una minúscula",400))
+                } else if(!newPassword.match(/[/\d/]/)){
+                    next(new AppError("La contraseña debe tener al menos un número",400))
+                } else if(!newPassword.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
+                    next(new AppError("La contraseña debe tener al menos un carácter especial",400))
                 } else{
-                    next(new AppError("La contraseña actual es incorrecta", 400))
+                    const validado = await bcrypt.compareLogin(currentPassword, userFounded.user_password)
+                    if(validado){
+                        userFounded.user_password = await bcrypt.hashPassword(newPassword)
+                    } else{
+                        next(new AppError("La contraseña actual es incorrecta", 400))
+                    }
                 }
             }
-        }
 
-        // NAME 
-        if(name && name != ""){
-            completeUser.name = name
-        }
-
-        // EMAIL
-        if(email && email != ""){
-            completeUser.email = email
-        }
-
-        // WEIGHT
-        if(weight && weight > 40 && weight < 200){
-            completeUser.weight = weight
-        }
-
-        // HEIGHT
-        if(height && height > 130 && height < 230){
-            completeUser.height = height
-        }
-
-        // OBJECTIVE
-        if(objective && objective > 0){
-            completeUser.objective = objective
-        }
-        
-        // ACTUALIZAMOS USUARIO
-        await userModel.updateById(id, completeUser, function(err, datosUsuarioActualizado){
-            if(err){
-                next(err, 500)
-            } else{
-                res.status(200).json(datosUsuarioActualizado)
+            // NAME 
+            if(name && name != ""){
+                userFounded.user_name = name
             }
-        })
+
+            // EMAIL
+            if(email && email != ""){
+                userFounded.user_email = email
+            }
+
+            // WEIGHT
+            if(weight && weight > 40 && weight < 200){
+                userFounded.user_weight = weight
+            }
+
+            // HEIGHT
+            if(height && height > 130 && height < 230){
+                userFounded.user_height = height
+            }
+
+            // OBJECTIVE
+            if(objective && objective > 0){
+                userFounded.user_objective = objective
+            }
+            
+            // ACTUALIZAMOS USUARIO
+            await userModel.updateById(id, userFounded, function(err, datosUsuarioActualizado){
+                if(err){
+                    next(err, 500)
+                } else{
+                    res.status(200).json(datosUsuarioActualizado)
+                }
+            })
+        }
     })
 })
 
 /* <=============================== REGISTER ===============================> */
 exports.register = wrapAsync(async function (req, res, next) {
     // const userLogued = req.session.userLogued?.data;
-    let { username, name, password, email, height, weight, objective} = req.body
+    let { username, name, password, birthdate, email, height, weight, objective} = req.body
 
     // VALIDACIONES DE CONTRASEÑA
      if(password.length<8){
@@ -150,38 +147,43 @@ exports.register = wrapAsync(async function (req, res, next) {
         let newUser = {}
 
         newUser = {
-            username: username,
-            name: name,
-            password: password,
-            email: email,
-            height: height,
-            weight: weight,
-            objective: objective
+            user_username: username,
+            user_name: name,
+            user_password: password,
+            user_birthdate: birthdate,
+            user_email: email,
+            user_height: height,
+            user_weight: weight,
+            user_objective: objective
         }
 
-        newUser.password = await bcrypt.hashPassword(newUser.password)
+        newUser.user_password = await bcrypt.hashPassword(newUser.user_password)
 
-        await userModel.create(newUser,function(err,datosUsuarioCreado){
-            if(err){
-                return next(new AppError(err, 500))
-            } else{
-                
-                if(req.session.userLogued && req.session.userLogued.data.user_role == 1){
-                    res.status(200).json({ datosUsuarioCreado })
-                } else if(!req.session.userLogued){
-                    const jwtToken = jwtMW.createJWT(req, res, next, newUser)
-                    const userLogued = {
-                        data: newUser,
-                        token: jwtToken
-                    }
-
-                    req.session.userLogued = userLogued
-                    res.status(200).json({ datosUsuarioCreado })
+        if(!req.session.userLogued || (req.session.userLogued && req.session.userLogued.data.user_role == 1)){
+            await userModel.create(newUser,function(err,datosUsuarioCreado){
+                if(err){
+                    return next(new AppError(err, 500))
                 } else{
-                    return next(new AppError("No tienes permisos para realizar esta petición", 403))
+                    
+                    if(req.session.userLogued && req.session.userLogued.data.user_role == 1){
+                        res.status(200).json(datosUsuarioCreado)
+                    } else if(!req.session.userLogued){
+                        const jwtToken = jwtMW.createJWT(req, res, next, newUser)
+                        const userLogued = {
+                            data: newUser,
+                            token: jwtToken
+                        }
+
+                        req.session.userLogued = userLogued
+                        res.status(200).json(datosUsuarioCreado)
+                    }
                 }
-            }
-        })
+            })
+        } else{
+            return next(new AppError("No tienes permisos para realizar esta petición", 403))
+        }
+
+        
     }
 })
 
@@ -190,37 +192,38 @@ exports.deleteUser = wrapAsync(async function (req, res, next) {
     const { id } = req.params
     const userLogued = req.session.userLogued.data
 
-    if (userLogued) {
-        await userModel.findById(id, async function (err, objetoDatos) {
+    if (userLogued && (userLogued.user_role == 1 || userLogued.user_id == id)) {
+        await userModel.findById(id, async function (err, userFounded) {
             if (err) {
                 return next(new AppError("Usuario no encontrado", 404))
             }
 
-            if (!objetoDatos || objetoDatos.length == 0) {
+            if (!userFounded || userFounded.length == 0) {
                 return next(new AppError("Usuario no encontrado", 404))
             }
 
             await userModel.delete(id, function (err, datosUsuarioEliminado) {
                 if (err) {
                     return next(new AppError("Error al eliminar el usuario", 500))
-                }
-
-                // Si se elimina a sí mismo, cerrar sesión
-                if (userLogued.idUser == id) {
-                    const jwtDestroyed = jwtMW.destroyJWT(req);
-                    if (jwtDestroyed) {
-                        req.session.destroy((err) => {
-                            if (err) {
-                                return next(new AppError("Error al destruir la sesión", 500))
-                            }
-                            return res.status(200).json({ msg: "Usuario eliminado, sesión destruida" })
-                        })
+                } else{
+                    // Si se elimina a sí mismo, cerrar sesión
+                    if (userLogued.idUser == id) {
+                        const jwtDestroyed = jwtMW.destroyJWT(req);
+                        if (jwtDestroyed) {
+                            req.session.destroy((err) => {
+                                if (err) {
+                                    return next(new AppError("Error al destruir la sesión", 500))
+                                }
+                                return res.status(200).json({ msg: "Usuario eliminado, sesión destruida" })
+                            })
+                        } else {
+                            return next(new AppError("Error al eliminar el Token o Sesión Inexistente", 500))
+                        }
                     } else {
-                        return next(new AppError("Error al eliminar el Token o Sesión Inexistente", 500))
+                        return res.status(200).json(datosUsuarioEliminado)
                     }
-                } else {
-                    return res.status(200).json(datosUsuarioEliminado)
                 }
+                
             })
         })
     } else {

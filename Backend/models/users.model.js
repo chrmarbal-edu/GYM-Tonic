@@ -23,10 +23,8 @@ user.findAll = async function (result) {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM Users")
         result(null, response.recordset)
-        sql.close()
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -44,10 +42,8 @@ user.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -66,7 +62,6 @@ user.updateById = async function (id, updateUser, result) {
         request.input("weight", sql.Decimal(5,2), updateUser.user_weight)
         request.input("objective", sql.Int, updateUser.user_objective)
         request.input("points", sql.Int, updateUser.user_points)
-        request.input("role", sql.Int, updateUser.user_role)
 
         const sqlQuery = `
             UPDATE Users SET
@@ -77,18 +72,15 @@ user.updateById = async function (id, updateUser, result) {
                 user_height = @height,
                 user_weight = @weight,
                 user_objective = @objective,
-                user_points = @points,
-                user_role = @role
+                user_points = @points
             OUTPUT INSERTED.*
             WHERE user_id = @id
         `
 
         const response = await request.query(sqlQuery)
-        result(null, response)
-        sql.close()
+        result(null, response.recordsets[0][0])
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -106,7 +98,6 @@ user.create = async function (newUser, result) {
         request.input("height", sql.Decimal(5,2), newUser.user_height)
         request.input("weight", sql.Decimal(5,2), newUser.user_weight)
         request.input("objective", sql.Int, newUser.user_objective)
-        request.input("role", sql.Int, newUser.user_role)
 
         const sqlQuery = `
             INSERT INTO Users (
@@ -114,19 +105,18 @@ user.create = async function (newUser, result) {
                 user_email, user_height, user_weight,
                 user_objective, user_role
             )
+            OUTPUT INSERTED.*
             VALUES (
                 @username, @name, @password, @birthdate,
                 @email, @height, @weight,
-                @objective, @role
+                @objective, 0
             )
         `
 
         const response = await request.query(sqlQuery)
-        result(null, response)
-        sql.close()
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -136,13 +126,15 @@ user.delete = async function (id, result) {
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("id", sql.Int, id)
-            .query("DELETE FROM Users WHERE user_id = @id")
+            .query(`
+                DELETE FROM Users
+                OUTPUT DELETED.*
+                WHERE user_id = @id
+            `)
 
-        result(null, response)
-        sql.close()
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -160,10 +152,8 @@ user.findByUsername = async function (usernameParam, result) {
             result("No hay datos del usuario " + usernameParam, null)
         }
 
-        sql.close()
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
