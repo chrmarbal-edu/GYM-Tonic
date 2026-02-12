@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.remoteDatasource
+package edu.gymtonic_app.data.remote
 
 import edu.gymtonic_app.data.remote.model.LoginRequest
 import edu.gymtonic_app.data.remote.model.LoginResponse

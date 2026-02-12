@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.local.model
+package edu.gymtonic_app.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

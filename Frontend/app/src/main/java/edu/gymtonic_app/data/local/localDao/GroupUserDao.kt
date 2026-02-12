@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.local.localDao
 
 import androidx.room.*
-import edu.gymtonic_app.data.local.model.GroupUserEntity
+import edu.gymtonic_app.data.model.GroupUserEntity
 
 @Dao
 interface GroupUserDao {
