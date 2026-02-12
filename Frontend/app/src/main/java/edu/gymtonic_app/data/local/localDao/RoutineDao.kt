@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.local.localDao
 
 import androidx.room.*
-import edu.gymtonic_app.data.local.model.RoutineEntity
+import edu.gymtonic_app.data.model.RoutineEntity
 
 @Dao
 interface RoutineDao {

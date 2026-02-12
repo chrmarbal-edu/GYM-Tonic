@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.local.localDao
 
 import androidx.room.*
-import edu.gymtonic_app.data.local.model.UserMissionEntity
+import edu.gymtonic_app.data.model.UserMissionEntity
 
 @Dao
 interface UserMissionDao {

@@ -1,31 +1,27 @@
-/* edu.gymtonic_app.data.remote.model
+package edu.gymtonic_app.data.remote.model
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import java.util.prefs.Preferences
 import edu.gymtonic_app.data.remote.model.SessionManager.Companion.TOKEN_KEY
 import edu.gymtonic_app.data.remote.model.SessionManager.Companion.USERNAME_KEY
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
-
+// DataStore recomienda crear las propiedades de nivel superior.
 // Inicialización con extensión delegada.
 val Context.dataStore by preferencesDataStore(name = "settings")
 
-//Clase para gestionar la sesión del usuario con DataStore.
-class SessionManager(private val dataStore: DataStore<Preferences>) {   // dataStore DataStore para almacenar la sesión.
+class SessionManager(private val dataStore: DataStore<Preferences>) {
     companion object {
-        //Clave para almacenar el token.
-        private val  TOKEN_KEY = stringPreferencesKey("token") //stringPreferences: prefenrencia en el archivo para token
-        //USERNAME_KEY Clave para almacenar el nombre de usuario.
-        private val USERNAME_KEY = stringPreferencesKey("username") //stringPreferences: prefenrencia en el archivo para token
+        private val TOKEN_KEY = stringPreferencesKey("token")
+        private val USERNAME_KEY = stringPreferencesKey("username")
     }
 
-    // Flujo de datos para la sesión. Devuelve un par con el token y el nombre de usuario. si existen, en este caso devuelve los dos valores a la vez
-    //interesa recogerlos juntos token-usuario oudiendo ser nulos. Datastore recupera los datos en orden de preferencia
+    // Flujo de datos para la sesión. Devuelve un par con el token y el nombre de usuario.
     val sessionFlow: Flow<Pair<String?, String?>> = dataStore.data.map { preferences ->
         preferences[TOKEN_KEY] to preferences[USERNAME_KEY]
     }
@@ -46,4 +42,4 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {   // dataS
             it.remove(TOKEN_KEY)
         }
     }
-}*/
+}
