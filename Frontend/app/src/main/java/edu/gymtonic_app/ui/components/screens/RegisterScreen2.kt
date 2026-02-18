@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RegisterScreen2(
    onEnter: () -> Unit,
-
     onBack: () -> Unit = {}
 ) {
     val bg = Brush.verticalGradient(
