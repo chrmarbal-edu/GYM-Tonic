@@ -8,6 +8,9 @@ const port = process.env.PORT || process.env.PUERTO
 const path = require("path") // npm i path
 const errorHandlerMW = require("./middlewares/errorHandler.mw")
 const userRoutes = require("./routes/users.routes")
+const missionRoutes = require("./routes/missions.routes")
+const routinesRoutes = require("./routes/routines.routes")
+const groupRoutes = require("./routes/groups.routes")
 
 // <============ COOKIE DE SESIÓN ============>
 app.use(session({
@@ -29,6 +32,9 @@ app.use(express.static(path.join(__dirname, "public"))) // Asignamos la carpeta 
 
 // <============ RUTAS ============>
 app.use(`/api/${process.env.API_VERSION}/users`, userRoutes)
+app.use(`/api/${process.env.API_VERSION}/missions`, missionRoutes)
+app.use(`/api/${process.env.API_VERSION}/routines`, routinesRoutes)
+app.use(`/api/${process.env.API_VERSION}/groups`, groupRoutes)
 
 // <============ MANEJADOR DE ERRORES ============>
 app.use(errorHandlerMW.errorHandler)
@@ -42,6 +48,12 @@ app.listen(port, () => {
 
     console.log("<============ USERS ============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/users`)
+    console.log("============= MISSIONS =============")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/missions`)
+    console.log("============= ROUTINES =============")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/routines`)
+    console.log("============= GROUPS =============")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/groups`)
 
     console.log()
 

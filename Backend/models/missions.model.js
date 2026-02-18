@@ -122,4 +122,4 @@ mission.delete = async function (id, result) {
 }
 
 /* <======- EXPORTAMOS EL MODELO -======> */
-module.exports = group
+module.exports = mission
