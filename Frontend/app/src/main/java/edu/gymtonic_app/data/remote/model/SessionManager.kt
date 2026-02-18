@@ -2,44 +2,62 @@ package edu.gymtonic_app.data.remote.model
 
 import android.content.Context
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStore
-import edu.gymtonic_app.data.remote.model.SessionManager.Companion.TOKEN_KEY
-import edu.gymtonic_app.data.remote.model.SessionManager.Companion.USERNAME_KEY
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// DataStore recomienda crear las propiedades de nivel superior.
-// Inicialización con extensión delegada.
-val Context.dataStore by preferencesDataStore(name = "settings")
+// Extension property
+val Context.sessionDataStore by preferencesDataStore(name = "gymtonic_session")
 
 class SessionManager(private val dataStore: DataStore<Preferences>) {
     companion object {
         private val TOKEN_KEY = stringPreferencesKey("token")
+        private val USER_ID_KEY = intPreferencesKey("user_id")
         private val USERNAME_KEY = stringPreferencesKey("username")
+        private val EMAIL_KEY = stringPreferencesKey("email")
+        private val ROLE_KEY = intPreferencesKey("role")
     }
 
-    // Flujo de datos para la sesión. Devuelve un par con el token y el nombre de usuario.
-    val sessionFlow: Flow<Pair<String?, String?>> = dataStore.data.map { preferences ->
-        preferences[TOKEN_KEY] to preferences[USERNAME_KEY]
+    // Session model
+    data class SessionData(
+        val token: String?,
+        val userId: Int?,
+        val username: String?,
+        val email: String?,
+        val role: Int?
+    )
+
+    // Flow session
+    val sessionFlow: Flow<SessionData> = dataStore.data.map { prefs ->
+        SessionData(
+            token = prefs[TOKEN_KEY],
+            userId = prefs[USER_ID_KEY],
+            username = prefs[USERNAME_KEY],
+            email = prefs[EMAIL_KEY],
+            role = prefs[ROLE_KEY]
+        )
     }
 
-    // Función para guardar los datos de la sesión.
-    suspend fun saveSession(token: String, username: String) {
-        dataStore.edit { preferences -> // Edita los datos del DataStore, si no existen los crea.
-            preferences[TOKEN_KEY] = token
-            preferences[USERNAME_KEY] = username
+    // Save session
+    suspend fun saveSession(
+        token: String,
+        userId: Int,
+        username: String,
+        email: String,
+        role: Int
+    ) {
+        dataStore.edit { prefs ->
+            prefs[TOKEN_KEY] = token
+            prefs[USER_ID_KEY] = userId
+            prefs[USERNAME_KEY] = username
+            prefs[EMAIL_KEY] = email
+            prefs[ROLE_KEY] = role
         }
     }
 
-    // Función para limpiar la sesión. Borra los datos del fichero settings.
+    // Clear session
     suspend fun clearSession() {
-        // dataStore.edit { it.clear() } // Limpia todos los datos del DataStore.
-
-        dataStore.edit { // Versión para borrar únicamente el token.
-            it.remove(TOKEN_KEY)
-        }
+        dataStore.edit { it.clear() }
     }
 }

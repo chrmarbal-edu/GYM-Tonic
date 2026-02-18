@@ -1,5 +1,6 @@
 package edu.gymtonic_app.ui.components.screens
 
+import UnderlineTextField
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,6 +22,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,21 +37,18 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.viewmodel.LoginState
+import edu.gymtonic_app.viewmodel.LoginViewModel
 
 
 @Composable
 fun LoginFormScreen(
-    onEnter: () -> Unit,
+    loginViewModel: LoginViewModel,
+    onLoginSuccess: () -> Unit,
     onRegister: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
-    val bg = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val loginState by loginViewModel.loginState.collectAsState()
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -54,21 +56,18 @@ fun LoginFormScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bg)
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF1F3F73),
+                        Color(0xFF3A2F7A),
+                        Color(0xFF2A3344)
+                    )
+                )
+            )
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
-        // Texto "¡Hola!" arriba a la izquierda
-        Text(
-            text = "¡Hola!",
-            color = Color.White,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(top = 55.dp)
-        )
-
-        // Panel grande gris abajo
+        // Panel gris
         Surface(
             modifier = Modifier
                 .padding(12.dp)
@@ -76,7 +75,7 @@ fun LoginFormScreen(
                 .fillMaxWidth()
                 .height(670.dp),
             color = Color(0xFFD9D9D9),
-            shape = RoundedCornerShape(topStart = 70.dp, topEnd = 70.dp, bottomStart = 70.dp, bottomEnd = 70.dp),
+            shape = RoundedCornerShape(70.dp),
             shadowElevation = 6.dp
         ) {
             Column(
@@ -85,14 +84,9 @@ fun LoginFormScreen(
                     .padding(horizontal = 36.dp, vertical = 46.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 // Email
-                Text(
-                    text = "Email",
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF2D2D2D),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(text = "Email", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = email,
@@ -103,13 +97,7 @@ fun LoginFormScreen(
                 Spacer(Modifier.height(26.dp))
 
                 // Contraseña
-                Text(
-                    text = "Contraseña",
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color(0xFF2D2D2D),
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(text = "Contraseña", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = password,
@@ -125,104 +113,53 @@ fun LoginFormScreen(
                     modifier = Modifier.align(Alignment.End),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(
-                        text = "¿Has olvidado la contraseña?",
-                        fontSize = 11.sp,
-                        color = Color(0xFF2D2D2D).copy(alpha = 0.8f)
-                    )
+                    Text("¿Has olvidado la contraseña?", fontSize = 11.sp)
                 }
 
                 Spacer(Modifier.height(18.dp))
 
-                // Botón ENTRAR (blanco con borde azul y texto azul)
+                // Botón ENTRAR
                 OutlinedButton(
-                    onClick = onEnter,
-                    modifier = Modifier
-                        .width(140.dp)
-                        .height(38.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = Color.White,
-                        contentColor = Color(0xFF3B4EE8)
-                    ),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        width = 1.2.dp,
-                        brush = Brush.linearGradient(listOf(Color(0xFF3B4EE8), Color(0xFF3B4EE8)))
-                    )
+                    onClick = { loginViewModel.login(email, password) },
+                    modifier = Modifier.width(140.dp).height(38.dp),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text(
-                        "ENTRAR",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.8.sp
-                    )
+                    if (loginState is LoginState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFF3B4EE8)
+                        )
+                    } else {
+                        Text("ENTRAR", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
 
                 Spacer(Modifier.weight(1f))
 
-                // Texto final (2 líneas)
-                Text(
-                    text = "¿No tienes cuenta?",
-                    fontSize = 11.sp,
-                    color = Color(0xFF2D2D2D).copy(alpha = 0.75f)
-                )
+                // Texto final
+                Text("¿No tienes cuenta?", fontSize = 11.sp)
+                TextButton(onClick = onRegister) {
+                    Text("¡Regístrate!", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                }
 
-                TextButton(
-                    onClick = onRegister,
-                    contentPadding = PaddingValues(0.dp)
-                ) {
+                // Mostrar errores si los hay
+                if (loginState is LoginState.Error) {
                     Text(
-                        text = "¡Regístrate!",
+                        text = (loginState as LoginState.Error).message,
+                        color = Color.Red,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
+                        modifier = Modifier.padding(top = 8.dp)
                     )
+                }
+
+                // Navegar si login fue correcto
+                if (loginState is LoginState.Success) {
+                    LaunchedEffect(Unit) {
+                        onLoginSuccess()
+                    }
                 }
             }
         }
     }
 }
-
-
-@Composable
-private fun UnderlineTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    visualTransformation: VisualTransformation = VisualTransformation.None
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
-
-        // Texto que aparece cuando el campo está vacío
-        placeholder = {
-            Text(
-                placeholder,
-                fontSize = 11.sp,
-                color = Color(0xFF2D2D2D).copy(alpha = 0.45f)
-            )
-        },
-
-        singleLine = true,
-
-        // Permite ocultar el texto (por ejemplo en contraseñas)
-        visualTransformation = visualTransformation,
-
-        // ⚠️ Material 3 usa TextFieldDefaults.colors(), NO textFieldColors()
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,      // Fondo cuando está enfocado
-            unfocusedContainerColor = Color.Transparent,    // Fondo cuando NO está enfocado
-            disabledContainerColor = Color.Transparent,
-
-            focusedIndicatorColor = Color(0xFF2D2D2D).copy(alpha = 0.65f),   // Línea inferior activa
-            unfocusedIndicatorColor = Color(0xFF2D2D2D).copy(alpha = 0.35f), // Línea inferior inactiva
-
-            focusedTextColor = Color(0xFF2D2D2D),     // Color del texto al escribir
-            unfocusedTextColor = Color(0xFF2D2D2D),
-
-            cursorColor = Color(0xFF2D2D2D)            // Color del cursor
-        )
-    )
-}
-

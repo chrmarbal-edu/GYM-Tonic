@@ -41,34 +41,6 @@ android {
 }
 
 dependencies {
-
-    // DataStore Preferences
-    implementation("androidx.datastore:datastore-preferences:1.2.0")
-
-    //Iconos
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.compose.material:material-icons-extended")
-
-// ROOM dependencies
-    implementation("androidx.room:room-runtime:2.7.2")
-    implementation("androidx.room:room-ktx:2.7.2") // Soporte para Coroutines y Kotlin Extensions.
-    ksp("androidx.room:room-compiler:2.7.2") // KSP para procesamiento de anotaciones.
-
-// ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
-
-// Navigation Compose
-    implementation("androidx.navigation:navigation-compose:2.9.3")
-// Retrofit2
-    implementation("com.squareup.retrofit2:retrofit:3.0.0")
-
-// Conversor para JSON (Gson)
-    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
-
-// Corutinas (para llamadas asíncronas)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -77,6 +49,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.datastore.core)
+    implementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -84,4 +58,32 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+
+    //Iconos
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
+
+    // ROOM dependencies
+    implementation("androidx.room:room-runtime:2.7.2")
+    implementation("androidx.room:room-ktx:2.7.2") // Soporte para Coroutines y Kotlin Extensions.
+    ksp("androidx.room:room-compiler:2.7.2") // KSP para procesamiento de anotaciones.
+
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
+
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.9.3")
+    // Retrofit2
+    implementation("com.squareup.retrofit2:retrofit:3.0.0")
+
+    // Conversor para JSON (Gson)
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+
+    // Corutinas (para llamadas asíncronas)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+
+    // DataStore Preferences
+    implementation("androidx.datastore:datastore-preferences:1.2.0")
 }

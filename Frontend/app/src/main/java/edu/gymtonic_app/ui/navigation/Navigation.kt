@@ -2,17 +2,20 @@ package edu.gymtonic_app.ui.navigation
 
 import RegisterScreen
 import RegisterScreen2
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import edu.gymtonic_app.ui.components.screens.GymTonicLoginScreen
 import edu.gymtonic_app.ui.components.screens.LoginFormScreen
+import edu.gymtonic_app.viewmodel.LoginViewModel
 
 @Composable
-fun Navigation() {
-    val navController: NavHostController = rememberNavController()
+fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {
+    val loginViewModel: LoginViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -34,7 +37,9 @@ fun Navigation() {
                     // navController.navigate(Routes.HOME)
                 },
                 onRegister = { navController.navigate(Routes.REGISTER) },
-                onForgotPassword = { }
+                onForgotPassword = { },
+                loginViewModel = loginViewModel,
+                onLoginSuccess =
             )
         }
 
