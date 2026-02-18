@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.remoteDatasource
+package edu.gymtonic_app.data.remote
 
 import android.util.Log
 import edu.gymtonic_app.data.remote.model.LoginRequest
