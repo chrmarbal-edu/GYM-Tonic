@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,11 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.viewmodel.RegisterState
 import edu.gymtonic_app.viewmodel.RegisterViewModel
-
 
 @Composable
 fun RegisterScreen2(
@@ -27,7 +29,8 @@ fun RegisterScreen2(
     email: String,
     password: String,
     registerViewModel: RegisterViewModel,
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    registerState: RegisterState
 ) {
     val bg = Brush.verticalGradient(
         colors = listOf(
@@ -49,12 +52,14 @@ fun RegisterScreen2(
     var pesoError by remember { mutableStateOf(false) }
     var objetivoError by remember { mutableStateOf(false) }
 
-    // Dropdown objetivo
+    // Dropdown clásico
     val objetivos = listOf("Perder peso", "Tonificar", "Ganar masa muscular")
-    var expanded by remember { mutableStateOf(false) }
+    var dropdownExpanded by remember { mutableStateOf(false) }
 
     fun validateForm(): Boolean {
-        fechaError = fechaNacimiento.isBlank()
+        // Fecha debe ser exactamente yyyy-MM-dd
+        val fechaRegex = Regex("""\d{4}-\d{2}-\d{2}""")
+        fechaError = !fechaNacimiento.matches(fechaRegex)
         alturaError = altura.isBlank()
         pesoError = peso.isBlank()
         objetivoError = objetivo.isBlank()
@@ -94,16 +99,11 @@ fun RegisterScreen2(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                UnderlineLabeledField(
-                    label = "Fecha de nacimiento",
-                    value = fechaNacimiento,
-                    onValueChange = {
-                        fechaNacimiento = it
-                        fechaError = false
-                    },
-                    placeholder = "06/10/1999",
-                    isError = fechaError,
-                    errorText = "Campo obligatorio"
+                // Fecha con máscara simple
+                FechaNacimientoField(
+                    fecha = fechaNacimiento,
+                    onFechaChange = { fechaNacimiento = it; fechaError = false },
+                    isError = fechaError
                 )
 
                 Spacer(Modifier.height(18.dp))
@@ -136,52 +136,47 @@ fun RegisterScreen2(
 
                 Spacer(Modifier.height(22.dp))
 
-                // Dropdown Objetivo
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    TextField(
-                        value = objetivo,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Objetivo") },
-                        placeholder = { Text("Selecciona un objetivo") },
-                        isError = objetivoError,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                // Dropdown clásico
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = { dropdownExpanded = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text(if (objetivo.isEmpty()) "Selecciona un objetivo" else objetivo)
+                    }
+
+                    DropdownMenu(
+                        expanded = dropdownExpanded,
+                        onDismissRequest = { dropdownExpanded = false }
                     ) {
                         objetivos.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
                                     objetivo = option
-                                    expanded = false
+                                    dropdownExpanded = false
                                     objetivoError = false
                                 }
                             )
                         }
                     }
-                    if (objetivoError) {
-                        Text(
-                            text = "Campo obligatorio",
-                            color = Color.Red,
-                            fontSize = 11.sp,
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
+                }
+                if (objetivoError) {
+                    Text(
+                        text = "Campo obligatorio",
+                        color = Color.Red,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
                 }
 
                 Spacer(Modifier.height(28.dp))
 
                 Button(
                     onClick = {
-                        if(validateForm()){
-
-                            val objetivoValue = when(objetivo){
+                        if (validateForm()) {
+                            val objetivoValue = when (objetivo) {
                                 "Perder peso" -> 0
                                 "Tonificar" -> 1
                                 "Ganar masa muscular" -> 2
@@ -189,8 +184,14 @@ fun RegisterScreen2(
                             }
 
                             registerViewModel.register(
-                                username = username, name = fullName, password = password, birthdate = fechaNacimiento,
-                                email = email, altura.toDouble(), peso.toDouble(), objetivoValue
+                                username = username,
+                                name = fullName,
+                                password = password,
+                                birthdate = fechaNacimiento,
+                                email = email,
+                                altura.toDouble(),
+                                peso.toDouble(),
+                                objetivoValue
                             )
                         }
                     },
@@ -204,12 +205,20 @@ fun RegisterScreen2(
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                 ) {
-                    Text(
-                        text = "ENTRAR",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.8.sp
-                    )
+                    if(registerState is RegisterState.Loading){
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFFFFFFFF)
+                        )
+                    }else{
+                        Text(
+                            text = "ENTRAR",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.8.sp
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(16.dp))
@@ -218,16 +227,43 @@ fun RegisterScreen2(
     }
 }
 
-/**
- * Campo con etiqueta + TextField subrayado (reutilizable).
- */
+@Composable
+fun FechaNacimientoField(
+    fecha: String,
+    onFechaChange: (String) -> Unit,
+    isError: Boolean
+) {
+    UnderlineLabeledField(
+        label = "Fecha de nacimiento",
+        value = fecha,
+        onValueChange = {
+            // Solo números y guiones automáticos
+            val digits = it.filter { c -> c.isDigit() }
+            var formatted = ""
+            for (i in digits.indices) {
+                formatted += digits[i]
+                if (i == 3 || i == 5) formatted += "-"
+            }
+            if (formatted.length <= 10) onFechaChange(formatted)
+        },
+        placeholder = "yyyy-MM-dd",
+        isError = isError,
+        errorText = "Formato: yyyy-MM-dd",
+        visualTransformation = VisualTransformation.None,
+        keyboardType = KeyboardType.Number
+    )
+}
+
 @Composable
 private fun UnderlineLabeledField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    isError: Boolean = false,
+    errorText: String = "",
+    keyboardType: KeyboardType = KeyboardType.Text
 ) {
     Text(
         text = label,
@@ -237,10 +273,21 @@ private fun UnderlineLabeledField(
         fontWeight = FontWeight.SemiBold
     )
     Spacer(Modifier.height(8.dp))
-    UnderlineTextField(
+    TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = placeholder,
-        visualTransformation = visualTransformation
+        placeholder = { Text(placeholder) },
+        visualTransformation = visualTransformation,
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
     )
+    if (isError) {
+        Text(
+            text = errorText,
+            color = Color.Red,
+            fontSize = 11.sp,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
 }

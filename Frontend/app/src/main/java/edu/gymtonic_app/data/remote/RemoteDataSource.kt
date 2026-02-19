@@ -34,4 +34,8 @@ class RemoteDataSource {
             throw Exception("Error en login: ${response.message()}")
         }
     }
+
+    suspend fun logout(){
+        api.logout()
+    }
 }

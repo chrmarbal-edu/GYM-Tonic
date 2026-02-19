@@ -19,4 +19,8 @@ class Repository(
     suspend fun register(request: RegisterRequest): RegisterResponse {
         return remoteDataSource.register(request)
     }
+
+    suspend fun logout(){
+        remoteDataSource.logout()
+    }
 }

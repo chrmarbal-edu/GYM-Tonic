@@ -1,4 +1,5 @@
 package edu.gymtonic_app.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,6 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.viewmodel.HomeViewModel
+
+// -------------------- DATA MODEL --------------------
 
 data class HomeAction(
     val title: String,
@@ -27,8 +31,11 @@ data class HomeAction(
     val onClick: () -> Unit
 )
 
+// -------------------- MAIN SCREEN --------------------
+
 @Composable
 fun MainViewScreen(
+    onLogout : () -> Unit,
     onOpenTraining: () -> Unit,
     onOpenTechnogym: () -> Unit,
     onOpenMusic: () -> Unit,
@@ -42,6 +49,7 @@ fun MainViewScreen(
     onOpenWhatsapp: () -> Unit,
     onOpenInstagram: () -> Unit,
 ) {
+
     val bg = Brush.verticalGradient(
         listOf(
             Color(0xFF1F3F73),
@@ -56,10 +64,10 @@ fun MainViewScreen(
         HomeAction("Música del club", Icons.Outlined.MusicNote, onClick = onOpenMusic),
         HomeAction("Descuentos", Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
         HomeAction("Entrenador Personal", Icons.Outlined.Person, onClick = onOpenCoach),
-        HomeAction("Encontrar un gimnasio", Icons.Outlined.LocationOn, onClick = onOpenFindGym),
-        HomeAction("Mi Espacio Cliente", Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
+        HomeAction("Encontrar gimnasio", Icons.Outlined.LocationOn, onClick = onOpenFindGym),
+        HomeAction("Mi espacio cliente", Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
         HomeAction("Código QR", Icons.Outlined.QrCode2, highlight = true, onClick = onOpenQr),
-        HomeAction("Invitar a un amigo", Icons.Outlined.GroupAdd, onClick = onInviteFriend),
+        HomeAction("Invitar amigo", Icons.Outlined.GroupAdd, onClick = onInviteFriend),
         HomeAction("Reservas", Icons.Outlined.EventAvailable, onClick = onOpenBookings),
         HomeAction("WhatsApp", Icons.Outlined.Chat, onClick = onOpenWhatsapp),
         HomeAction("Instagram", Icons.Outlined.CameraAlt, onClick = onOpenInstagram),
@@ -71,23 +79,47 @@ fun MainViewScreen(
             .background(bg)
             .padding(18.dp)
     ) {
-        Text(
-            text = "GYMTONIC",
-            color = Color.White,
-            fontSize = 36.sp,
-            fontWeight = FontWeight.ExtraBold
-        )
 
-        Spacer(Modifier.height(6.dp))
+        // ---------------- HEADER ----------------
 
-        Text(
-            text = "DESAFÍATE · SUPÉRATE",
-            color = Color.White.copy(alpha = 0.85f),
-            fontSize = 12.sp,
-            letterSpacing = 2.sp
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Column {
+                Text(
+                    text = "GYMTONIC",
+                    color = Color.White,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+
+                Text(
+                    text = "DESAFÍATE · SUPÉRATE",
+                    color = Color.White.copy(alpha = 0.85f),
+                    fontSize = 12.sp,
+                    letterSpacing = 2.sp
+                )
+            }
+
+            // 🔥 LOGOUT BUTTON
+            IconButton(
+                onClick = { onLogout }
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Logout,
+                    contentDescription = "Logout",
+                    tint = Color.White,
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        }
 
         Spacer(Modifier.height(26.dp))
+
+        // ---------------- GRID ----------------
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -102,12 +134,15 @@ fun MainViewScreen(
     }
 }
 
+// ---------------- TILE COMPONENT ----------------
+
 @Composable
 private fun HomeTile(action: HomeAction) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable { action.onClick() }
     ) {
+
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier

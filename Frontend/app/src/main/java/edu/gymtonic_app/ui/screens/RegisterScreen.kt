@@ -212,7 +212,8 @@ fun RegisterScreen(
             email,
             password,
             registerViewModel = registerViewModel,
-            onBack = { navController.popBackStack() }
+            onBack = { navController.popBackStack() },
+            registerState
         )
     }
 }

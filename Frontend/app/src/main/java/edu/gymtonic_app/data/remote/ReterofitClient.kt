@@ -8,6 +8,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
 
@@ -33,4 +34,9 @@ interface ApiService {
     @POST("users")
     @Headers("Content-Type: application/json")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
+
+    //LOGOUT
+    @GET("users/logout")
+    suspend fun logout()
+
 }
