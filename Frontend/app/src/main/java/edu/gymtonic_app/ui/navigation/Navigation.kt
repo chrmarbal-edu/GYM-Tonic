@@ -9,8 +9,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import edu.gymtonic_app.ui.components.screens.FullBodyScreen
 import edu.gymtonic_app.ui.components.screens.GymTonicLoginScreen
 import edu.gymtonic_app.ui.components.screens.LoginFormScreen
+import edu.gymtonic_app.ui.components.screens.MainViewScreen
+import edu.gymtonic_app.ui.components.screens.TrainingScreen
 import edu.gymtonic_app.viewmodel.LoginViewModel
 
 @Composable
@@ -32,14 +35,10 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
         composable(Routes.LOGIN_FORM) {
             LoginFormScreen(
-                onEnter = {
-                    // cuando tengas HOME:
-                    // navController.navigate(Routes.HOME)
-                },
                 onRegister = { navController.navigate(Routes.REGISTER) },
                 onForgotPassword = { },
                 loginViewModel = loginViewModel,
-                onLoginSuccess =
+                onLoginSuccess = { navController.navigate(Routes.HOME) }
             )
         }
 
@@ -62,6 +61,36 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                     }
                 },
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.HOME) {
+            MainViewScreen(
+                onOpenTraining = {navController.navigate(Routes.TRAINING) },
+                onOpenTechnogym = { },
+                onOpenMusic = { },
+                onOpenDiscounts = { },
+                onOpenCoach = { },
+                onOpenFindGym = { },
+                onOpenClientArea = { },
+                onOpenQr = { },
+                onInviteFriend = { },
+                onOpenBookings = { },
+                onOpenWhatsapp = { },
+                onOpenInstagram = { }
+            )
+        }
+
+        composable(Routes.TRAINING) {
+            TrainingScreen(
+                onBack = {navController.popBackStack()},
+                onSelect =  {navController.navigate(Routes.EXERCISES)}
+            )
+        }
+
+        composable(Routes.EXERCISES)  {
+            FullBodyScreen(
+                onBack = {navController.popBackStack()}
             )
         }
     }

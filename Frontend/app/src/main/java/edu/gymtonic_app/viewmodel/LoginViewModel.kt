@@ -1,6 +1,7 @@
 package edu.gymtonic_app.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.AndroidViewModel
@@ -14,6 +15,7 @@ import edu.gymtonic_app.data.remote.model.sessionDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class LoginViewModel(application: Application): AndroidViewModel(application){
     private val remoteDataSource: RemoteDataSource
@@ -39,15 +41,18 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
 
             try{
                 val response = repository.login(request)
+                Log.i("login",response.toString())
+                if(response.token != null){
 
-                if(response.ok && response.token != null){
                     sessionManager.saveSession(
                         token = response.token,
-                        userId = response.userId!!,
-                        username = response.username!!,
-                        email = response.email!!,
-                        role = response.role!!
+
+                        userId = response.data.user_id,
+                        username = response.data.user_username,
+                        email = response.data.user_email,
+                        role = response.data.user_role
                     )
+
 
                     _loginState.value = LoginState.Success(response)
                 }

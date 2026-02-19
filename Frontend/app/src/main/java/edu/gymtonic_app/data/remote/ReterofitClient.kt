@@ -10,7 +10,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 object RetrofitClient {
-    private val BASE_URL = "http://localhost:3010/api/v1/users/"
+    private val BASE_URL = "http://192.168.195.109:3010/api/v1/users/"
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()

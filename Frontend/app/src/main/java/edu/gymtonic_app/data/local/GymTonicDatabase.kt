@@ -1,7 +1,5 @@
 package edu.gymtonic_app.data.local
 
-<<<<<<< HEAD
-=======
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
@@ -83,4 +81,3 @@ abstract class GymTonicDatabase : RoomDatabase() {
         }
     }
 }
->>>>>>> dcc5eefeb1c433b11396d213cb3cb6e4960c1d3c
