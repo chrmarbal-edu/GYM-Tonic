@@ -1,4 +1,4 @@
-package edu.gymtonic_app.ui.components.screens
+package edu.gymtonic_app.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

@@ -1,5 +1,7 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
+package edu.gymtonic_app.ui.screens
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -16,12 +18,19 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import edu.gymtonic_app.viewmodel.RegisterViewModel
 
 @Composable
 fun RegisterScreen(
-    onNext: () -> Unit,
+    navController: NavHostController,
+    registerViewModel: RegisterViewModel,
     onBack: () -> Unit = {}
 ) {
+    val registerState by registerViewModel.registerState.collectAsState()
+
+    var showStep2 by remember { mutableStateOf(false) }
+
     val bg = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF1F3F73),
@@ -170,7 +179,7 @@ fun RegisterScreen(
                 Button(
                     onClick = {
                         if (validateForm()){
-                            onNext()
+                            showStep2 = true
                         }
                     },
                     modifier = Modifier
@@ -195,12 +204,23 @@ fun RegisterScreen(
             }
         }
     }
+
+    if(showStep2){
+        RegisterScreen2(
+            fullName,
+            username,
+            email,
+            password,
+            registerViewModel = registerViewModel,
+            onBack = { navController.popBackStack() }
+        )
+    }
 }
 /**
  * Campo con etiqueta + TextField subrayado (reutilizable).
  */
 @Composable
-private fun UnderlineLabeledField(
+fun UnderlineLabeledField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,

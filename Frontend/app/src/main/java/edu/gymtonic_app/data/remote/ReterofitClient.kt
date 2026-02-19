@@ -2,6 +2,8 @@ package edu.gymtonic_app.data.remote
 
 import edu.gymtonic_app.data.remote.model.LoginRequest
 import edu.gymtonic_app.data.remote.model.LoginResponse
+import edu.gymtonic_app.data.remote.model.RegisterRequest
+import edu.gymtonic_app.data.remote.model.RegisterResponse
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -10,7 +12,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 
 object RetrofitClient {
-    private val BASE_URL = "http://192.168.195.109:3010/api/v1/users/"
+    private val BASE_URL = "http://192.168.195.109:3010/api/v1/"
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()
@@ -22,8 +24,13 @@ object RetrofitClient {
 }
 
 interface ApiService {
-    // Función para obtener el login, se pasa un objeto LoginRequest en el body.
-    @POST("login") // https://www.javiercarrasco.es/api/coffee/login
-    @Headers("Content-Type: application/json") // Indica que el contenido es JSON.
+    // LOGIN
+    @POST("users/login")
+    @Headers("Content-Type: application/json")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+
+    // REGISTER
+    @POST("users")
+    @Headers("Content-Type: application/json")
+    suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
 }

@@ -166,7 +166,7 @@ exports.register = wrapAsync(async function (req, res, next) {
                 } else{
                     
                     if(req.session.userLogued && req.session.userLogued.data.user_role == 1){
-                        res.status(200).json(datosUsuarioCreado)
+                        res.status(201).json({user: datosUsuarioCreado, token: null})
                     } else if(!req.session.userLogued){
                         const jwtToken = jwtMW.createJWT(req, res, next, newUser)
                         const userLogued = {
@@ -175,7 +175,7 @@ exports.register = wrapAsync(async function (req, res, next) {
                         }
 
                         req.session.userLogued = userLogued
-                        res.status(200).json(datosUsuarioCreado)
+                        res.status(201).json({user: datosUsuarioCreado, token: jwtToken})
                     }
                 }
             })
