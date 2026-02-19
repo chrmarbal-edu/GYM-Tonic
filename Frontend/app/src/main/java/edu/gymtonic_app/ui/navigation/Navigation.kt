@@ -8,10 +8,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import edu.gymtonic_app.ui.components.screens.FullBodyScreen
-import edu.gymtonic_app.ui.components.screens.GymTonicLoginScreen
-import edu.gymtonic_app.ui.components.screens.LoginFormScreen
-import edu.gymtonic_app.ui.components.screens.MainViewScreen
+import edu.gymtonic_app.ui.screens.FullBodyScreen
+import edu.gymtonic_app.ui.screens.GymTonicLoginScreen
+import edu.gymtonic_app.ui.screens.LoginFormScreen
+import edu.gymtonic_app.ui.screens.MainViewScreen
 import edu.gymtonic_app.ui.screens.TrainingScreen
 import edu.gymtonic_app.viewmodel.LoginState
 import edu.gymtonic_app.viewmodel.LoginViewModel
