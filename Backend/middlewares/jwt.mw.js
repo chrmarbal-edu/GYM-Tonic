@@ -32,6 +32,7 @@ exports.authenticate = (req, res, next) => {
                     next(new AppError(err, 401))
                 }
             } else{
+                req.user = decoded
                 next()
             }
         })

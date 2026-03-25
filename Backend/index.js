@@ -11,6 +11,7 @@ const userRoutes = require("./routes/users.routes")
 const missionRoutes = require("./routes/missions.routes")
 const routinesRoutes = require("./routes/routines.routes")
 const groupRoutes = require("./routes/groups.routes")
+const exercisesRoutes = require("./routes/exercises.routes")
 
 // <============ COOKIE DE SESIÓN ============>
 app.use(session({
@@ -35,6 +36,7 @@ app.use(`/api/${process.env.API_VERSION}/users`, userRoutes)
 app.use(`/api/${process.env.API_VERSION}/missions`, missionRoutes)
 app.use(`/api/${process.env.API_VERSION}/routines`, routinesRoutes)
 app.use(`/api/${process.env.API_VERSION}/groups`, groupRoutes)
+app.use(`/api/${process.env.API_VERSION}/exercises`, exercisesRoutes)
 
 // <============ MANEJADOR DE ERRORES ============>
 app.use(errorHandlerMW.errorHandler)
@@ -48,12 +50,22 @@ app.listen(port, () => {
 
     console.log("<============ USERS ============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/users`)
-    console.log("============= MISSIONS =============")
+    console.log()
+
+    console.log("<============= MISSIONS =============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/missions`)
-    console.log("============= ROUTINES =============")
+    console.log()
+    
+    console.log("<============= ROUTINES =============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/routines`)
-    console.log("============= GROUPS =============")
+    console.log()
+
+    console.log("<============= GROUPS =============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/groups`)
+    console.log()
+    
+    console.log("<============= EXERCISES =============>")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/exercises`)
 
     console.log()
 

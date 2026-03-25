@@ -63,7 +63,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
         }else{       
             console.log(userFounded)
 
-             // USERNAME
+            // USERNAME
             if(username && username != ""){
                 userFounded.user_username = username
             }
@@ -118,7 +118,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             // ACTUALIZAMOS USUARIO
             await userModel.updateById(id, userFounded, function(err, datosUsuarioActualizado){
                 if(err){
-                    next(err, 500)
+                    next(new AppError(err, 500))
                 } else{
                     res.status(200).json(datosUsuarioActualizado)
                 }
@@ -231,7 +231,7 @@ exports.deleteUser = wrapAsync(async function (req, res, next) {
     }
 })
 
-// LOGIN
+/* <=============================== LOGIN ===============================> */
 exports.login = wrapAsync(async(req, res, next) => {
     let {username, password} = req.body
     
@@ -258,8 +258,7 @@ exports.login = wrapAsync(async(req, res, next) => {
     })
 })
 
-
-// LOGOUT
+/* <=============================== LOGOUT ===============================> */
 exports.logout = wrapAsync(async(req,res,next) => {
     const jwtDestroyed = jwtMW.destroyJWT(req)
     
