@@ -1,4 +1,4 @@
-package edu.gymtonic_app.ui.screens.home
+package edu.gymtonic_app.ui.screens.missions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,11 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -85,7 +86,7 @@ fun WeekChallengesScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
-            .padding(12.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 42.dp)
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -96,7 +97,7 @@ fun WeekChallengesScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 10.dp)
+                    .padding(top = 25.dp)
             ) {
                 HeaderRow(onBack = onBack)
 
@@ -108,7 +109,7 @@ fun WeekChallengesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 6.dp, bottom = 8.dp),
+                            .padding(top = 15.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -135,7 +136,7 @@ fun WeekChallengesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp, bottom = 8.dp),
+                            .padding(top = 15.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -151,14 +152,14 @@ fun WeekChallengesScreen(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 13.sp,
                             modifier = Modifier
-                                .clickable(onClick = onShowMoreCalendar)
+                                .clickable { onShowMoreCalendar() }
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color.Transparent)
                                 .padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
 
-                    CalendarCard(onShowMoreCalendar = onShowMoreCalendar)
+                    CalendarCard()
                 }
 
                 BottomNavBar(
@@ -183,7 +184,7 @@ private fun HeaderRow(onBack: () -> Unit) {
     ) {
         IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
             Icon(
-                imageVector = Icons.Outlined.KeyboardArrowLeft,
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                 contentDescription = "Volver",
                 tint = Color(0xFF2D2D2D)
             )
@@ -260,7 +261,7 @@ private fun GoalCard(goal: WeeklyGoalUi) {
 }
 
 @Composable
-private fun CalendarCard(onShowMoreCalendar: () -> Unit) {
+private fun CalendarCard() {
     val weekColors = listOf(
         Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFFFF1A1A), Color(0xFFFF1A1A),
         Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFFFF1A1A),
@@ -310,14 +311,18 @@ private fun BottomNavBar(
     onOpenProfile: () -> Unit
 ) {
     Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFFF0F0F0)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 4.dp),
+        shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
+        color = Color(0xFFF3F4F8),
+        shadowElevation = 10.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomItem("Inicio", Icons.Outlined.Home, false, onOpenHome)
@@ -331,35 +336,34 @@ private fun BottomNavBar(
 @Composable
 private fun BottomItem(
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     selected: Boolean,
     onClick: () -> Unit
 ) {
     val containerColor = if (selected) Color(0xFF757BDF) else Color.Transparent
-    val tint = if (selected) Color(0xFF1A1A1A) else Color(0xFF2D2D2D)
+    val tint = if (selected) Color(0xFF111111) else Color(0xFF4A4A4A)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .clickable(onClick = onClick)
             .clip(RoundedCornerShape(16.dp))
             .background(containerColor)
-            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.size(22.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = tint
-            )
-        }
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = tint,
+            modifier = Modifier.size(28.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             color = tint,
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            fontSize = 11.sp
         )
     }
 }

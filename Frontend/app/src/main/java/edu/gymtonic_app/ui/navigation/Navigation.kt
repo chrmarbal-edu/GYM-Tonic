@@ -22,7 +22,7 @@ import edu.gymtonic_app.ui.screens.routines.FullBodyScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
-import edu.gymtonic_app.ui.screens.home.WeekChallengesScreen
+import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
