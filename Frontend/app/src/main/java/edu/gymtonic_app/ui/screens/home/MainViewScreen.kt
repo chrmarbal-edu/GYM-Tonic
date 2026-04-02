@@ -105,7 +105,7 @@ fun MainViewScreen(
 
             // 🔥 LOGOUT BUTTON
             IconButton(
-                onClick = { onLogout }
+                onClick = { onLogout() }
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Logout,

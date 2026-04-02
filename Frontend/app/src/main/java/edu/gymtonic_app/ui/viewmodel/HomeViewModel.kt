@@ -26,10 +26,19 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
         sessionManager = SessionManager(dataStore)
     }
 
-    fun logout(){
+    fun logout(
+        onLoggedOut: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
         viewModelScope.launch {
-            repository.logout()
-            sessionManager.clearSession()
+            val remoteResult = repository.logout()
+            if (remoteResult.isFailure) {
+                onError(remoteResult.exceptionOrNull()?.message ?: "No se pudo cerrar sesión en servidor")
+            }
+
+            runCatching { sessionManager.clearSession() }
+                .onSuccess { onLoggedOut() }
+                .onFailure { onError(it.message ?: "No se pudo limpiar la sesión local") }
         }
     }
 }

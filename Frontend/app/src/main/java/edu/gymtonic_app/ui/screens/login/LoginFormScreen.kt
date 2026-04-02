@@ -46,7 +46,7 @@ fun LoginFormScreen(
 ) {
     val loginState by loginViewModel.loginState.collectAsState()
 
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Box(
@@ -82,12 +82,12 @@ fun LoginFormScreen(
             ) {
 
                 // Email
-                Text(text = "Email", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = "Username", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = "john@gmail.com"
+                    value = username,
+                    onValueChange = { username = it },
+                    placeholder = "client1"
                 )
 
                 Spacer(Modifier.height(26.dp))
@@ -116,7 +116,7 @@ fun LoginFormScreen(
 
                 // Botón ENTRAR
                 OutlinedButton(
-                    onClick = { loginViewModel.login(email, password) },
+                    onClick = { loginViewModel.login(username, password) },
                     modifier = Modifier.width(140.dp).height(38.dp),
                     shape = RoundedCornerShape(10.dp)
                 ) {

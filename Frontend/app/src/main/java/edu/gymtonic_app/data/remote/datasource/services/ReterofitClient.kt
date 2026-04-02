@@ -38,6 +38,6 @@ interface ApiService {
 
     //LOGOUT
     @GET("users/logout")
-    suspend fun logout()
+    suspend fun logout(): Response<Unit>
 
 }

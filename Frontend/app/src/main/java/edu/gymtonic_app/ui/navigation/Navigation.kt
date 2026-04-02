@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import edu.gymtonic_app.data.remote.datasource.model.Login.SessionManager
@@ -89,8 +90,18 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.HOME) {
             MainViewScreen(
                 onLogout = {
-                    homeViewModel.logout()
-                    navController.navigate(Routes.WELCOME)},
+                    homeViewModel.logout(
+                        onLoggedOut = {
+                            navController.navigate(Routes.WELCOME) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        },
+                        onError = { }
+                    )
+                },
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
                 onOpenTechnogym = { },
                 onOpenMusic = { },

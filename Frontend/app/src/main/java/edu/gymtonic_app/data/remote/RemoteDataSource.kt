@@ -36,7 +36,12 @@ class RemoteDataSource {
         }
     }
 
-    suspend fun logout(){
-        api.logout()
+    suspend fun logout() {
+        val response = api.logout()
+        if (!response.isSuccessful) {
+            val errorBody = response.errorBody()?.string()
+            Log.e(TAG, "Error logout: ${response.code()} ${response.message()} | $errorBody")
+            throw Exception("Error en logout: ${response.message()}")
+        }
     }
 }

@@ -20,7 +20,9 @@ class Repository(
         return remoteDataSource.register(request)
     }
 
-    suspend fun logout(){
-        remoteDataSource.logout()
+    suspend fun logout(): Result<Unit> {
+        return runCatching {
+            remoteDataSource.logout()
+        }
     }
 }
