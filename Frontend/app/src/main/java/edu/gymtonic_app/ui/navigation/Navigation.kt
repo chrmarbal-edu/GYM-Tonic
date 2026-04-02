@@ -132,7 +132,16 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.TRAINING) {
             TrainingScreen(
                 onBack = { navController.popBackStack() },
-                onSelect = { navController.navigate(Routes.EXERCISES) }
+                onSelect = { navController.navigate(Routes.EXERCISES) },
+                onOpenHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onOpenTraining = { },
+                onOpenChallenges = { navController.navigate(Routes.WEEK) },
+                onOpenProfile = { }
             )
         }
 

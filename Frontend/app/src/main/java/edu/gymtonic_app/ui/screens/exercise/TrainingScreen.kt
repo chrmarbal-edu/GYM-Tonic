@@ -21,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
+import edu.gymtonic_app.ui.components.BottomNavBar
+import edu.gymtonic_app.ui.components.BottomNavItem
 
 data class TrainingOption(
     val id: String,
@@ -31,7 +33,11 @@ data class TrainingOption(
 @Composable
 fun TrainingScreen(
     onBack: () -> Unit,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
+    onOpenHome: () -> Unit = {},
+    onOpenTraining: () -> Unit = {},
+    onOpenChallenges: () -> Unit = {},
+    onOpenProfile: () -> Unit = {}
 ) {
     val bg = Brush.verticalGradient(
         listOf(
@@ -58,24 +64,24 @@ fun TrainingScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
-            .padding(18.dp)
+            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 42.dp)
     ) {
-        // Card grande gris (como tu imagen)
         Surface(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(70.dp),
+            shape = RoundedCornerShape(34.dp),
             color = Color(0xFFD9D9D9),
             shadowElevation = 10.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(22.dp)
+                    .padding(top = 25.dp)
             ) {
-                // Cabecera con Back
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp)
                 ) {
                     TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
                         Text("←", fontSize = 22.sp, color = Color(0xFF2D2D2D))
@@ -89,9 +95,10 @@ fun TrainingScreen(
                     )
                 }
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(14.dp))
 
                 LazyColumn(
+                    modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 12.dp)
                 ) {
@@ -120,6 +127,14 @@ fun TrainingScreen(
                         )
                     }
                 }
+
+                BottomNavBar(
+                    selectedItem = BottomNavItem.TRAINING,
+                    onOpenHome = onOpenHome,
+                    onOpenTraining = onOpenTraining,
+                    onOpenChallenges = onOpenChallenges,
+                    onOpenProfile = onOpenProfile
+                )
             }
         }
     }

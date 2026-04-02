@@ -109,7 +109,7 @@ fun WeekChallengesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 15.dp, bottom = 8.dp),
+                            .padding(top = 6.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -136,7 +136,7 @@ fun WeekChallengesScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 15.dp, bottom = 8.dp),
+                            .padding(top = 12.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -199,7 +199,7 @@ private fun HeaderRow(onBack: () -> Unit) {
             modifier = Modifier.weight(1f)
         )
 
-        Spacer(modifier = Modifier.size(36.dp))
+        Spacer(modifier = Modifier.size(40.dp))
     }
 }
 
