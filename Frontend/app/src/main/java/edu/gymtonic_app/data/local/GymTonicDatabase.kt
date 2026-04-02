@@ -4,28 +4,18 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import edu.gymtonic_app.data.local.localDao.ExerciseDao
-import edu.gymtonic_app.data.local.localDao.FrequestDao
-import edu.gymtonic_app.data.local.localDao.FriendDao
-import edu.gymtonic_app.data.local.localDao.GroupDao
-import edu.gymtonic_app.data.local.localDao.GroupUserDao
-import edu.gymtonic_app.data.local.localDao.MissionDao
-import edu.gymtonic_app.data.local.localDao.RoutineDao
-import edu.gymtonic_app.data.local.localDao.RoutineExerciseDao
-import edu.gymtonic_app.data.local.localDao.UserDao
-import edu.gymtonic_app.data.local.localDao.UserMissionDao
-import edu.gymtonic_app.data.local.localDao.UserRoutineDao
-import edu.gymtonic_app.data.model.ExerciseEntity
-import edu.gymtonic_app.data.model.FrequestEntity
-import edu.gymtonic_app.data.model.FriendEntity
-import edu.gymtonic_app.data.model.GroupEntity
-import edu.gymtonic_app.data.model.GroupUserEntity
-import edu.gymtonic_app.data.model.MissionEntity
-import edu.gymtonic_app.data.model.RoutineEntity
-import edu.gymtonic_app.data.model.RoutineExerciseEntity
-import edu.gymtonic_app.data.model.UserEntity
-import edu.gymtonic_app.data.model.UserMissionEntity
-import edu.gymtonic_app.data.model.UserRoutineEntity
+import edu.gymtonic_app.data.local.dao.*
+import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.local.localModel.FrequestEntity
+import edu.gymtonic_app.data.local.localModel.FriendEntity
+import edu.gymtonic_app.data.local.localModel.GroupEntity
+import edu.gymtonic_app.data.local.localModel.GroupUserEntity
+import edu.gymtonic_app.data.local.localModel.MissionEntity
+import edu.gymtonic_app.data.local.localModel.RoutineEntity
+import edu.gymtonic_app.data.local.localModel.RoutineExerciseEntity
+import edu.gymtonic_app.data.local.localModel.UserEntity
+import edu.gymtonic_app.data.local.localModel.UserMissionEntity
+import edu.gymtonic_app.data.local.localModel.UserRoutineEntity
 
 @Database(
     entities = [

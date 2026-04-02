@@ -1,10 +1,11 @@
 package edu.gymtonic_app.data.remote
 
 import android.util.Log
-import edu.gymtonic_app.data.remote.model.LoginRequest
-import edu.gymtonic_app.data.remote.model.LoginResponse
-import edu.gymtonic_app.data.remote.model.RegisterRequest
-import edu.gymtonic_app.data.remote.model.RegisterResponse
+import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
+import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
+import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
+import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
+import edu.gymtonic_app.data.remote.datasource.services.RetrofitClient
 
 class RemoteDataSource {
     //Para logear

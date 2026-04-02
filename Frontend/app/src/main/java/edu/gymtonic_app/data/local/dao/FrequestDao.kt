@@ -6,7 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Delete
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.model.FrequestEntity
+import edu.gymtonic_app.data.local.localModel.FrequestEntity
 
 @Dao
 interface FrequestDao {

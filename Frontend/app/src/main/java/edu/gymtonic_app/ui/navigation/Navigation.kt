@@ -3,7 +3,7 @@ package edu.gymtonic_app.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import edu.gymtonic_app.ui.screens.RegisterScreen
+import edu.gymtonic_app.ui.screens.register.RegisterScreen
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,16 +15,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import edu.gymtonic_app.data.remote.model.SessionManager
-import edu.gymtonic_app.data.remote.model.sessionDataStore
-import edu.gymtonic_app.ui.screens.FullBodyScreen
-import edu.gymtonic_app.ui.screens.GymTonicLoginScreen
-import edu.gymtonic_app.ui.screens.LoginFormScreen
-import edu.gymtonic_app.ui.screens.MainViewScreen
-import edu.gymtonic_app.ui.screens.TrainingScreen
-import edu.gymtonic_app.viewmodel.HomeViewModel
-import edu.gymtonic_app.viewmodel.LoginViewModel
-import edu.gymtonic_app.viewmodel.RegisterViewModel
+import edu.gymtonic_app.data.remote.datasource.model.Login.SessionManager
+import edu.gymtonic_app.data.remote.datasource.model.Login.sessionDataStore
+import edu.gymtonic_app.ui.screens.routines.FullBodyScreen
+import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
+import edu.gymtonic_app.ui.screens.login.LoginFormScreen
+import edu.gymtonic_app.ui.screens.home.MainViewScreen
+import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
+import edu.gymtonic_app.ui.viewmodel.HomeViewModel
+import edu.gymtonic_app.ui.viewmodel.LoginViewModel
+import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 
 @Composable
 fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {

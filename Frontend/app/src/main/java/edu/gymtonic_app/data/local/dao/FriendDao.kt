@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.model.FriendEntity
+import edu.gymtonic_app.data.local.localModel.FriendEntity
 
 @Dao
 interface FriendDao {

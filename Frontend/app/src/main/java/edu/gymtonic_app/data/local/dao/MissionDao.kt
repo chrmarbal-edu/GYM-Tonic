@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.model.MissionEntity
+import edu.gymtonic_app.data.local.localModel.MissionEntity
 
 @Dao
 interface MissionDao {

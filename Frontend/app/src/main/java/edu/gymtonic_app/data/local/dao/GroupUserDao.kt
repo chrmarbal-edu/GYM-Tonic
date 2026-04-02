@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.model.GroupUserEntity
+import edu.gymtonic_app.data.local.localModel.GroupUserEntity
 
 @Dao
 interface GroupUserDao {
