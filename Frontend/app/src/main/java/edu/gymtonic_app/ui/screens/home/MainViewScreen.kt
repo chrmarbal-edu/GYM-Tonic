@@ -37,16 +37,11 @@ fun MainViewScreen(
     onLogout : () -> Unit,
     onOpenTraining: () -> Unit,
     onOpenTechnogym: () -> Unit,
-    onOpenMusic: () -> Unit,
     onOpenDiscounts: () -> Unit,
-    onOpenCoach: () -> Unit,
     onOpenFindGym: () -> Unit,
     onOpenClientArea: () -> Unit,
-    onOpenQr: () -> Unit,
     onInviteFriend: () -> Unit,
-    onOpenBookings: () -> Unit,
-    onOpenWhatsapp: () -> Unit,
-    onOpenInstagram: () -> Unit,
+    onOpenMissions: () -> Unit
 ) {
 
     val bg = Brush.verticalGradient(
@@ -58,25 +53,23 @@ fun MainViewScreen(
     )
 
     val actions = listOf(
-        HomeAction("Entrenamientos", Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
+        HomeAction("Entrenamientos Predefinidos", Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
+        HomeAction("Crear Entrenamientos", Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
         HomeAction("Technogym App", Icons.Outlined.Devices, onClick = onOpenTechnogym),
-        HomeAction("Música del club", Icons.Outlined.MusicNote, onClick = onOpenMusic),
+
         HomeAction("Descuentos", Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
-        HomeAction("Entrenador Personal", Icons.Outlined.Person, onClick = onOpenCoach),
+        HomeAction("Desafios", Icons.Outlined.EventAvailable, onClick = onOpenMissions),
+
         HomeAction("Encontrar gimnasio", Icons.Outlined.LocationOn, onClick = onOpenFindGym),
         HomeAction("Mi espacio cliente", Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
-        HomeAction("Código QR", Icons.Outlined.QrCode2, highlight = true, onClick = onOpenQr),
-        HomeAction("Invitar amigo", Icons.Outlined.GroupAdd, onClick = onInviteFriend),
-        HomeAction("Reservas", Icons.Outlined.EventAvailable, onClick = onOpenBookings),
-        HomeAction("WhatsApp", Icons.Outlined.Chat, onClick = onOpenWhatsapp),
-        HomeAction("Instagram", Icons.Outlined.CameraAlt, onClick = onOpenInstagram),
+        HomeAction("Chat", Icons.Outlined.GroupAdd, onClick = onInviteFriend),
     )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
-            .padding(18.dp)
+            .padding(start = 18.dp, end = 18.dp, bottom = 18.dp, top = 50.dp)
     ) {
 
         // ---------------- HEADER ----------------
@@ -116,7 +109,7 @@ fun MainViewScreen(
             }
         }
 
-        Spacer(Modifier.height(26.dp))
+        Spacer(Modifier.height(35.dp))
 
         // ---------------- GRID ----------------
 

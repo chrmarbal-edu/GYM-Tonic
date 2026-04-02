@@ -13,4 +13,6 @@ object Routes {
     const val TRAINING = "training_screen"
 
     const val EXERCISES = "exercises_screen"
+
+    const val WEEK = "week_challenges"
 }

@@ -22,6 +22,7 @@ import edu.gymtonic_app.ui.screens.routines.FullBodyScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
+import edu.gymtonic_app.ui.screens.home.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
@@ -104,16 +105,27 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 },
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
                 onOpenTechnogym = { },
-                onOpenMusic = { },
                 onOpenDiscounts = { },
-                onOpenCoach = { },
                 onOpenFindGym = { },
                 onOpenClientArea = { },
-                onOpenQr = { },
                 onInviteFriend = { },
-                onOpenBookings = { },
-                onOpenWhatsapp = { },
-                onOpenInstagram = { }
+                onOpenMissions = { navController.navigate(Routes.WEEK) },
+            )
+        }
+
+        composable(Routes.WEEK) {
+            WeekChallengesScreen(
+                onBack = { navController.popBackStack() },
+                onOpenHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                onOpenTraining = { navController.navigate(Routes.TRAINING) },
+                onOpenChallenges = { },
+                onOpenProfile = { },
+                onShowMoreCalendar = { }
             )
         }
 
