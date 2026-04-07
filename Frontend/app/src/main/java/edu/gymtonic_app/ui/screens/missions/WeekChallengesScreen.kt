@@ -12,15 +12,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,13 +46,16 @@ data class WeeklyGoalUi(
 )
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun WeekChallengesScreen(
     onBack: () -> Unit,
     onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
-    onShowMoreCalendar: () -> Unit
+    onShowMoreCalendar: () -> Unit,
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {}
 ) {
     val bg = Brush.verticalGradient(
         listOf(
@@ -98,65 +105,74 @@ fun WeekChallengesScreen(
             ) {
                 HeaderRow(onBack = onBack)
 
-                Column(
+                PullToRefreshBox(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(horizontal = 14.dp)
+                        .padding(horizontal = 14.dp),
+                    isRefreshing = isRefreshing,
+                    // El refresh recarga el contenido principal semanal desde el contenedor/ViewModel.
+                    onRefresh = onRefresh
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 6.dp, bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Objetivos semanales",
-                            color = Color(0xFF2D2D2D),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Text(
-                            text = "0/3 Logrados",
-                            color = Color(0xFF2D2D2D),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp
-                        )
-                    }
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 6.dp, bottom = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Objetivos semanales",
+                                    color = Color(0xFF2D2D2D),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp
+                                )
+                                Text(
+                                    text = "0/3 Logrados",
+                                    color = Color(0xFF2D2D2D),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
 
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        goals.forEach { goal ->
+                        items(goals) { goal ->
                             GoalCard(goal = goal)
                         }
-                    }
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp, bottom = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Mi Calendario",
-                            color = Color(0xFF2D2D2D),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        Text(
-                            text = "Mostrar mas",
-                            color = Color(0xFF3A42B9),
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp,
-                            modifier = Modifier
-                                .clickable { onShowMoreCalendar() }
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color.Transparent)
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
-                        )
-                    }
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp, bottom = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Mi Calendario",
+                                    color = Color(0xFF2D2D2D),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp
+                                )
+                                Text(
+                                    text = "Mostrar mas",
+                                    color = Color(0xFF3A42B9),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier
+                                        .clickable { onShowMoreCalendar() }
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.Transparent)
+                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
 
-                    CalendarCard()
+                        item {
+                            CalendarCard()
+                        }
+                    }
                 }
 
                 BottomNavBar(

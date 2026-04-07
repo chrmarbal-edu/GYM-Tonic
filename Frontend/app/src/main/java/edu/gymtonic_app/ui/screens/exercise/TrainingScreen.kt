@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,8 +24,10 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,13 +100,16 @@ private fun trainingCategoriesFromBackendMock(): List<TrainingCategoryUi> {
 }
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(
     onBack: () -> Unit,
     onSelect: (String) -> Unit,
     onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
-    onOpenProfile: () -> Unit = {}
+    onOpenProfile: () -> Unit = {},
+    isRefreshing: Boolean = false,
+    onRefresh: () -> Unit = {}
 ) {
     val bg = Brush.verticalGradient(
         listOf(
@@ -138,23 +142,29 @@ fun TrainingScreen(
 
                 Spacer(Modifier.height(14.dp))
 
-                LazyColumn(
+                PullToRefreshBox(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 12.dp)
+                    isRefreshing = isRefreshing,
+                    // El refresh lo dispara la pantalla/contenedor (ViewModel en siguiente paso).
+                    onRefresh = onRefresh
                 ) {
-                    items(
-                        items = categories,
-                        key = { category -> category.id }
-                    ) { category ->
-                        TrainingSection(
-                            title = category.title,
-                            routines = category.routines,
-                            onSelect = onSelect
-                        )
-                    }
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(bottom = 12.dp),
+                        content = {
+                            for (category in categories) {
+                                item(key = category.id) {
+                                    TrainingSection(
+                                        title = category.title,
+                                        routines = category.routines,
+                                        onSelect = onSelect
+                                    )
+                                }
+                            }
+                        }
+                    )
                 }
 
                 BottomNavBar(
