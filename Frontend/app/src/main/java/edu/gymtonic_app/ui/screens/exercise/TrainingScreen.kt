@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
@@ -39,11 +42,61 @@ import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
 
-data class TrainingOption(
+// routineId es la clave que vendrá del backend y se usa para enlazar con rutas de screens/routines.
+data class TrainingRoutineUi(
     val id: String,
     val title: String,
     val imageRes: Int
 )
+
+// Cada categoría también llega del backend con una lista dinámica de rutinas.
+data class TrainingCategoryUi(
+    val id: String,
+    val title: String,
+    val routines: List<TrainingRoutineUi>
+)
+
+private fun trainingCategoriesFromBackendMock(): List<TrainingCategoryUi> {
+    // Mock temporal: cuando se conecte el back, esta estructura debe venir del repositorio/ViewModel.
+    return listOf(
+        TrainingCategoryUi(
+            id = "recent",
+            title = "Recientes",
+            routines = listOf(
+                TrainingRoutineUi("back", "Espalda", R.drawable.espalda),
+                TrainingRoutineUi("fullbody", "Full Body", R.drawable.fullbody),
+                TrainingRoutineUi("push", "Empujes", R.drawable.pushup)
+            )
+        ),
+        TrainingCategoryUi(
+            id = "beginners",
+            title = "Para Principiantes",
+            routines = listOf(
+                TrainingRoutineUi("stretch", "Estiramientos", R.drawable.estiramientos),
+                TrainingRoutineUi("arm", "Brazo", R.drawable.brazo),
+                TrainingRoutineUi("calves", "Gemelos", R.drawable.pierna)
+            )
+        ),
+        TrainingCategoryUi(
+            id = "muscle_groups",
+            title = "Por Grupo Muscular",
+            routines = listOf(
+                TrainingRoutineUi("calves", "Gemelos", R.drawable.pierna),
+                TrainingRoutineUi("arm", "Brazo", R.drawable.brazo),
+                TrainingRoutineUi("back", "Espalda", R.drawable.espalda)
+            )
+        ),
+        TrainingCategoryUi(
+            id = "recommended",
+            title = "Recomendados",
+            routines = listOf(
+                TrainingRoutineUi("fullbody", "Full Body", R.drawable.fullbody),
+                TrainingRoutineUi("push", "Empujes", R.drawable.pushup),
+                TrainingRoutineUi("stretch", "Estiramientos", R.drawable.estiramientos)
+            )
+        )
+    )
+}
 
 @Composable
 fun TrainingScreen(
@@ -62,18 +115,7 @@ fun TrainingScreen(
         )
     )
 
-    val recent = listOf(
-        TrainingOption("back", "Espalda", R.drawable.espalda),
-        TrainingOption("fullbody", "Full Body", R.drawable.fullbody)
-    )
-    val beginners = listOf(
-        TrainingOption("stretch", "Estiramientos", R.drawable.estiramientos),
-        TrainingOption("push", "Empujes", R.drawable.pushup)
-    )
-    val muscle = listOf(
-        TrainingOption("calves", "Gemelos", R.drawable.pierna),
-        TrainingOption("arm", "Brazo", R.drawable.brazo)
-    )
+    val categories = trainingCategoriesFromBackendMock()
 
     Box(
         modifier = Modifier
@@ -103,27 +145,13 @@ fun TrainingScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(bottom = 12.dp)
                 ) {
-                    item {
+                    items(
+                        items = categories,
+                        key = { category -> category.id }
+                    ) { category ->
                         TrainingSection(
-                            title = "Recientes",
-                            left = recent[0],
-                            right = recent[1],
-                            onSelect = onSelect
-                        )
-                    }
-                    item {
-                        TrainingSection(
-                            title = "Para Principiantes",
-                            left = beginners[0],
-                            right = beginners[1],
-                            onSelect = onSelect
-                        )
-                    }
-                    item {
-                        TrainingSection(
-                            title = "Por Grupo Muscular",
-                            left = muscle[0],
-                            right = muscle[1],
+                            title = category.title,
+                            routines = category.routines,
                             onSelect = onSelect
                         )
                     }
@@ -141,35 +169,6 @@ fun TrainingScreen(
     }
 }
 
-/*@Composable
-private fun TrainingHeaderRow(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = "Volver",
-                tint = Color(0xFF2D2D2D)
-            )
-        }
-
-        Text(
-            text = "Entrenamientos",
-            color = Color(0xFF1D1D1D),
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 26.sp,
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.size(40.dp))
-    }
-}
-*/
 @Composable
 private fun TrainingHeaderRow(onBack: () -> Unit) {
     Box(
@@ -203,8 +202,7 @@ private fun TrainingHeaderRow(onBack: () -> Unit) {
 @Composable
 private fun TrainingSection(
     title: String,
-    left: TrainingOption,
-    right: TrainingOption,
+    routines: List<TrainingRoutineUi>,
     onSelect: (String) -> Unit
 ) {
     Column {
@@ -216,27 +214,28 @@ private fun TrainingSection(
         )
         Spacer(Modifier.height(10.dp))
 
-        Row(
+        LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+            contentPadding = PaddingValues(end = 4.dp)
         ) {
-            TrainingCard(option = left, onSelect = onSelect, modifier = Modifier.weight(1f))
-            TrainingCard(option = right, onSelect = onSelect, modifier = Modifier.weight(1f))
-
-            Text(
-                text = "→",
-                fontSize = 20.sp,
-                color = Color(0xFF2D2D2D),
-                modifier = Modifier.padding(start = 2.dp)
-            )
+            items(
+                items = routines,
+                key = { routine -> routine.id }
+            ) { routine ->
+                TrainingCard(
+                    option = routine,
+                    onSelect = onSelect,
+                    modifier = Modifier.width(150.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun TrainingCard(
-    option: TrainingOption,
+    option: TrainingRoutineUi,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {

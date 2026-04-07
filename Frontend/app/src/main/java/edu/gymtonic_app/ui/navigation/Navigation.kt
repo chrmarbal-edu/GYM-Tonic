@@ -14,11 +14,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import edu.gymtonic_app.data.remote.datasource.model.Login.SessionManager
 import edu.gymtonic_app.data.remote.datasource.model.Login.sessionDataStore
 import edu.gymtonic_app.ui.screens.routines.FullBodyScreen
+import edu.gymtonic_app.ui.screens.routines.ArmScreen
+import edu.gymtonic_app.ui.screens.routines.BackScreen
+import edu.gymtonic_app.ui.screens.routines.CalvesScreen
+import edu.gymtonic_app.ui.screens.routines.PushScreen
+import edu.gymtonic_app.ui.screens.routines.StretchScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
@@ -132,7 +139,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.TRAINING) {
             TrainingScreen(
                 onBack = { navController.popBackStack() },
-                onSelect = { navController.navigate(Routes.EXERCISES) },
+                // Cada card envía el routineId (backend) y se construye una ruta dinámica a screens/routines.
+                onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
                 onOpenHome = {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.HOME) { inclusive = false }
@@ -143,6 +151,29 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenChallenges = { navController.navigate(Routes.WEEK) },
                 onOpenProfile = { }
             )
+        }
+
+        composable(
+            route = Routes.ROUTINE_DETAIL,
+            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val routineId = backStackEntry.arguments?.getString("routineId").orEmpty()
+
+            // Este when es el punto de enlace entre IDs del backend y pantallas reales en screens/routines.
+            // A medida que se creen nuevas pantallas (Espalda, Brazo, etc), se añade aquí su destino.
+            when (routineId) {
+                "fullbody" -> FullBodyScreen(onBack = { navController.popBackStack() })
+                "back" -> BackScreen(onBack = { navController.popBackStack() })
+                "push" -> PushScreen(onBack = { navController.popBackStack() })
+                "stretch" -> StretchScreen(onBack = { navController.popBackStack() })
+                "arm" -> ArmScreen(onBack = { navController.popBackStack() })
+                "calves" -> CalvesScreen(onBack = { navController.popBackStack() })
+
+                else -> {
+                    // Fallback temporal para IDs aún no implementados en una screen específica.
+                    FullBodyScreen(onBack = { navController.popBackStack() })
+                }
+            }
         }
 
         composable(Routes.EXERCISES) {
