@@ -140,6 +140,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = { },
                 onShowMoreCalendar = { },
                 goals = weekUiState.value.goals,
+                calendarDays = weekUiState.value.calendarDays,
                 achievedLabel = weekUiState.value.achievedLabel,
                 isRefreshing = weekUiState.value.isRefreshing,
                 onRefresh = { weekChallengesViewModel.refreshWeekGoals() }

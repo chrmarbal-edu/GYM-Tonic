@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.viewmodel.CalendarDayUi
+import edu.gymtonic_app.ui.viewmodel.CalendarDayUiStatus
 import edu.gymtonic_app.ui.viewmodel.WeeklyGoalUi
 
 @Composable
@@ -49,6 +51,7 @@ fun WeekChallengesScreen(
     onOpenProfile: () -> Unit,
     onShowMoreCalendar: () -> Unit,
     goals: List<WeeklyGoalUi> = emptyList(),
+    calendarDays: List<CalendarDayUi> = emptyList(),
     achievedLabel: String = "0/0 Logrados",
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
@@ -145,7 +148,7 @@ fun WeekChallengesScreen(
                         }
 
                         item {
-                            CalendarCard()
+                            CalendarCard(days = calendarDays)
                         }
                     }
                 }
@@ -250,13 +253,10 @@ private fun GoalCard(goal: WeeklyGoalUi) {
 }
 
 @Composable
-private fun CalendarCard() {
-    val weekColors = listOf(
-        Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFFFF1A1A), Color(0xFFFF1A1A),
-        Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFFFF1A1A),
-        Color(0xFF22FF19), Color(0xFFFF1A1A), Color(0xFF22FF19), Color(0xFF66D9FF), Color(0xFFD0D3DB), Color(0xFFD0D3DB), Color(0xFFD0D3DB),
-        Color(0xFFD0D3DB), Color(0xFFD0D3DB), Color(0xFFD0D3DB), Color(0xFFD0D3DB), Color(0xFFD0D3DB), Color(0xFFD0D3DB), Color(0xFFD0D3DB)
-    )
+private fun CalendarCard(days: List<CalendarDayUi>) {
+    val doneColor = Color(0xFF22FF19)
+    val missedColor = Color(0xFFFF1A1A)
+    val pendingColor = Color(0xFFD0D3DB)
 
     Surface(
         modifier = Modifier
@@ -278,12 +278,17 @@ private fun CalendarCard() {
                 ) {
                     for (col in 0 until 7) {
                         val colorIndex = row * 7 + col
+                        val dayColor = when (days.getOrNull(colorIndex)?.status) {
+                            CalendarDayUiStatus.DONE -> doneColor
+                            CalendarDayUiStatus.MISSED -> missedColor
+                            else -> pendingColor
+                        }
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(24.dp)
                                 .clip(RoundedCornerShape(2.dp))
-                                .background(weekColors[colorIndex])
+                                .background(dayColor)
                         )
                     }
                 }

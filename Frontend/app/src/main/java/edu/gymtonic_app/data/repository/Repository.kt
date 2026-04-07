@@ -1,6 +1,7 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.RemoteDataSource
+import edu.gymtonic_app.data.remote.RemoteCalendarDay
 import edu.gymtonic_app.data.remote.RemoteTrainingCategory
 import edu.gymtonic_app.data.remote.RemoteWeeklyGoal
 import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
@@ -37,6 +38,12 @@ class Repository(
     suspend fun getWeeklyGoals(): Result<List<RemoteWeeklyGoal>> {
         return runCatching {
             remoteDataSource.getWeeklyGoals()
+        }
+    }
+
+    suspend fun getWeeklyCalendarDays(): Result<List<RemoteCalendarDay>> {
+        return runCatching {
+            remoteDataSource.getWeeklyCalendarDays()
         }
     }
 }

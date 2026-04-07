@@ -26,6 +26,12 @@ data class RemoteWeeklyGoal(
     val progress: Float
 )
 
+data class RemoteCalendarDay(
+    val dayIndex: Int,
+    val didWorkout: Boolean,
+    val isClosedDay: Boolean
+)
+
 class RemoteDataSource {
     //Para logear
     private val TAG = RemoteDataSource::class.java.simpleName
@@ -127,6 +133,40 @@ class RemoteDataSource {
                 pointsLabel = "+ 50 pts",
                 progress = 0.50f
             )
+        )
+    }
+
+    suspend fun getWeeklyCalendarDays(): List<RemoteCalendarDay> {
+        // dayIndex 0..27 para una grilla de 4x7.
+        return listOf(
+            RemoteCalendarDay(0, true, true),
+            RemoteCalendarDay(1, false, true),
+            RemoteCalendarDay(2, true, true),
+            RemoteCalendarDay(3, true, true),
+            RemoteCalendarDay(4, false, true),
+            RemoteCalendarDay(5, false, true),
+            RemoteCalendarDay(6, false, true),
+            RemoteCalendarDay(7, false, true),
+            RemoteCalendarDay(8, true, true),
+            RemoteCalendarDay(9, true, true),
+            RemoteCalendarDay(10, false, true),
+            RemoteCalendarDay(11, true, true),
+            RemoteCalendarDay(12, false, true),
+            RemoteCalendarDay(13, false, true),
+            RemoteCalendarDay(14, true, true),
+            RemoteCalendarDay(15, false, true),
+            RemoteCalendarDay(16, true, true),
+            RemoteCalendarDay(17, false, false),
+            RemoteCalendarDay(18, false, false),
+            RemoteCalendarDay(19, false, false),
+            RemoteCalendarDay(20, false, false),
+            RemoteCalendarDay(21, false, false),
+            RemoteCalendarDay(22, false, false),
+            RemoteCalendarDay(23, false, false),
+            RemoteCalendarDay(24, false, false),
+            RemoteCalendarDay(25, false, false),
+            RemoteCalendarDay(26, false, false),
+            RemoteCalendarDay(27, false, false)
         )
     }
 }
