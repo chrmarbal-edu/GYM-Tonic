@@ -39,65 +39,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
-
-// routineId es la clave que vendrá del backend y se usa para enlazar con rutas de screens/routines.
-data class TrainingRoutineUi(
-    val id: String,
-    val title: String,
-    val imageRes: Int
-)
-
-// Cada categoría también llega del backend con una lista dinámica de rutinas.
-data class TrainingCategoryUi(
-    val id: String,
-    val title: String,
-    val routines: List<TrainingRoutineUi>
-)
-
-private fun trainingCategoriesFromBackendMock(): List<TrainingCategoryUi> {
-    // Mock temporal: cuando se conecte el back, esta estructura debe venir del repositorio/ViewModel.
-    return listOf(
-        TrainingCategoryUi(
-            id = "recent",
-            title = "Recientes",
-            routines = listOf(
-                TrainingRoutineUi("back", "Espalda", R.drawable.espalda),
-                TrainingRoutineUi("fullbody", "Full Body", R.drawable.fullbody),
-                TrainingRoutineUi("push", "Empujes", R.drawable.pushup)
-            )
-        ),
-        TrainingCategoryUi(
-            id = "beginners",
-            title = "Para Principiantes",
-            routines = listOf(
-                TrainingRoutineUi("stretch", "Estiramientos", R.drawable.estiramientos),
-                TrainingRoutineUi("arm", "Brazo", R.drawable.brazo),
-                TrainingRoutineUi("calves", "Gemelos", R.drawable.pierna)
-            )
-        ),
-        TrainingCategoryUi(
-            id = "muscle_groups",
-            title = "Por Grupo Muscular",
-            routines = listOf(
-                TrainingRoutineUi("calves", "Gemelos", R.drawable.pierna),
-                TrainingRoutineUi("arm", "Brazo", R.drawable.brazo),
-                TrainingRoutineUi("back", "Espalda", R.drawable.espalda)
-            )
-        ),
-        TrainingCategoryUi(
-            id = "recommended",
-            title = "Recomendados",
-            routines = listOf(
-                TrainingRoutineUi("fullbody", "Full Body", R.drawable.fullbody),
-                TrainingRoutineUi("push", "Empujes", R.drawable.pushup),
-                TrainingRoutineUi("stretch", "Estiramientos", R.drawable.estiramientos)
-            )
-        )
-    )
-}
+import edu.gymtonic_app.ui.viewmodel.TrainingCategoryUi
+import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,6 +53,7 @@ fun TrainingScreen(
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    categories: List<TrainingCategoryUi> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
@@ -118,8 +64,6 @@ fun TrainingScreen(
             Color(0xFF2A3344)
         )
     )
-
-    val categories = trainingCategoriesFromBackendMock()
 
     Box(
         modifier = Modifier
