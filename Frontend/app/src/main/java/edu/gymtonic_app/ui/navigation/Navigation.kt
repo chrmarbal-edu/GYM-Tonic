@@ -35,6 +35,7 @@ import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 import edu.gymtonic_app.ui.viewmodel.TrainingScreenViewModel
+import edu.gymtonic_app.ui.viewmodel.WeekChallengesViewModel
 
 @Composable
 fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {
@@ -46,9 +47,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
     val registerViewModel: RegisterViewModel = viewModel()
     val homeViewModel : HomeViewModel = viewModel()
     val trainingViewModel: TrainingScreenViewModel = viewModel()
+    val weekChallengesViewModel: WeekChallengesViewModel = viewModel()
 
     val sessionState = sessionManager.sessionFlow.collectAsState(initial = null)
     val trainingUiState = trainingViewModel.uiState.collectAsState()
+    val weekUiState = weekChallengesViewModel.uiState.collectAsState()
 
     val startRoute = when {
         sessionState.value == null -> null
@@ -135,7 +138,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
                 onOpenChallenges = { },
                 onOpenProfile = { },
-                onShowMoreCalendar = { }
+                onShowMoreCalendar = { },
+                goals = weekUiState.value.goals,
+                achievedLabel = weekUiState.value.achievedLabel,
+                isRefreshing = weekUiState.value.isRefreshing,
+                onRefresh = { weekChallengesViewModel.refreshWeekGoals() }
             )
         }
 

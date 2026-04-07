@@ -14,92 +14,86 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class TrainingRoutineUi(
-	val id: String,
-	val title: String,
-	val imageRes: Int
+    val id: String,
+    val title: String,
+    val imageRes: Int
 )
 
 data class TrainingCategoryUi(
-	val id: String,
-	val title: String,
-	val routines: List<TrainingRoutineUi>
+    val id: String,
+    val title: String,
+    val routines: List<TrainingRoutineUi>
 )
 
 data class TrainingUiState(
-	val categories: List<TrainingCategoryUi> = emptyList(),
-	val isRefreshing: Boolean = false
+    val categories: List<TrainingCategoryUi> = emptyList(),
+    val isRefreshing: Boolean = false,
+    val errorMessage: String? = null
 )
 
 class TrainingScreenViewModel(application: Application) : AndroidViewModel(application) {
-	// Igual que HomeViewModel, dejamos la capa de datos preparada para conectar backend real.
-	val remoteDataSource: RemoteDataSource = RemoteDataSource()
-	val repository: Repository = Repository(remoteDataSource)
+    val remoteDataSource: RemoteDataSource = RemoteDataSource()
+    val repository: Repository = Repository(remoteDataSource)
 
-	private val _uiState = MutableStateFlow(TrainingUiState())
-	val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(TrainingUiState())
+    val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
 
-	init {
-		loadCategories()
-	}
+    init {
+        loadCategories()
+    }
 
-	fun refreshCategories() {
-		viewModelScope.launch {
-			_uiState.update { it.copy(isRefreshing = true) }
+    fun refreshCategories() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isRefreshing = true) }
+            delay(700)
+            loadCategories()
+        }
+    }
 
-			// Simulacion temporal: cuando exista endpoint real, aqui ira la llamada al repo.
-			delay(700)
-			loadCategories()
+    private fun loadCategories() {
+        viewModelScope.launch {
+            repository.getTrainingCategories()
+                .onSuccess { remoteCategories ->
+                    _uiState.update {
+                        it.copy(
+                            categories = remoteCategories.map { category ->
+                                TrainingCategoryUi(
+                                    id = category.id,
+                                    title = category.title,
+                                    routines = category.routines.map { routine ->
+                                        TrainingRoutineUi(
+                                            id = routine.id,
+                                            title = routine.title,
+                                            imageRes = imageResFromKey(routine.imageKey)
+                                        )
+                                    }
+                                )
+                            },
+                            isRefreshing = false,
+                            errorMessage = null
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isRefreshing = false,
+                            errorMessage = error.message ?: "No se pudo cargar entrenamientos"
+                        )
+                    }
+                }
+        }
+    }
 
-			_uiState.update { it.copy(isRefreshing = false) }
-		}
-	}
-
-	private fun loadCategories() {
-		_uiState.update {
-			it.copy(categories = trainingCategoriesFromBackendMock())
-		}
-	}
-
-	private fun trainingCategoriesFromBackendMock(): List<TrainingCategoryUi> {
-		// Mock temporal para desacoplar la vista; se reemplaza por datos de backend sin tocar TrainingScreen.
-		return listOf(
-			TrainingCategoryUi(
-				id = "recent",
-				title = "Recientes",
-				routines = listOf(
-					TrainingRoutineUi("back", "Espalda", R.drawable.espalda),
-					TrainingRoutineUi("fullbody", "Full Body", R.drawable.fullbody),
-					TrainingRoutineUi("push", "Empujes", R.drawable.pushup)
-				)
-			),
-			TrainingCategoryUi(
-				id = "beginners",
-				title = "Para Principiantes",
-				routines = listOf(
-					TrainingRoutineUi("stretch", "Estiramientos", R.drawable.estiramientos),
-					TrainingRoutineUi("arm", "Brazo", R.drawable.brazo),
-					TrainingRoutineUi("calves", "Gemelos", R.drawable.pierna)
-				)
-			),
-			TrainingCategoryUi(
-				id = "muscle_groups",
-				title = "Por Grupo Muscular",
-				routines = listOf(
-					TrainingRoutineUi("calves", "Gemelos", R.drawable.pierna),
-					TrainingRoutineUi("arm", "Brazo", R.drawable.brazo),
-					TrainingRoutineUi("back", "Espalda", R.drawable.espalda)
-				)
-			),
-			TrainingCategoryUi(
-				id = "recommended",
-				title = "Recomendados",
-				routines = listOf(
-					TrainingRoutineUi("fullbody", "Full Body", R.drawable.fullbody),
-					TrainingRoutineUi("push", "Empujes", R.drawable.pushup),
-					TrainingRoutineUi("stretch", "Estiramientos", R.drawable.estiramientos)
-				)
-			)
-		)
-	}
+    private fun imageResFromKey(imageKey: String): Int {
+        return when (imageKey) {
+            "espalda" -> R.drawable.espalda
+            "fullbody" -> R.drawable.fullbody
+            "pushup" -> R.drawable.pushup
+            "estiramientos" -> R.drawable.estiramientos
+            "brazo" -> R.drawable.brazo
+            "pierna" -> R.drawable.pierna
+            else -> R.drawable.fullbody
+        }
+    }
 }
-

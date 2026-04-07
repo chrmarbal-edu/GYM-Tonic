@@ -37,13 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
-
-data class WeeklyGoalUi(
-    val title: String,
-    val progressLabel: String,
-    val pointsLabel: String,
-    val progress: Float
-)
+import edu.gymtonic_app.ui.viewmodel.WeeklyGoalUi
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +48,8 @@ fun WeekChallengesScreen(
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     onShowMoreCalendar: () -> Unit,
+    goals: List<WeeklyGoalUi> = emptyList(),
+    achievedLabel: String = "0/0 Logrados",
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
@@ -62,27 +58,6 @@ fun WeekChallengesScreen(
             Color(0xFF1F3F73),
             Color(0xFF3A2F7A),
             Color(0xFF2A3344)
-        )
-    )
-
-    val goals = listOf(
-        WeeklyGoalUi(
-            title = "Entrenar 5 dias a la semana",
-            progressLabel = "2/5",
-            pointsLabel = "+ 300 pts",
-            progress = 0.40f
-        ),
-        WeeklyGoalUi(
-            title = "Quemar 1000 kcal",
-            progressLabel = "882/1000",
-            pointsLabel = "+ 120 pts",
-            progress = 0.88f
-        ),
-        WeeklyGoalUi(
-            title = "Manten la racha 2 dias seguidos",
-            progressLabel = "1/2",
-            pointsLabel = "+ 50 pts",
-            progress = 0.50f
         )
     )
 
@@ -129,7 +104,7 @@ fun WeekChallengesScreen(
                                     fontSize = 20.sp
                                 )
                                 Text(
-                                    text = "0/3 Logrados",
+                                    text = achievedLabel,
                                     color = Color(0xFF2D2D2D),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 11.sp

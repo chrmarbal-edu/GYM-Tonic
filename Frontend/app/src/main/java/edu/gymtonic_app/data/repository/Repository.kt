@@ -1,6 +1,8 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.RemoteDataSource
+import edu.gymtonic_app.data.remote.RemoteTrainingCategory
+import edu.gymtonic_app.data.remote.RemoteWeeklyGoal
 import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
 import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
 import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
@@ -23,6 +25,18 @@ class Repository(
     suspend fun logout(): Result<Unit> {
         return runCatching {
             remoteDataSource.logout()
+        }
+    }
+
+    suspend fun getTrainingCategories(): Result<List<RemoteTrainingCategory>> {
+        return runCatching {
+            remoteDataSource.getTrainingCategories()
+        }
+    }
+
+    suspend fun getWeeklyGoals(): Result<List<RemoteWeeklyGoal>> {
+        return runCatching {
+            remoteDataSource.getWeeklyGoals()
         }
     }
 }
