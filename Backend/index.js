@@ -1,7 +1,6 @@
 // <============ CONSTANTES Y DEPENDENCIAS ============>
 require("dotenv").config() // npm i dotenv
 const methodOverride = require("method-override") // npm i method-override
-const session = require("express-session") // npm i express-session
 const express = require("express") // npm i express
 const app = express()
 const port = process.env.PORT || process.env.PUERTO
@@ -12,18 +11,7 @@ const missionRoutes = require("./routes/missions.routes")
 const routinesRoutes = require("./routes/routines.routes")
 const groupRoutes = require("./routes/groups.routes")
 const exercisesRoutes = require("./routes/exercises.routes")
-
-// <============ COOKIE DE SESIÓN ============>
-app.use(session({
-    name: "gymtonic",
-    secret: process.env.SECRET_SESSION,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        httpOnly: true,
-        sameSite: "none"
-    }
-}))
+const friendsRoutes = require("./routes/friends.routes")
 
 // <============ CONFIGURACIÓN SERVIDOR ============>
 app.use(express.urlencoded({extended: true})) // Leer Datos req.body
@@ -37,6 +25,7 @@ app.use(`/api/${process.env.API_VERSION}/missions`, missionRoutes)
 app.use(`/api/${process.env.API_VERSION}/routines`, routinesRoutes)
 app.use(`/api/${process.env.API_VERSION}/groups`, groupRoutes)
 app.use(`/api/${process.env.API_VERSION}/exercises`, exercisesRoutes)
+app.use(`/api/${process.env.API_VERSION}/exercises`, friendsRoutes)
 
 // <============ MANEJADOR DE ERRORES ============>
 app.use(errorHandlerMW.errorHandler)
@@ -66,7 +55,10 @@ app.listen(port, () => {
     
     console.log("<============= EXERCISES =============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/exercises`)
-
     console.log()
 
+    console.log("<============= FRIENDS =============>")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/friends`)
+
+    console.log()
 })

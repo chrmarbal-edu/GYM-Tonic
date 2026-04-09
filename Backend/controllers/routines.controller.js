@@ -44,7 +44,7 @@ exports.findAllRoutinesCSR = wrapAsync(async function (req,res,next) {
 exports.findRoutineByIdCSR = wrapAsync(async function (req,res,next){
     // Traemos por parámetro el id enviado como parámetro por la ruta.
     const {id} = req.params
-    const userLogued = req.session.userLogued.data;
+    const userLogued = req.userLogued;
     // Espera una promesa de lo que devuelva la función "findById" del modelo.
     if(!userLogued){
         return next(new AppError("No estás registrado!", 403))

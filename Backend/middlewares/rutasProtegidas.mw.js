@@ -1,7 +1,7 @@
 const AppError = require("../utils/AppError")
 
 const checkRole = (req, role) =>{
-    if(req.session && req.session.userLogued && req.session.userLogued.data && req.session.userLogued.data.user_role && req.session.userLogued.data.user_role == role){
+    if(req && req.userLogued && req.userLogued && req.userLogued.user_role && req.userLogued.user_role == role){
         return true
     }else{
         return false

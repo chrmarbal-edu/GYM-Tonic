@@ -21,7 +21,7 @@ exports.findAllUsers = wrapAsync(async function (req,res,next) {
         if(err){
             next(new AppError(err,400))
         } else{                
-            const userLogued = req.session.userLogued.data
+            const userLogued = req.userLogued
 
             if(userLogued.user_role != 1){
                 return next(new AppError("No tienes permiso para realizar esta petición", 403))
@@ -35,7 +35,7 @@ exports.findAllUsers = wrapAsync(async function (req,res,next) {
 /* <=============================== FIND USER BY ID ===============================> */
 exports.findUserById = wrapAsync(async function (req,res,next){
     const {id} = req.params
-    // const userLogued = req.session.userLogued.data
+    // const userLogued = req.userLogued
     // console.log(id);
     await userModel.findById(id,function(err,datosUsuario){
         if(err){
@@ -53,7 +53,7 @@ exports.findUserById = wrapAsync(async function (req,res,next){
 /* <=============================== UPDATE USER ===============================> */
 exports.updateUser = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    // const userLogued = req.session.userLogued.data
+    // const userLogued = req.userLogued
     let { username, name, currentPassword = "", newPassword = "", email, height, weight, objective} = req.body
     
     // BUSCAMOS USUARIO
@@ -129,7 +129,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
 
 /* <=============================== REGISTER ===============================> */
 exports.register = wrapAsync(async function (req, res, next) {
-    // const userLogued = req.session.userLogued?.data;
+    // const userLogued = req.userLogued?.data;
     let { username, name, password, birthdate, email, height, weight, objective} = req.body
 
     // VALIDACIONES DE CONTRASEÑA
@@ -159,23 +159,23 @@ exports.register = wrapAsync(async function (req, res, next) {
 
         newUser.user_password = await bcrypt.hashPassword(newUser.user_password)
 
-        if(!req.session.userLogued || (req.session.userLogued && req.session.userLogued.data.user_role == 1)){
+        if(!req.userLogued || (req.userLogued && req.userLogued.user_role == 1)){
             await userModel.create(newUser,function(err,datosUsuarioCreado){
                 if(err){
                     return next(new AppError(err, 500))
                 } else{
                     
-                    if(req.session.userLogued && req.session.userLogued.data.user_role == 1){
+                    if(req.userLogued && req.userLogued.user_role == 1){
                         res.status(201).json({user: datosUsuarioCreado, token: null})
-                    } else if(!req.session.userLogued){
-                        const jwtToken = jwtMW.createJWT(req, res, next, newUser)
+                    } else if(!req.userLogued){
+                        const jwtToken = jwtMW.createJWT(req, res, next, datosUsuarioCreado)
+
                         const userLogued = {
-                            data: newUser,
+                            data: datosUsuarioCreado,
                             token: jwtToken
                         }
 
-                        req.session.userLogued = userLogued
-                        res.status(201).json({user: datosUsuarioCreado, token: jwtToken})
+                        res.status(201).json(userLogued)
                     }
                 }
             })
@@ -190,7 +190,7 @@ exports.register = wrapAsync(async function (req, res, next) {
 /* <=============================== DELETE USER ===============================> */
 exports.deleteUser = wrapAsync(async function (req, res, next) {
     const { id } = req.params
-    const userLogued = req.session.userLogued.data
+    const userLogued = req.userLogued
 
     if (userLogued && (userLogued.user_role == 1 || userLogued.user_id == id)) {
         await userModel.findById(id, async function (err, userFounded) {
@@ -208,17 +208,7 @@ exports.deleteUser = wrapAsync(async function (req, res, next) {
                 } else{
                     // Si se elimina a sí mismo, cerrar sesión
                     if (userLogued.idUser == id) {
-                        const jwtDestroyed = jwtMW.destroyJWT(req);
-                        if (jwtDestroyed) {
-                            req.session.destroy((err) => {
-                                if (err) {
-                                    return next(new AppError("Error al destruir la sesión", 500))
-                                }
-                                return res.status(200).json({ msg: "Usuario eliminado, sesión destruida" })
-                            })
-                        } else {
-                            return next(new AppError("Error al eliminar el Token o Sesión Inexistente", 500))
-                        }
+                        return res.status(200).json({ msg: "Usuario eliminado, sesión destruida" })
                     } else {
                         return res.status(200).json(datosUsuarioEliminado)
                     }
@@ -248,8 +238,7 @@ exports.login = wrapAsync(async(req, res, next) => {
                     data: userFounded,
                     token: jwtToken
                 }
-                req.session.userLogued = userLogued
-                
+
                 res.status(200).json(userLogued)
             } else{
                 next(new AppError("Usuario y/o contraseña incorrectos", 401))
@@ -260,20 +249,5 @@ exports.login = wrapAsync(async(req, res, next) => {
 
 /* <=============================== LOGOUT ===============================> */
 exports.logout = wrapAsync(async(req,res,next) => {
-    const jwtDestroyed = jwtMW.destroyJWT(req)
-    
-    console.log(jwtDestroyed)
-    console.log(req.session)
-
-    if(jwtDestroyed){
-        req.session.destroy((err) => {
-            if(err){
-                return next(new AppError("Error al destruir la sesión", 500))
-            }            
-        })
-    } else{
-        next(new AppError("Error al Eliminar el Token o Sesión Inexistente", 500))
-    }
-
     res.status(200).json({msg: "Token Eliminado y Sesión Destruida"})
 })

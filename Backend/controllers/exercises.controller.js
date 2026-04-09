@@ -117,7 +117,7 @@ exports.updateExerciseById = wrapAsync(async function (req, res, next) {
 /* <=============================== DELETE EXERCISE BY ID ===============================> */
 exports.deleteExerciseById = wrapAsync(async function (req, res, next) {
     const {id} = req.params
-    const userLogued = req.session.userLogued.data
+    const userLogued = req.userLogued
 
     if(userLogued && userLogued.user_role == 1){
         await exercisesModel.delete(id, function(err, datosEjercicioEliminado){

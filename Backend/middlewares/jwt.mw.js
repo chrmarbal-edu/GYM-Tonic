@@ -12,9 +12,6 @@ function extractToken(req){
     } else if (req.query && req.query.token){
         // En el caso de que venga por query el token
         return req.query.token
-    } else if (req.session && req.session.userLogued && req.session.userLogued.token){
-        // En el caso de que lo guardemos en el objeto session
-        return req.session.userLogued.token
     } else{
         return null
     }
@@ -32,7 +29,7 @@ exports.authenticate = (req, res, next) => {
                     next(new AppError(err, 401))
                 }
             } else{
-                req.user = decoded
+                req.userLogued = decoded
                 next()
             }
         })
@@ -44,7 +41,7 @@ exports.authenticate = (req, res, next) => {
 // GENERAR TOKEN
 exports.createJWT = (req, res, next, userData) => {
     try {
-        const payload = {userData}
+        const payload = userData
 
         const token = jwt.sign(payload, process.env.SECRET_JWT, {
             expiresIn: "2d" // El token expira en 2 días
@@ -57,23 +54,5 @@ exports.createJWT = (req, res, next, userData) => {
         }
     } catch (error) {
         next(new AppError(error.message, 500))
-    }
-}
-
-// DESTROY TOKEN
-exports.destroyJWT = (req) => {
-    if(!req.session || !req.session.userLogued || !req.session.userLogued.token){
-        return false
-    }
-
-    try {
-        jwt.sign({}, req.session.userLogued.token, {expiresIn: 1})
-
-        req.session.userLogued.token = null
-        return true
-    } catch (error) {
-        logger.error.error(error.message)
-        console.log(error.message)
-        return false
     }
 }
