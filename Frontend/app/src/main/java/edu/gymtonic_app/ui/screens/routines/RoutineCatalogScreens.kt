@@ -1,89 +1,72 @@
 package edu.gymtonic_app.ui.screens.routines
 
 import androidx.compose.runtime.Composable
-import edu.gymtonic_app.R
+import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.gymtonic_app.ui.viewmodel.RoutineCatalogStoreViewModel
 
 @Composable
-fun BackScreen(onBack: () -> Unit) {
-    // Mock temporal de la rutina Espalda. El backend enviará estos ejercicios por routineId="back".
-    val exercises = listOf(
-        RoutineExerciseUi("JALON AL PECHO", "x12", R.drawable.remo),
-        RoutineExerciseUi("REMO CON BARRA", "x10", R.drawable.remo),
-        RoutineExerciseUi("PESO MUERTO", "x8", R.drawable.pesomuerto),
-        RoutineExerciseUi("PULL OVER", "x12", R.drawable.pullover)
-    )
+fun BackScreen(onBack: () -> Unit, viewModel: RoutineCatalogStoreViewModel = viewModel()) {
+    // Fuente de datos temporal del catalogo. Luego vendra del backend por routineId.
+    val routine = viewModel.getRoutine("back")
 
     RoutineTemplateScreen(
-        title = "Espalda",
-        exercises = exercises,
+        title = routine.title,
+        exercises = routine.exercises,
         onBack = onBack
     )
 }
 
 @Composable
-fun ArmScreen(onBack: () -> Unit) {
-    // Mock temporal de Brazo para la ruta routineId="arm".
-    val exercises = listOf(
-        RoutineExerciseUi("CURL BICEPS", "x12", R.drawable.brazo),
-        RoutineExerciseUi("EXTENSION TRICEPS", "x12", R.drawable.brazo),
-        RoutineExerciseUi("MARTILLO", "x10", R.drawable.brazo),
-        RoutineExerciseUi("FONDOS", "x10", R.drawable.pushup)
-    )
+fun ArmScreen(onBack: () -> Unit, viewModel: RoutineCatalogStoreViewModel = viewModel()) {
+    val routine = viewModel.getRoutine("arm")
 
     RoutineTemplateScreen(
-        title = "Brazo",
-        exercises = exercises,
+        title = routine.title,
+        exercises = routine.exercises,
         onBack = onBack
     )
 }
 
 @Composable
-fun CalvesScreen(onBack: () -> Unit) {
-    // Mock temporal de Gemelos para la ruta routineId="calves".
-    val exercises = listOf(
-        RoutineExerciseUi("ELEVACION TALONES", "x20", R.drawable.pierna),
-        RoutineExerciseUi("SENTADILLA", "x12", R.drawable.sentadilla),
-        RoutineExerciseUi("ESTOCADAS", "x12", R.drawable.estocadas),
-        RoutineExerciseUi("PRENSA", "x10", R.drawable.pierna)
-    )
+fun CalvesScreen(onBack: () -> Unit, viewModel: RoutineCatalogStoreViewModel = viewModel()) {
+    val routine = viewModel.getRoutine("calves")
 
     RoutineTemplateScreen(
-        title = "Gemelos",
-        exercises = exercises,
+        title = routine.title,
+        exercises = routine.exercises,
         onBack = onBack
     )
 }
 
 @Composable
-fun PushScreen(onBack: () -> Unit) {
-    // Mock temporal de Empujes para la ruta routineId="push".
-    val exercises = listOf(
-        RoutineExerciseUi("PUSH UPS", "x15", R.drawable.pushup),
-        RoutineExerciseUi("PRESS BANCA", "x10", R.drawable.pressbanca),
-        RoutineExerciseUi("PRESS MILITAR", "x10", R.drawable.pushup),
-        RoutineExerciseUi("FONDOS", "x12", R.drawable.pushup)
-    )
+fun PushScreen(onBack: () -> Unit, viewModel: RoutineCatalogStoreViewModel = viewModel()) {
+    val routine = viewModel.getRoutine("push")
 
     RoutineTemplateScreen(
-        title = "Empujes",
-        exercises = exercises,
+        title = routine.title,
+        exercises = routine.exercises,
         onBack = onBack
     )
 }
 
 @Composable
-fun StretchScreen(onBack: () -> Unit) {
-    // Mock temporal de Estiramientos para la ruta routineId="stretch".
-    val exercises = listOf(
-        RoutineExerciseUi("MOVILIDAD HOMBRO", "x30s", R.drawable.estiramientos),
-        RoutineExerciseUi("ISQUIOS", "x30s", R.drawable.estiramientos),
-        RoutineExerciseUi("CADERA", "x30s", R.drawable.estiramientos),
-        RoutineExerciseUi("LUMBAR", "x30s", R.drawable.estiramientos)
-    )
+fun StretchScreen(onBack: () -> Unit, viewModel: RoutineCatalogStoreViewModel = viewModel()) {
+    val routine = viewModel.getRoutine("stretch")
 
     RoutineTemplateScreen(
-        title = "Estiramientos",
-        exercises = exercises,
+        title = routine.title,
+        exercises = routine.exercises,
+        onBack = onBack
+    )
+}
+
+@Composable
+fun FullBodyScreen(onBack: () -> Unit, viewModel: RoutineCatalogStoreViewModel = viewModel()) {
+    val routine = viewModel.getRoutine("fullbody")
+
+    RoutineTemplateScreen(
+        title = routine.title,
+        exercises = routine.exercises,
         onBack = onBack
     )
 }
