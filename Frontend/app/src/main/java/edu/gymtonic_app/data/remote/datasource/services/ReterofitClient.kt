@@ -4,6 +4,8 @@ import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
 import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
 import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
 import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
+import edu.gymtonic_app.data.remote.datasource.model.RoutineDetailDto
+import edu.gymtonic_app.data.remote.datasource.model.RoutineDto
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -11,6 +13,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 object RetrofitClient {
     // En Android Emulator, 10.0.2.2 apunta al localhost de tu PC.
@@ -39,5 +42,12 @@ interface ApiService {
     //LOGOUT
     @GET("users/logout")
     suspend fun logout(): Response<Unit>
+
+    // ROUTINES
+    @GET("routines")
+    suspend fun getRoutines(): Response<List<RoutineDto>>
+
+    @GET("routines/{routineId}")
+    suspend fun getRoutineById(@Path("routineId") routineId: String): Response<RoutineDetailDto>
 
 }

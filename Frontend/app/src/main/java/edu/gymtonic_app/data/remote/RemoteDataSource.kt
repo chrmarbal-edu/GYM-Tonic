@@ -5,6 +5,9 @@ import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
 import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
 import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
 import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
+import edu.gymtonic_app.data.remote.datasource.model.RoutineDetailDto
+import edu.gymtonic_app.data.remote.datasource.model.RoutineDto
+import edu.gymtonic_app.data.remote.datasource.model.RoutineExerciseDto
 import edu.gymtonic_app.data.remote.datasource.services.RetrofitClient
 
 data class RemoteTrainingRoutine(
@@ -36,6 +39,72 @@ class RemoteDataSource {
     //Para logear
     private val TAG = RemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
+
+    // Fuente temporal de detalle de rutinas; se usa como fallback mientras el backend se estabiliza.
+    private val mockRoutineDetails: List<RoutineDetailDto> = listOf(
+        RoutineDetailDto(
+            routineId = "fullbody",
+            routineName = "FullBody",
+            exercises = listOf(
+                RoutineExerciseDto(name = "ESTOCADAS", reps = "x10", imageKey = "estocadas"),
+                RoutineExerciseDto(name = "PRESS BANCA", reps = "x10", imageKey = "pressbanca"),
+                RoutineExerciseDto(name = "PULL OVER", reps = "x12", imageKey = "pullover"),
+                RoutineExerciseDto(name = "REMO", reps = "x15", imageKey = "remo"),
+                RoutineExerciseDto(name = "SENTADILLA", reps = "x15", imageKey = "sentadilla"),
+                RoutineExerciseDto(name = "PESO MUERTO", reps = "x20", imageKey = "pesomuerto")
+            )
+        ),
+        RoutineDetailDto(
+            routineId = "back",
+            routineName = "Espalda",
+            exercises = listOf(
+                RoutineExerciseDto(name = "JALON AL PECHO", reps = "x12", imageKey = "remo"),
+                RoutineExerciseDto(name = "REMO CON BARRA", reps = "x10", imageKey = "remo"),
+                RoutineExerciseDto(name = "PESO MUERTO", reps = "x8", imageKey = "pesomuerto"),
+                RoutineExerciseDto(name = "PULL OVER", reps = "x12", imageKey = "pullover")
+            )
+        ),
+        RoutineDetailDto(
+            routineId = "arm",
+            routineName = "Brazo",
+            exercises = listOf(
+                RoutineExerciseDto(name = "CURL BICEPS", reps = "x12", imageKey = "brazo"),
+                RoutineExerciseDto(name = "EXTENSION TRICEPS", reps = "x12", imageKey = "brazo"),
+                RoutineExerciseDto(name = "MARTILLO", reps = "x10", imageKey = "brazo"),
+                RoutineExerciseDto(name = "FONDOS", reps = "x10", imageKey = "pushup")
+            )
+        ),
+        RoutineDetailDto(
+            routineId = "calves",
+            routineName = "Gemelos",
+            exercises = listOf(
+                RoutineExerciseDto(name = "ELEVACION TALONES", reps = "x20", imageKey = "pierna"),
+                RoutineExerciseDto(name = "SENTADILLA", reps = "x12", imageKey = "sentadilla"),
+                RoutineExerciseDto(name = "ESTOCADAS", reps = "x12", imageKey = "estocadas"),
+                RoutineExerciseDto(name = "PRENSA", reps = "x10", imageKey = "pierna")
+            )
+        ),
+        RoutineDetailDto(
+            routineId = "push",
+            routineName = "Empujes",
+            exercises = listOf(
+                RoutineExerciseDto(name = "PUSH UPS", reps = "x15", imageKey = "pushup"),
+                RoutineExerciseDto(name = "PRESS BANCA", reps = "x10", imageKey = "pressbanca"),
+                RoutineExerciseDto(name = "PRESS MILITAR", reps = "x10", imageKey = "pushup"),
+                RoutineExerciseDto(name = "FONDOS", reps = "x12", imageKey = "pushup")
+            )
+        ),
+        RoutineDetailDto(
+            routineId = "stretch",
+            routineName = "Estiramientos",
+            exercises = listOf(
+                RoutineExerciseDto(name = "MOVILIDAD HOMBRO", reps = "x30s", imageKey = "estiramientos"),
+                RoutineExerciseDto(name = "ISQUIOS", reps = "x30s", imageKey = "estiramientos"),
+                RoutineExerciseDto(name = "CADERA", reps = "x30s", imageKey = "estiramientos"),
+                RoutineExerciseDto(name = "LUMBAR", reps = "x30s", imageKey = "estiramientos")
+            )
+        )
+    )
 
     // Función para obtener el login, se pasa el objeto RequestLogin en el body.
     // Se devuelve un objeto LoginResponse.
@@ -110,6 +179,62 @@ class RemoteDataSource {
                 )
             )
         )
+    }
+
+    // Mock temporal para listado de rutinas, útil cuando la API no esté disponible.
+    suspend fun getRoutines(): List<RoutineDto> {
+        return mockRoutineDetails.map { detail ->
+            RoutineDto(
+                routineId = detail.routineId,
+                routineName = detail.routineName,
+                imageKey = detail.exercises.firstOrNull()?.imageKey
+            )
+        }
+    }
+
+    // Mock temporal para detalle de rutina, mantiene fallback a fullbody.
+    suspend fun getRoutineById(routineId: String): RoutineDetailDto {
+        return mockRoutineDetails.firstOrNull { it.routineId == routineId }
+            ?: mockRoutineDetails.first { it.routineId == "fullbody" }
+    }
+
+    // Expone la fuente mock para que el repositorio pueda mapearla a modelos de UI.
+    fun getMockRoutineDetails(): List<RoutineDetailDto> {
+        return mockRoutineDetails
+    }
+
+    // Llamada real de listado de rutinas con fallback a mock local.
+    suspend fun getRoutinesFromApi(): List<RoutineDto> {
+        return try {
+            val response = api.getRoutines()
+            if (response.isSuccessful) {
+                response.body() ?: throw Exception("Respuesta vacia del servidor")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Error routines: ${response.code()} ${response.message()} | $errorBody")
+                getRoutines()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error routines exception: ${e.message}")
+            getRoutines()
+        }
+    }
+
+    // Llamada real de detalle por id con fallback a mock local.
+    suspend fun getRoutineByIdFromApi(routineId: String): RoutineDetailDto {
+        return try {
+            val response = api.getRoutineById(routineId)
+            if (response.isSuccessful) {
+                response.body() ?: throw Exception("Respuesta vacia del servidor")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Error routine detail: ${response.code()} ${response.message()} | $errorBody")
+                getRoutineById(routineId)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error routine detail exception: ${e.message}")
+            getRoutineById(routineId)
+        }
     }
 
     suspend fun getWeeklyGoals(): List<RemoteWeeklyGoal> {

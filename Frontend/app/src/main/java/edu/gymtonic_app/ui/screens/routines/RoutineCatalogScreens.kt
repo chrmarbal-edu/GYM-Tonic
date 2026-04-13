@@ -1,8 +1,19 @@
 package edu.gymtonic_app.ui.screens.routines
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun RoutineCatalogScreen(
@@ -10,13 +21,42 @@ fun RoutineCatalogScreen(
     onBack: () -> Unit,
     viewModel: RoutineCatalogViewModel = viewModel()
 ) {
-    // La pantalla solo pinta: el ViewModel resuelve el routineId al detalle de rutina.
-    val routine = viewModel.getRoutine(routineId)
+    val uiState by viewModel.uiState.collectAsState()
 
-    RoutineTemplateScreen(
-        title = routine.title,
-        exercises = routine.exercises,
-        onBack = onBack
-    )
+    // Cada vez que cambia el id de ruta, recargamos su detalle.
+    LaunchedEffect(routineId) {
+        viewModel.loadRoutine(routineId)
+    }
+
+    when (val state = uiState) {
+        is RoutineCatalogUiState.Loading -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is RoutineCatalogUiState.Success -> {
+            RoutineTemplateScreen(
+                title = state.routine.title,
+                exercises = state.routine.exercises,
+                onBack = onBack
+            )
+        }
+
+        is RoutineCatalogUiState.Error -> {
+            val fallback = state.fallbackRoutine
+            if (fallback != null) {
+                RoutineTemplateScreen(
+                    title = fallback.title,
+                    exercises = fallback.exercises,
+                    onBack = onBack
+                )
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = state.message, textAlign = TextAlign.Center)
+                }
+            }
+        }
+    }
 }
 

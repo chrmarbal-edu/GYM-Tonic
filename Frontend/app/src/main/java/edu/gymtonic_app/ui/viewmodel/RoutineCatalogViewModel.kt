@@ -2,7 +2,13 @@ package edu.gymtonic_app.ui.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import edu.gymtonic_app.R
+import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.remote.RemoteDataSource
+import edu.gymtonic_app.data.repository.RoutineRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 //modelo de UI para un ejercicio (nombre, reps, imagen local).
 data class RoutineExerciseUi(
@@ -16,76 +22,81 @@ data class RoutineDetailUi(
     val title: String,
     val exercises: List<RoutineExerciseUi>
 )
+
+sealed class RoutineCatalogUiState {
+    object Loading : RoutineCatalogUiState()
+    data class Success(val routine: RoutineDetailUi) : RoutineCatalogUiState()
+    data class Error(
+        val message: String,
+        val fallbackRoutine: RoutineDetailUi? = null
+    ) : RoutineCatalogUiState()
+}
+
 //hardcodeado en memoria, usado como mock mientras no llega la integración real.
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Catalogo temporal local. En la integracion real se reemplaza por repository/backend.
-    private val routinesById: Map<String, RoutineDetailUi> = mapOf(
-        "fullbody" to RoutineDetailUi(
-            id = "fullbody",
-            title = "FullBody",
-            exercises = listOf(
-                RoutineExerciseUi("ESTOCADAS", "x10", R.drawable.estocadas),
-                RoutineExerciseUi("PRESS BANCA", "x10", R.drawable.pressbanca),
-                RoutineExerciseUi("PULL OVER", "x12", R.drawable.pullover),
-                RoutineExerciseUi("REMO", "x15", R.drawable.remo),
-                RoutineExerciseUi("SENTADILLA", "x15", R.drawable.sentadilla),
-                RoutineExerciseUi("PESO MUERTO", "x20", R.drawable.pesomuerto)
-            )
-        ),
-        "back" to RoutineDetailUi(
-            id = "back",
-            title = "Espalda",
-            exercises = listOf(
-                RoutineExerciseUi("JALON AL PECHO", "x12", R.drawable.remo),
-                RoutineExerciseUi("REMO CON BARRA", "x10", R.drawable.remo),
-                RoutineExerciseUi("PESO MUERTO", "x8", R.drawable.pesomuerto),
-                RoutineExerciseUi("PULL OVER", "x12", R.drawable.pullover)
-            )
-        ),
-        "arm" to RoutineDetailUi(
-            id = "arm",
-            title = "Brazo",
-            exercises = listOf(
-                RoutineExerciseUi("CURL BICEPS", "x12", R.drawable.brazo),
-                RoutineExerciseUi("EXTENSION TRICEPS", "x12", R.drawable.brazo),
-                RoutineExerciseUi("MARTILLO", "x10", R.drawable.brazo),
-                RoutineExerciseUi("FONDOS", "x10", R.drawable.pushup)
-            )
-        ),
-        "calves" to RoutineDetailUi(
-            id = "calves",
-            title = "Gemelos",
-            exercises = listOf(
-                RoutineExerciseUi("ELEVACION TALONES", "x20", R.drawable.pierna),
-                RoutineExerciseUi("SENTADILLA", "x12", R.drawable.sentadilla),
-                RoutineExerciseUi("ESTOCADAS", "x12", R.drawable.estocadas),
-                RoutineExerciseUi("PRENSA", "x10", R.drawable.pierna)
-            )
-        ),
-        "push" to RoutineDetailUi(
-            id = "push",
-            title = "Empujes",
-            exercises = listOf(
-                RoutineExerciseUi("PUSH UPS", "x15", R.drawable.pushup),
-                RoutineExerciseUi("PRESS BANCA", "x10", R.drawable.pressbanca),
-                RoutineExerciseUi("PRESS MILITAR", "x10", R.drawable.pushup),
-                RoutineExerciseUi("FONDOS", "x12", R.drawable.pushup)
-            )
-        ),
-        "stretch" to RoutineDetailUi(
-            id = "stretch",
-            title = "Estiramientos",
-            exercises = listOf(
-                RoutineExerciseUi("MOVILIDAD HOMBRO", "x30s", R.drawable.estiramientos),
-                RoutineExerciseUi("ISQUIOS", "x30s", R.drawable.estiramientos),
-                RoutineExerciseUi("CADERA", "x30s", R.drawable.estiramientos),
-                RoutineExerciseUi("LUMBAR", "x30s", R.drawable.estiramientos)
-            )
-        )
-    )
-// busca la rutina por id y, si no existe, retorna fullbody.
-    fun getRoutine(routineId: String): RoutineDetailUi {
-        return routinesById[routineId] ?: routinesById.getValue("fullbody")
+    private val routineRepository = RoutineRepository(RemoteDataSource())
+    private val _uiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
+    val uiState: StateFlow<RoutineCatalogUiState> = _uiState.asStateFlow()
+
+    init {
+        loadRoutine("fullbody")
     }
+
+    // Carga remote-first para el detalle de rutina y deja fallback local en caso de error.
+    fun loadRoutine(routineId: String) {
+        viewModelScope.launch {
+            _uiState.value = RoutineCatalogUiState.Loading
+
+            routineRepository.getRoutineByIdFromApi(routineId)
+                .onSuccess { routine ->
+                    _uiState.value = RoutineCatalogUiState.Success(routine)
+                }
+                .onFailure { error ->
+                    val fallback = routineRepository.getRoutineFromMock(routineId)
+                    _uiState.value = RoutineCatalogUiState.Error(
+                        message = error.message ?: "No se pudo cargar la rutina",
+                        fallbackRoutine = fallback
+                    )
+                }
+        }
+    }
+
+    // Carga remote-first para catálogo completo de rutinas; útil para próximas pantallas.
+    fun loadRoutines() {
+        viewModelScope.launch {
+            _uiState.value = RoutineCatalogUiState.Loading
+
+            routineRepository.getRoutinesFromApi()
+                .onSuccess { routines ->
+                    val firstRoutine = routines.firstOrNull() ?: routineRepository.getRoutineFromMock("fullbody")
+                    _uiState.value = RoutineCatalogUiState.Success(firstRoutine)
+                }
+                .onFailure { error ->
+                    val fallback = routineRepository.getRoutineFromMock("fullbody")
+                    _uiState.value = RoutineCatalogUiState.Error(
+                        message = error.message ?: "No se pudo cargar el catalogo",
+                        fallbackRoutine = fallback
+                    )
+                }
+        }
+    }
+
+    /**
+     * Futuro endpoint: lista de rutinas completas desde API.
+     * Se deja comentado hasta que exista endpoint dedicado y DTO de detalle.
+     *
+     * suspend fun fetchRoutinesFromApi(): Result<List<RoutineDetailUi>> {
+     *     return routineRepository.getRoutinesFromApi()
+     * }
+     */
+
+    /**
+     * Futuro endpoint: detalle de rutina por id desde API.
+     * Se deja comentado para no afectar el flujo actual hardcodeado.
+     *
+     * suspend fun fetchRoutineByIdFromApi(routineId: String): Result<RoutineDetailUi> {
+     *     return routineRepository.getRoutineByIdFromApi(routineId)
+     * }
+     */
 }
