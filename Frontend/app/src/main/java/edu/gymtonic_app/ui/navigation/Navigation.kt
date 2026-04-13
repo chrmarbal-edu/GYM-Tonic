@@ -20,12 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import edu.gymtonic_app.data.remote.datasource.model.Login.SessionManager
 import edu.gymtonic_app.data.remote.datasource.model.Login.sessionDataStore
-import edu.gymtonic_app.ui.screens.routines.FullBodyScreen
-import edu.gymtonic_app.ui.screens.routines.ArmScreen
-import edu.gymtonic_app.ui.screens.routines.BackScreen
-import edu.gymtonic_app.ui.screens.routines.CalvesScreen
-import edu.gymtonic_app.ui.screens.routines.PushScreen
-import edu.gymtonic_app.ui.screens.routines.StretchScreen
+import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
@@ -38,6 +33,7 @@ import edu.gymtonic_app.ui.viewmodel.TrainingScreenViewModel
 import edu.gymtonic_app.ui.viewmodel.WeekChallengesViewModel
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {
 
     val context = LocalContext.current
@@ -173,25 +169,15 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getString("routineId").orEmpty()
 
-            // Este when es el punto de enlace entre IDs del backend y pantallas reales en screens/routines.
-            // A medida que se creen nuevas pantallas (Espalda, Brazo, etc), se añade aquí su destino.
-            when (routineId) {
-                "fullbody" -> FullBodyScreen(onBack = { navController.popBackStack() })
-                "back" -> BackScreen(onBack = { navController.popBackStack() })
-                "push" -> PushScreen(onBack = { navController.popBackStack() })
-                "stretch" -> StretchScreen(onBack = { navController.popBackStack() })
-                "arm" -> ArmScreen(onBack = { navController.popBackStack() })
-                "calves" -> CalvesScreen(onBack = { navController.popBackStack() })
-
-                else -> {
-                    // Fallback temporal para IDs aún no implementados en una screen específica.
-                    FullBodyScreen(onBack = { navController.popBackStack() })
-                }
-            }
+            RoutineCatalogScreen(
+                routineId = routineId,
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.EXERCISES) {
-            FullBodyScreen(
+            RoutineCatalogScreen(
+                routineId = "fullbody",
                 onBack = { navController.popBackStack() }
             )
         }

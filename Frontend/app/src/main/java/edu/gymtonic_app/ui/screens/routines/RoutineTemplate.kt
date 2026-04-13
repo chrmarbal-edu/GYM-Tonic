@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,18 +31,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// Modelo de cada ejercicio dentro de una rutina. En producción llegará del backend.
-data class RoutineExerciseUi(
-    val name: String,
-    val reps: String,
-    val imageRes: Int
-)
+import edu.gymtonic_app.R
+import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
 @Composable
 fun RoutineTemplateScreen(
@@ -84,7 +79,7 @@ fun RoutineTemplateScreen(
                 Spacer(Modifier.height(8.dp))
 
                 Text(
-                    text = "${exercises.size} ejercicios disponibles",
+                    text = stringResource(R.string.ejercicios_disponibles, exercises.size),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF464A57),
@@ -125,7 +120,7 @@ private fun RoutineHeaderRow(
         IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = "Volver",
+                contentDescription = stringResource(R.string.volver),
                 tint = Color(0xFF2D2D2D)
             )
         }
@@ -179,7 +174,7 @@ private fun RoutineExerciseRow(exercise: RoutineExerciseUi) {
                 )
 
                 Text(
-                    text = "Series y repeticiones",
+                    text = stringResource(R.string.series_y_repeticiones),
                     fontSize = 11.sp,
                     color = Color(0xFF5D6270)
                 )

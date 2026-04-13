@@ -3,19 +3,25 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import edu.gymtonic_app.R
-import edu.gymtonic_app.ui.screens.routines.RoutineExerciseUi
 
-data class RoutineCatalogDetailUi(
+//modelo de UI para un ejercicio (nombre, reps, imagen local).
+data class RoutineExerciseUi(
+    val name: String,
+    val reps: String,
+    val imageRes: Int
+)
+//modelo de UI para el detalle de una rutina (id, titulo, lista de ejercicios).
+data class RoutineDetailUi(
     val id: String,
     val title: String,
     val exercises: List<RoutineExerciseUi>
 )
-
-class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(application) {
+//hardcodeado en memoria, usado como mock mientras no llega la integración real.
+class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
     // Catalogo temporal local. En la integracion real se reemplaza por repository/backend.
-    private val routinesById: Map<String, RoutineCatalogDetailUi> = mapOf(
-        "fullbody" to RoutineCatalogDetailUi(
+    private val routinesById: Map<String, RoutineDetailUi> = mapOf(
+        "fullbody" to RoutineDetailUi(
             id = "fullbody",
             title = "FullBody",
             exercises = listOf(
@@ -27,7 +33,7 @@ class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(
                 RoutineExerciseUi("PESO MUERTO", "x20", R.drawable.pesomuerto)
             )
         ),
-        "back" to RoutineCatalogDetailUi(
+        "back" to RoutineDetailUi(
             id = "back",
             title = "Espalda",
             exercises = listOf(
@@ -37,7 +43,7 @@ class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(
                 RoutineExerciseUi("PULL OVER", "x12", R.drawable.pullover)
             )
         ),
-        "arm" to RoutineCatalogDetailUi(
+        "arm" to RoutineDetailUi(
             id = "arm",
             title = "Brazo",
             exercises = listOf(
@@ -47,7 +53,7 @@ class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(
                 RoutineExerciseUi("FONDOS", "x10", R.drawable.pushup)
             )
         ),
-        "calves" to RoutineCatalogDetailUi(
+        "calves" to RoutineDetailUi(
             id = "calves",
             title = "Gemelos",
             exercises = listOf(
@@ -57,7 +63,7 @@ class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(
                 RoutineExerciseUi("PRENSA", "x10", R.drawable.pierna)
             )
         ),
-        "push" to RoutineCatalogDetailUi(
+        "push" to RoutineDetailUi(
             id = "push",
             title = "Empujes",
             exercises = listOf(
@@ -67,7 +73,7 @@ class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(
                 RoutineExerciseUi("FONDOS", "x12", R.drawable.pushup)
             )
         ),
-        "stretch" to RoutineCatalogDetailUi(
+        "stretch" to RoutineDetailUi(
             id = "stretch",
             title = "Estiramientos",
             exercises = listOf(
@@ -78,12 +84,8 @@ class RoutineCatalogStoreViewModel(application: Application) : AndroidViewModel(
             )
         )
     )
-
-    fun getRoutine(routineId: String): RoutineCatalogDetailUi {
+// busca la rutina por id y, si no existe, retorna fullbody.
+    fun getRoutine(routineId: String): RoutineDetailUi {
         return routinesById[routineId] ?: routinesById.getValue("fullbody")
     }
 }
-
-
-
-
