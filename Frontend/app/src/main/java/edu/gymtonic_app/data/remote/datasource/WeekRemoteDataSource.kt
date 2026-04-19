@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.remote.datasource
 
-import edu.gymtonic_app.data.remote.model.WeeklyCalendarDayDto
-import edu.gymtonic_app.data.remote.model.WeeklyGoalDto
+import edu.gymtonic_app.data.remote.model.week.WeeklyCalendarDayDto
+import edu.gymtonic_app.data.remote.model.week.WeeklyGoalDto
 
 class WeekRemoteDataSource {
     suspend fun getWeeklyGoals(): List<WeeklyGoalDto> {

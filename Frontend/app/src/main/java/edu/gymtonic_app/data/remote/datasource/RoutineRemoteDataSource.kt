@@ -1,9 +1,9 @@
 package edu.gymtonic_app.data.remote.datasource
 
 import android.util.Log
-import edu.gymtonic_app.data.remote.model.RoutineDetailDto
-import edu.gymtonic_app.data.remote.model.RoutineDto
-import edu.gymtonic_app.data.remote.model.RoutineExerciseDto
+import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
+import edu.gymtonic_app.data.remote.model.routine.RoutineDto
+import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseDto
 import edu.gymtonic_app.data.remote.services.RetrofitClient
 
 class RoutineRemoteDataSource {

@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model
+package edu.gymtonic_app.data.remote.model.week
 
 data class WeeklyGoalDto(
     val title: String,
@@ -6,4 +6,5 @@ data class WeeklyGoalDto(
     val pointsLabel: String,
     val progress: Float
 )
+
 

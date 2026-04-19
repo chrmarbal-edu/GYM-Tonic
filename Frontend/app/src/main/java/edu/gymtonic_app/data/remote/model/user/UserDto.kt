@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model
+package edu.gymtonic_app.data.remote.model.user
 
 import com.google.gson.annotations.SerializedName
 

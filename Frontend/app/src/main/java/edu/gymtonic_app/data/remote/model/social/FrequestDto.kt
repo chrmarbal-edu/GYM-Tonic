@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model
+package edu.gymtonic_app.data.remote.model.social
 
 data class FrequestDto(
     val frequestId: Int,
@@ -6,3 +6,4 @@ data class FrequestDto(
     val frequestReceiver: Int,
     val frequestStatus: Int
 )
+

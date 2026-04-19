@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model
+package edu.gymtonic_app.data.remote.model.training
 
 data class TrainingRoutineDto(
     val id: String,
@@ -11,4 +11,5 @@ data class TrainingCategoryDto(
     val title: String,
     val routines: List<TrainingRoutineDto>
 )
+
 

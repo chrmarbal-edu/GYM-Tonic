@@ -1,14 +1,14 @@
 package edu.gymtonic_app.data.remote.datasource
 
 import android.util.Log
-import edu.gymtonic_app.data.remote.model.Login.LoginRequest
-import edu.gymtonic_app.data.remote.model.Login.LoginResponse
-import edu.gymtonic_app.data.remote.model.RegisterRequest
-import edu.gymtonic_app.data.remote.model.RegisterResponse
+import edu.gymtonic_app.data.remote.model.auth.LoginRequest
+import edu.gymtonic_app.data.remote.model.auth.LoginResponse
 import edu.gymtonic_app.data.remote.services.RetrofitClient
+import edu.gymtonic_app.data.remote.model.user.RegisterRequest
+import edu.gymtonic_app.data.remote.model.user.RegisterResponse
 
-class UserRemoteDataSource {
-    private val tag = UserRemoteDataSource::class.java.simpleName
+class AuthRemoteDataSource {
+    private val tag = AuthRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
     suspend fun login(request: LoginRequest): LoginResponse {
@@ -42,4 +42,6 @@ class UserRemoteDataSource {
         throw Exception("Error en logout: ${response.message()}")
     }
 }
+
+
 

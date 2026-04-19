@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.remote.datasource
 
-import edu.gymtonic_app.data.remote.model.TrainingCategoryDto
-import edu.gymtonic_app.data.remote.model.TrainingRoutineDto
+import edu.gymtonic_app.data.remote.model.training.TrainingCategoryDto
+import edu.gymtonic_app.data.remote.model.training.TrainingRoutineDto
 
 class TrainingRemoteDataSource {
     suspend fun getTrainingCategories(): List<TrainingCategoryDto> {

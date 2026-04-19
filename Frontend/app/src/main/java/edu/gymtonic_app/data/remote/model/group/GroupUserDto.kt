@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model
+package edu.gymtonic_app.data.remote.model.group
 
 data class GroupUserDto(
     val groupUserId: Int,
@@ -6,3 +6,4 @@ data class GroupUserDto(
     val userId: Int,
     val range: Int
 )
+

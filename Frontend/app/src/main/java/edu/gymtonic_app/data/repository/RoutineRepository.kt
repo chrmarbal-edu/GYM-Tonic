@@ -2,8 +2,8 @@ package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.R
 import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
-import edu.gymtonic_app.data.remote.model.RoutineDetailDto
-import edu.gymtonic_app.data.remote.model.RoutineExerciseDto
+import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
+import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseDto
 import edu.gymtonic_app.ui.viewmodel.RoutineDetailUi
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
