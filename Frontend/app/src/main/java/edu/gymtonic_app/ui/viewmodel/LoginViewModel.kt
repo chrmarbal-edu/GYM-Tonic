@@ -6,7 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.repository.Repository
+import edu.gymtonic_app.data.repository.AuthRepository
 import edu.gymtonic_app.data.remote.model.auth.LoginRequest
 import edu.gymtonic_app.data.remote.model.auth.LoginResponse
 import edu.gymtonic_app.data.remote.model.auth.SessionManager
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(application: Application): AndroidViewModel(application){
-    private val repository: Repository
+    private val authRepository: AuthRepository
 
     val sessionManager: SessionManager
 
@@ -24,7 +24,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
     val loginState: StateFlow<LoginState> = _loginState
 
     init {
-        repository = Repository()
+        authRepository = AuthRepository()
 
         val dataStore: DataStore<Preferences> = application.sessionDataStore
         sessionManager = SessionManager(dataStore)
@@ -36,7 +36,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
             _loginState.value = LoginState.Loading
 
             try{
-                val response = repository.login(request)
+                val response = authRepository.login(request)
                 Log.i("login",response.toString())
                 if(response.token != null){
 

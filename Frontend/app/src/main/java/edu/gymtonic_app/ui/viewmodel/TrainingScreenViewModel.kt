@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.R
-import edu.gymtonic_app.data.repository.Repository
+import edu.gymtonic_app.data.repository.TrainingRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +31,7 @@ data class TrainingUiState(
 )
 
 class TrainingScreenViewModel(application: Application) : AndroidViewModel(application) {
-    val repository: Repository = Repository()
+    val trainingRepository: TrainingRepository = TrainingRepository()
 
     private val _uiState = MutableStateFlow(TrainingUiState())
     val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
@@ -50,7 +50,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
 
     private fun loadCategories() {
         viewModelScope.launch {
-            repository.getTrainingCategories()
+            trainingRepository.getTrainingCategories()
                 .onSuccess { remoteCategories ->
                     _uiState.update {
                         it.copy(

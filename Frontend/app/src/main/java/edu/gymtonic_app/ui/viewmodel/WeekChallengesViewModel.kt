@@ -3,7 +3,7 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.repository.Repository
+import edu.gymtonic_app.data.repository.WeekRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +38,7 @@ data class WeekChallengesUiState(
 )
 
 class WeekChallengesViewModel(application: Application) : AndroidViewModel(application) {
-	val repository: Repository = Repository()
+	val weekRepository: WeekRepository = WeekRepository()
 
 	private val _uiState = MutableStateFlow(WeekChallengesUiState())
 	val uiState: StateFlow<WeekChallengesUiState> = _uiState.asStateFlow()
@@ -57,8 +57,8 @@ class WeekChallengesViewModel(application: Application) : AndroidViewModel(appli
 
 	private fun loadWeekGoals() {
 		viewModelScope.launch {
-			val goalsResult = repository.getWeeklyGoals()
-			val calendarResult = repository.getWeeklyCalendarDays()
+			val goalsResult = weekRepository.getWeeklyGoals()
+			val calendarResult = weekRepository.getWeeklyCalendarDays()
 
 			goalsResult
 				.onSuccess { remoteGoals ->

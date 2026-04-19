@@ -6,7 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.repository.Repository
+import edu.gymtonic_app.data.repository.AuthRepository
 import edu.gymtonic_app.data.remote.model.auth.SessionManager
 import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.model.user.RegisterRequest
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class RegisterViewModel(application: Application): AndroidViewModel(application) {
-    val repository: Repository
+    val authRepository: AuthRepository
 
     val sessionManager: SessionManager
 
@@ -24,7 +24,7 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
     val registerState: StateFlow<RegisterState> = _registerState
 
     init {
-        repository = Repository()
+        authRepository = AuthRepository()
 
         val dataStore: DataStore<Preferences> = application.sessionDataStore
         sessionManager = SessionManager(dataStore)
@@ -45,7 +45,7 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
             _registerState.value = RegisterState.Loading
 
             try{
-                val response = repository.register(request)
+                val response = authRepository.register(request)
                 Log.i("register",response.toString())
                 if(response.token != null){
                     sessionManager.saveSession(
