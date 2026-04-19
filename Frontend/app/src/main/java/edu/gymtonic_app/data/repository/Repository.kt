@@ -1,49 +1,53 @@
 package edu.gymtonic_app.data.repository
 
-import edu.gymtonic_app.data.remote.RemoteDataSource
-import edu.gymtonic_app.data.remote.RemoteCalendarDay
-import edu.gymtonic_app.data.remote.RemoteTrainingCategory
-import edu.gymtonic_app.data.remote.RemoteWeeklyGoal
+import edu.gymtonic_app.data.remote.datasource.TrainingRemoteDataSource
+import edu.gymtonic_app.data.remote.datasource.UserRemoteDataSource
+import edu.gymtonic_app.data.remote.datasource.WeekRemoteDataSource
 import edu.gymtonic_app.data.remote.model.Login.LoginRequest
 import edu.gymtonic_app.data.remote.model.Login.LoginResponse
 import edu.gymtonic_app.data.remote.model.RegisterRequest
 import edu.gymtonic_app.data.remote.model.RegisterResponse
+import edu.gymtonic_app.data.remote.model.TrainingCategoryDto
+import edu.gymtonic_app.data.remote.model.WeeklyCalendarDayDto
+import edu.gymtonic_app.data.remote.model.WeeklyGoalDto
 
 class Repository(
-    private val remoteDataSource: RemoteDataSource
+    private val userRemoteDataSource: UserRemoteDataSource = UserRemoteDataSource(),
+    private val trainingRemoteDataSource: TrainingRemoteDataSource = TrainingRemoteDataSource(),
+    private val weekRemoteDataSource: WeekRemoteDataSource = WeekRemoteDataSource()
 ) {
 
 
     // Función para obtener el login.
     suspend fun login(request: LoginRequest): LoginResponse {
-        return remoteDataSource.login(request)
+        return userRemoteDataSource.login(request)
     }
 
     suspend fun register(request: RegisterRequest): RegisterResponse {
-        return remoteDataSource.register(request)
+        return userRemoteDataSource.register(request)
     }
 
     suspend fun logout(): Result<Unit> {
         return runCatching {
-            remoteDataSource.logout()
+            userRemoteDataSource.logout()
         }
     }
 
-    suspend fun getTrainingCategories(): Result<List<RemoteTrainingCategory>> {
+    suspend fun getTrainingCategories(): Result<List<TrainingCategoryDto>> {
         return runCatching {
-            remoteDataSource.getTrainingCategories()
+            trainingRemoteDataSource.getTrainingCategories()
         }
     }
 
-    suspend fun getWeeklyGoals(): Result<List<RemoteWeeklyGoal>> {
+    suspend fun getWeeklyGoals(): Result<List<WeeklyGoalDto>> {
         return runCatching {
-            remoteDataSource.getWeeklyGoals()
+            weekRemoteDataSource.getWeeklyGoals()
         }
     }
 
-    suspend fun getWeeklyCalendarDays(): Result<List<RemoteCalendarDay>> {
+    suspend fun getWeeklyCalendarDays(): Result<List<WeeklyCalendarDayDto>> {
         return runCatching {
-            remoteDataSource.getWeeklyCalendarDays()
+            weekRemoteDataSource.getWeeklyCalendarDays()
         }
     }
 }

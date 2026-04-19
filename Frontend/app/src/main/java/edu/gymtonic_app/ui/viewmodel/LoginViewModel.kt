@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.repository.Repository
-import edu.gymtonic_app.data.remote.RemoteDataSource
 import edu.gymtonic_app.data.remote.model.Login.LoginRequest
 import edu.gymtonic_app.data.remote.model.Login.LoginResponse
 import edu.gymtonic_app.data.remote.model.Login.SessionManager
@@ -17,7 +16,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(application: Application): AndroidViewModel(application){
-    private val remoteDataSource: RemoteDataSource
     private val repository: Repository
 
     val sessionManager: SessionManager
@@ -26,8 +24,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
     val loginState: StateFlow<LoginState> = _loginState
 
     init {
-        remoteDataSource = RemoteDataSource()
-        repository = Repository(remoteDataSource)
+        repository = Repository()
 
         val dataStore: DataStore<Preferences> = application.sessionDataStore
         sessionManager = SessionManager(dataStore)

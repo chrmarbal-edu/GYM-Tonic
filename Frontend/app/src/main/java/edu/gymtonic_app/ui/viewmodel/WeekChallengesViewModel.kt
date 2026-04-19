@@ -3,7 +3,6 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.remote.RemoteDataSource
 import edu.gymtonic_app.data.repository.Repository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,8 +38,7 @@ data class WeekChallengesUiState(
 )
 
 class WeekChallengesViewModel(application: Application) : AndroidViewModel(application) {
-	val remoteDataSource: RemoteDataSource = RemoteDataSource()
-	val repository: Repository = Repository(remoteDataSource)
+	val repository: Repository = Repository()
 
 	private val _uiState = MutableStateFlow(WeekChallengesUiState())
 	val uiState: StateFlow<WeekChallengesUiState> = _uiState.asStateFlow()

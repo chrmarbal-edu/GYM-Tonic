@@ -3,7 +3,6 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.remote.RemoteDataSource
 import edu.gymtonic_app.data.repository.RoutineRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,7 +34,7 @@ sealed class RoutineCatalogUiState {
 //hardcodeado en memoria, usado como mock mientras no llega la integración real.
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val routineRepository = RoutineRepository(RemoteDataSource())
+    private val routineRepository = RoutineRepository()
     private val _uiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
     val uiState: StateFlow<RoutineCatalogUiState> = _uiState.asStateFlow()
 

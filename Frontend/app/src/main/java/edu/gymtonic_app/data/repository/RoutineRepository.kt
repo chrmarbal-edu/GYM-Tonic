@@ -1,23 +1,15 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.R
-import edu.gymtonic_app.data.remote.RemoteDataSource
-import edu.gymtonic_app.data.remote.RemoteTrainingCategory
+import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.model.RoutineDetailDto
 import edu.gymtonic_app.data.remote.model.RoutineExerciseDto
 import edu.gymtonic_app.ui.viewmodel.RoutineDetailUi
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
 class RoutineRepository(
-	private val remoteDataSource: RemoteDataSource
+	private val routineRemoteDataSource: RoutineRemoteDataSource = RoutineRemoteDataSource()
 ) {
-
-	// Devuelve las categorias de entrenamientos desde capa remota (actualmente payload temporal).
-	suspend fun getTrainingCategories(): Result<List<RemoteTrainingCategory>> {
-		return runCatching {
-			remoteDataSource.getTrainingCategories()
-		}
-	}
 
 	// Construye el indice por id a partir del mock remoto temporal para evitar duplicidad de datos.
 	private fun routinesById(details: List<RoutineDetailDto>): Map<String, RoutineDetailUi> {
@@ -27,7 +19,7 @@ class RoutineRepository(
 	}
 
 	suspend fun getRoutineFromMock(routineId: String): RoutineDetailUi {
-		val byId = routinesById(remoteDataSource.getMockRoutineDetails())
+		val byId = routinesById(routineRemoteDataSource.getMockRoutineDetails())
 		return byId[routineId] ?: byId["fullbody"] ?: RoutineDetailUi(
 			id = "fullbody",
 			title = "FullBody",
@@ -36,14 +28,14 @@ class RoutineRepository(
 	}
 
 	suspend fun getAllRoutinesFromMock(): List<RoutineDetailUi> {
-		return routinesById(remoteDataSource.getMockRoutineDetails()).values.toList()
+		return routinesById(routineRemoteDataSource.getMockRoutineDetails()).values.toList()
 	}
 
 	// Ruta remote-first para listado de rutinas, con fallback temporal al hardcode local.
 	suspend fun getRoutinesFromApi(): Result<List<RoutineDetailUi>> {
 		return runCatching {
-			val fallbackById = routinesById(remoteDataSource.getMockRoutineDetails())
-			remoteDataSource.getRoutinesFromApi().map { dto ->
+			val fallbackById = routinesById(routineRemoteDataSource.getMockRoutineDetails())
+			routineRemoteDataSource.getRoutinesFromApi().map { dto ->
 				val fallbackRoutine = fallbackById[dto.routineId] ?: fallbackById["fullbody"]
 				RoutineDetailUi(
 					id = dto.routineId,
@@ -57,7 +49,7 @@ class RoutineRepository(
 	// Ruta remote-first para detalle por id, con fallback progresivo al catálogo local.
 	suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDetailUi> {
 		return runCatching {
-			mapRoutineDetailDtoToUi(remoteDataSource.getRoutineByIdFromApi(routineId))
+			mapRoutineDetailDtoToUi(routineRemoteDataSource.getRoutineByIdFromApi(routineId))
 		}.recoverCatching {
 			getRoutineFromMock(routineId)
 		}
