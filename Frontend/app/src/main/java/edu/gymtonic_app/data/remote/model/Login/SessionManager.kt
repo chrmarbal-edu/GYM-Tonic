@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.datasource.model.Login
+package edu.gymtonic_app.data.remote.model.Login
 
 import android.content.Context
 import androidx.datastore.core.DataStore

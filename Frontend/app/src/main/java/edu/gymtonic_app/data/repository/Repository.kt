@@ -4,10 +4,10 @@ import edu.gymtonic_app.data.remote.RemoteDataSource
 import edu.gymtonic_app.data.remote.RemoteCalendarDay
 import edu.gymtonic_app.data.remote.RemoteTrainingCategory
 import edu.gymtonic_app.data.remote.RemoteWeeklyGoal
-import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
-import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
-import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
-import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
+import edu.gymtonic_app.data.remote.model.Login.LoginRequest
+import edu.gymtonic_app.data.remote.model.Login.LoginResponse
+import edu.gymtonic_app.data.remote.model.RegisterRequest
+import edu.gymtonic_app.data.remote.model.RegisterResponse
 
 class Repository(
     private val remoteDataSource: RemoteDataSource

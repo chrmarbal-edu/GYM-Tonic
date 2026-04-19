@@ -3,8 +3,8 @@ package edu.gymtonic_app.data.repository
 import edu.gymtonic_app.R
 import edu.gymtonic_app.data.remote.RemoteDataSource
 import edu.gymtonic_app.data.remote.RemoteTrainingCategory
-import edu.gymtonic_app.data.remote.datasource.model.RoutineDetailDto
-import edu.gymtonic_app.data.remote.datasource.model.RoutineExerciseDto
+import edu.gymtonic_app.data.remote.model.RoutineDetailDto
+import edu.gymtonic_app.data.remote.model.RoutineExerciseDto
 import edu.gymtonic_app.ui.viewmodel.RoutineDetailUi
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 

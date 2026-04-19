@@ -1,11 +1,11 @@
-package edu.gymtonic_app.data.remote.datasource.services
+package edu.gymtonic_app.data.remote.services
 
-import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
-import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
-import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
-import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
-import edu.gymtonic_app.data.remote.datasource.model.RoutineDetailDto
-import edu.gymtonic_app.data.remote.datasource.model.RoutineDto
+import edu.gymtonic_app.data.remote.model.Login.LoginRequest
+import edu.gymtonic_app.data.remote.model.Login.LoginResponse
+import edu.gymtonic_app.data.remote.model.RegisterRequest
+import edu.gymtonic_app.data.remote.model.RegisterResponse
+import edu.gymtonic_app.data.remote.model.RoutineDetailDto
+import edu.gymtonic_app.data.remote.model.RoutineDto
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

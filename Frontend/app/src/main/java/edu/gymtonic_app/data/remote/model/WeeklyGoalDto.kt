@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.datasource.model
+package edu.gymtonic_app.data.remote.model
 
 data class WeeklyGoalDto(
     val title: String,

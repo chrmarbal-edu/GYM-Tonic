@@ -18,8 +18,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import edu.gymtonic_app.data.remote.datasource.model.Login.SessionManager
-import edu.gymtonic_app.data.remote.datasource.model.Login.sessionDataStore
+import edu.gymtonic_app.data.remote.model.Login.SessionManager
+import edu.gymtonic_app.data.remote.model.Login.sessionDataStore
 import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen

@@ -8,10 +8,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.repository.Repository
 import edu.gymtonic_app.data.remote.RemoteDataSource
-import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
-import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
-import edu.gymtonic_app.data.remote.datasource.model.Login.SessionManager
-import edu.gymtonic_app.data.remote.datasource.model.Login.sessionDataStore
+import edu.gymtonic_app.data.remote.model.RegisterRequest
+import edu.gymtonic_app.data.remote.model.RegisterResponse
+import edu.gymtonic_app.data.remote.model.Login.SessionManager
+import edu.gymtonic_app.data.remote.model.Login.sessionDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

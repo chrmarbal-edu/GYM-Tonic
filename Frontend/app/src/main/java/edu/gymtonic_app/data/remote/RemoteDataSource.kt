@@ -1,14 +1,14 @@
 package edu.gymtonic_app.data.remote
 
 import android.util.Log
-import edu.gymtonic_app.data.remote.datasource.model.Login.LoginRequest
-import edu.gymtonic_app.data.remote.datasource.model.Login.LoginResponse
-import edu.gymtonic_app.data.remote.datasource.model.RegisterRequest
-import edu.gymtonic_app.data.remote.datasource.model.RegisterResponse
-import edu.gymtonic_app.data.remote.datasource.model.RoutineDetailDto
-import edu.gymtonic_app.data.remote.datasource.model.RoutineDto
-import edu.gymtonic_app.data.remote.datasource.model.RoutineExerciseDto
-import edu.gymtonic_app.data.remote.datasource.services.RetrofitClient
+import edu.gymtonic_app.data.remote.model.Login.LoginRequest
+import edu.gymtonic_app.data.remote.model.Login.LoginResponse
+import edu.gymtonic_app.data.remote.model.RegisterRequest
+import edu.gymtonic_app.data.remote.model.RegisterResponse
+import edu.gymtonic_app.data.remote.model.RoutineDetailDto
+import edu.gymtonic_app.data.remote.model.RoutineDto
+import edu.gymtonic_app.data.remote.model.RoutineExerciseDto
+import edu.gymtonic_app.data.remote.services.RetrofitClient
 
 data class RemoteTrainingRoutine(
     val id: String,
