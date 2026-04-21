@@ -16,8 +16,10 @@ object Routes {
 
     // Ruta dinámica para enlazar cualquier rutina que llegue del backend por su routineId.
     const val ROUTINE_DETAIL = "routine/{routineId}"
+    const val EXERCISE_DETAIL = "exercise/{exerciseId}"
 
     fun routine(routineId: String): String = "routine/$routineId"
+    fun exercise(exerciseId: String): String = "exercise/$exerciseId"
 
     const val WEEK = "week_challenges"
 }

@@ -14,11 +14,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
 import androidx.compose.runtime.collectAsState
-
+/*
+RoutineCatalogScreen sí es una pantalla navegable real.
+Es la pantalla que muestra el detalle de una rutina.
+Aunque el nombre diga “Catalog”, en la práctica actúa como pantalla detalle de rutina.
+*/
 @Composable
 fun RoutineCatalogScreen(
     routineId: String,
     onBack: () -> Unit,
+    onExerciseClick: (String) -> Unit,
     viewModel: RoutineCatalogViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -39,7 +44,8 @@ fun RoutineCatalogScreen(
             RoutineTemplateScreen(
                 title = state.routine.title,
                 exercises = state.routine.exercises,
-                onBack = onBack
+                onBack = onBack,
+                onExerciseClick = onExerciseClick
             )
         }
 
@@ -49,7 +55,8 @@ fun RoutineCatalogScreen(
                 RoutineTemplateScreen(
                     title = fallback.title,
                     exercises = fallback.exercises,
-                    onBack = onBack
+                    onBack = onBack,
+                    onExerciseClick = onExerciseClick
                 )
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

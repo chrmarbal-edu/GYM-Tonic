@@ -47,6 +47,7 @@ import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.viewmodel.TrainingCategoryUi
 import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 
+//La que muestra la lista de entrenamientos disponibles
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(

@@ -25,6 +25,7 @@ import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
+import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
@@ -171,13 +172,31 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
             RoutineCatalogScreen(
                 routineId = routineId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onExerciseClick = { exerciseId ->
+                    navController.navigate(Routes.exercise(exerciseId))
+                }
             )
         }
 
         composable(Routes.EXERCISES) {
             RoutineCatalogScreen(
                 routineId = "fullbody",
+                onBack = { navController.popBackStack() },
+                onExerciseClick = { exerciseId ->
+                    navController.navigate(Routes.exercise(exerciseId))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.EXERCISE_DETAIL,
+            arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val exerciseId = backStackEntry.arguments?.getString("exerciseId").orEmpty()
+
+            ExerciseDetailScreen(
+                exerciseId = exerciseId,
                 onBack = { navController.popBackStack() }
             )
         }

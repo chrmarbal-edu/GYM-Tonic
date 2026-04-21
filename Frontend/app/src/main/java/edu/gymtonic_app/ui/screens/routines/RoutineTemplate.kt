@@ -2,6 +2,7 @@ package edu.gymtonic_app.ui.screens.routines
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -40,11 +41,17 @@ import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
+/*
+RoutineTemplateScreen no es una pantalla navegable.
+Es un composable interno que pinta la UI visual de la rutina.
+La navegas indirectamente entrando a RoutineCatalogScreen, pero no existe ruta directa a RoutineTemplateScreen.
+ */
 @Composable
 fun RoutineTemplateScreen(
     title: String,
     exercises: List<RoutineExerciseUi>,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onExerciseClick: (String) -> Unit
 ) {
     val bg = Brush.verticalGradient(
         listOf(
@@ -97,7 +104,10 @@ fun RoutineTemplateScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     items(exercises) { exercise ->
-                        RoutineExerciseRow(exercise = exercise)
+                        RoutineExerciseRow(
+                            exercise = exercise,
+                            onClick = { onExerciseClick(exercise.id) }
+                        )
                     }
                 }
             }
@@ -141,12 +151,17 @@ private fun RoutineHeaderRow(
 }
 
 @Composable
-private fun RoutineExerciseRow(exercise: RoutineExerciseUi) {
+private fun RoutineExerciseRow(
+    exercise: RoutineExerciseUi,
+    onClick: () -> Unit
+) {
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = Color(0xFFE9EBF2),
         shadowElevation = 3.dp,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
