@@ -1,5 +1,6 @@
 package edu.gymtonic_app.data.remote.services
 
+import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.data.remote.model.auth.LoginRequest
 import edu.gymtonic_app.data.remote.model.auth.LoginResponse
 import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
@@ -16,8 +17,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 object RetrofitClient {
-    // En Android Emulator, 10.0.2.2 apunta al localhost de tu PC.
-    private val BASE_URL = "http://10.0.2.2:3010/api/v1/"
+    private val BASE_URL = BuildConfig.BASE_URL
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()
