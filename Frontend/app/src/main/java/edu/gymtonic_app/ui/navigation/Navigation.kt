@@ -22,6 +22,7 @@ import edu.gymtonic_app.data.remote.model.auth.SessionManager
 import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
+import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
@@ -142,6 +143,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                     )
                 },
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
+                onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                 onOpenTechnogym = { },
                 onOpenDiscounts = { },
                 onOpenFindGym = { },
@@ -186,10 +188,26 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 TrainingScreen(
                     // Cada card envía el routineId (backend) y se construye una ruta dinámica a screens/routines.
                     onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
+                    onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
                     isRefreshing = trainingUiState.value.isRefreshing,
                     onRefresh = { trainingViewModel.refreshCategories() }
                 )
+            }
+        }
+
+        composable(Routes.CREATE_ROUTINE) {
+            TrainingShellScreen(
+                title = "Crear Rutina",
+                onBack = { navController.popBackStack() },
+                showBottomBar = true,
+                selectedBottomItem = BottomNavItem.TRAINING,
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            ) {
+                CreateRoutineScreen()
             }
         }
 

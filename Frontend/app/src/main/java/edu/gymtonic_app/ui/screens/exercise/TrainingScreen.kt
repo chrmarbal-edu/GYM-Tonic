@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,6 +46,7 @@ import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 @OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(
     onSelect: (String) -> Unit,
+    onCreateRoutine: () -> Unit = {},
     categories: List<TrainingCategoryUi> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
@@ -54,20 +56,42 @@ fun TrainingScreen(
             .fillMaxSize()
             .padding(horizontal = 14.dp)
     ) {
-        Text(
-            text = if (categories.isEmpty()) {
-                "Explora entrenamientos creados por la comunidad y el equipo"
-            } else {
-                "${categories.size} categorias disponibles para hoy"
-            },
-            color = Color(0xFF464A57),
-            fontWeight = FontWeight.Medium,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center,
+        // Header con título y botón crear rutina
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp, vertical = 8.dp)
-        )
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = if (categories.isEmpty()) {
+                    "Explora entrenamientos creados por la comunidad y el equipo"
+                } else {
+                    "${categories.size} categorias disponibles para hoy"
+                },
+                color = Color(0xFF464A57),
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
+            )
+
+            // Icono "+" para crear rutina
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clickable { onCreateRoutine() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "+",
+                    color = Color(0xFF464A57),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp
+                )
+            }
+        }
 
         Spacer(Modifier.height(6.dp))
 

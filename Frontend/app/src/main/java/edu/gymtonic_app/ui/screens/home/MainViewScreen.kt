@@ -36,6 +36,7 @@ data class HomeAction(
 fun MainViewScreen(
     onLogout : () -> Unit,
     onOpenTraining: () -> Unit,
+    onCreateRoutine: () -> Unit,
     onOpenTechnogym: () -> Unit,
     onOpenDiscounts: () -> Unit,
     onOpenFindGym: () -> Unit,
@@ -54,7 +55,7 @@ fun MainViewScreen(
 
     val actions = listOf(
         HomeAction("Entrenamientos Predefinidos", Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
-        HomeAction("Crear Entrenamientos", Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
+        HomeAction("Crear Rutinas", Icons.Outlined.FitnessCenter, onClick = onCreateRoutine),
         HomeAction("Technogym App", Icons.Outlined.Devices, onClick = onOpenTechnogym),
 
         HomeAction("Descuentos", Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
