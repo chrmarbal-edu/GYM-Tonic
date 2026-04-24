@@ -24,9 +24,9 @@ fun RoutineCatalogScreen(
     routineId: String,
     onBack: () -> Unit,
     onExerciseClick: (String) -> Unit,
-    viewModel: RoutineCatalogViewModel = viewModel()
-) {
-    val uiState by viewModel.uiState.collectAsState()
+    onOpenHome: () -> Unit = {},
+    onOpenTraining: () -> Unit = {},
+    onOpenChallenges: () -> Unit = {},
 
     // Cada vez que cambia el id de ruta, recargamos su detalle.
     LaunchedEffect(routineId) {
@@ -35,18 +35,24 @@ fun RoutineCatalogScreen(
 
     when (val state = uiState) {
         is RoutineCatalogUiState.Loading -> {
+            TrainingShellScreen(
+                title = "Cargando rutina...",
+                onBack = onBack,
+                showBottomBar = true,
+                selectedBottomItem = BottomNavItem.TRAINING,
+                onOpenHome = onOpenHome,
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
+                onOpenHome = onOpenHome,
+                onOpenTraining = onOpenTraining,
+                onOpenChallenges = onOpenChallenges,
+                onOpenProfile = onOpenProfile
+            ) {
+                RoutineTemplateScreen(
+                    exercises = state.routine.exercises,
+                    onExerciseClick = onExerciseClick
+                )
             }
-        }
-
-        is RoutineCatalogUiState.Success -> {
-            RoutineTemplateScreen(
-                title = state.routine.title,
-                exercises = state.routine.exercises,
-                onBack = onBack,
-                onExerciseClick = onExerciseClick
-            )
         }
 
         is RoutineCatalogUiState.Error -> {
@@ -58,9 +64,30 @@ fun RoutineCatalogScreen(
                     onBack = onBack,
                     onExerciseClick = onExerciseClick
                 )
+            RoutineTemplateScreen(
+                title = state.routine.title,
+                exercises = state.routine.exercises,
+                onBack = onBack,
+                onExerciseClick = onExerciseClick
+            )
+                    )
+                }
             } else {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = state.message, textAlign = TextAlign.Center)
+                TrainingShellScreen(
+                    title = "Entrenamientos",
+                    onBack = onBack,
+                    showBottomBar = true,
+                    selectedBottomItem = BottomNavItem.TRAINING,
+                    onOpenHome = onOpenHome,
+                    onOpenTraining = onOpenTraining,
+                    onOpenChallenges = onOpenChallenges,
+                    onOpenProfile = onOpenProfile
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = state.message, textAlign = TextAlign.Center)
+                    }
                 }
             }
         }

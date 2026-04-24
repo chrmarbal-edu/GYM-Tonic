@@ -14,16 +14,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Surface
@@ -42,8 +37,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.gymtonic_app.ui.components.BottomNavBar
-import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.viewmodel.TrainingCategoryUi
 import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 
@@ -51,134 +44,64 @@ import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(
-    onBack: () -> Unit,
     onSelect: (String) -> Unit,
-    onOpenHome: () -> Unit = {},
-    onOpenTraining: () -> Unit = {},
-    onOpenChallenges: () -> Unit = {},
-    onOpenProfile: () -> Unit = {},
     categories: List<TrainingCategoryUi> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
-    val bg = Brush.verticalGradient(
-        listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
-
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(bg)
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 42.dp)
+            .padding(horizontal = 14.dp)
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(34.dp),
-            color = Color(0xFFD9D9D9),
-            shadowElevation = 10.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 24.dp)
-            ) {
-                TrainingHeaderRow(onBack = onBack)
-
-                Text(
-                    text = if (categories.isEmpty()) {
-                        "Explora entrenamientos creados por la comunidad y el equipo"
-                    } else {
-                        "${categories.size} categorias disponibles para hoy"
-                    },
-                    color = Color(0xFF464A57),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 8.dp)
-                )
-
-                Spacer(Modifier.height(6.dp))
-
-                PullToRefreshBox(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = 14.dp),
-                    isRefreshing = isRefreshing,
-                    // El refresh lo dispara la pantalla/contenedor (ViewModel en siguiente paso).
-                    onRefresh = onRefresh
-                ) {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 14.dp),
-                        content = {
-                            if (categories.isEmpty() && !isRefreshing) {
-                                item {
-                                    EmptyTrainingState()
-                                }
-                            } else {
-                                // Render dinamico: las categorias/rutinas vienen del backend via ViewModel.
-                                for (category in categories) {
-                                    item(key = category.id) {
-                                        TrainingSection(
-                                            title = category.title,
-                                            routines = category.routines,
-                                            onSelect = onSelect
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    )
-                }
-
-                BottomNavBar(
-                    selectedItem = BottomNavItem.TRAINING,
-                    onOpenHome = onOpenHome,
-                    onOpenTraining = onOpenTraining,
-                    onOpenChallenges = onOpenChallenges,
-                    onOpenProfile = onOpenProfile
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TrainingHeaderRow(onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        IconButton(
-            onClick = onBack,
-            modifier = Modifier.size(36.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = "Volver",
-                tint = Color(0xFF2D2D2D)
-            )
-        }
-
         Text(
-            text = "Entrenamientos",
-            color = Color(0xFF1D1D1D),
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 26.sp,
+            text = if (categories.isEmpty()) {
+                "Explora entrenamientos creados por la comunidad y el equipo"
+            } else {
+                "${categories.size} categorias disponibles para hoy"
+            },
+            color = Color(0xFF464A57),
+            fontWeight = FontWeight.Medium,
+            fontSize = 12.sp,
             textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 8.dp)
         )
 
-        Spacer(modifier = Modifier.size(40.dp))
+        Spacer(Modifier.height(6.dp))
+
+        PullToRefreshBox(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            isRefreshing = isRefreshing,
+            // El refresh lo dispara la pantalla/contenedor (ViewModel en siguiente paso).
+            onRefresh = onRefresh
+        ) {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(top = 4.dp, bottom = 14.dp),
+                content = {
+                    if (categories.isEmpty() && !isRefreshing) {
+                        item {
+                            EmptyTrainingState()
+                        }
+                    } else {
+                        // Render dinamico: las categorias/rutinas vienen del backend via ViewModel.
+                        for (category in categories) {
+                            item(key = category.id) {
+                                TrainingSection(
+                                    title = category.title,
+                                    routines = category.routines,
+                                    onSelect = onSelect
+                                )
+                            }
+                        }
+                    }
+                }
+            )
+        }
     }
 }
 

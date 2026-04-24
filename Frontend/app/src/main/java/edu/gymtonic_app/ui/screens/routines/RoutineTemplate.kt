@@ -39,20 +39,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
-import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
-
-/*
-RoutineTemplateScreen no es una pantalla navegable.
-Es un composable interno que pinta la UI visual de la rutina.
-La navegas indirectamente entrando a RoutineCatalogScreen, pero no existe ruta directa a RoutineTemplateScreen.
- */
-@Composable
-fun RoutineTemplateScreen(
-    title: String,
-    exercises: List<RoutineExerciseUi>,
-    onBack: () -> Unit,
-    onExerciseClick: (String) -> Unit
-) {
     val bg = Brush.verticalGradient(
         listOf(
             Color(0xFF1F3F73),
@@ -69,35 +55,7 @@ fun RoutineTemplateScreen(
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(34.dp),
-            color = Color(0xFFD9D9D9),
-            shadowElevation = 10.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = 24.dp)
-            ) {
-                RoutineHeaderRow(
-                    title = title,
-                    onBack = onBack
-                )
-
-                Spacer(Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(R.string.ejercicios_disponibles, exercises.size),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF464A57),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-
                 Spacer(Modifier.height(10.dp))
-
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
@@ -110,6 +68,39 @@ fun RoutineTemplateScreen(
                         )
                     }
                 }
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF464A57),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.ejercicios_disponibles, exercises.size),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF464A57),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+
+        Spacer(Modifier.height(10.dp))
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(exercises) { exercise ->
+                RoutineExerciseRow(
+                    exercise = exercise,
+                    onClick = { onExerciseClick(exercise.id) }
+                )
             }
         }
     }

@@ -20,12 +20,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import edu.gymtonic_app.data.remote.model.auth.SessionManager
 import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
+import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
+import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
@@ -49,6 +51,27 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
     val sessionState = sessionManager.sessionFlow.collectAsState(initial = null)
     val trainingUiState = trainingViewModel.uiState.collectAsState()
     val weekUiState = weekChallengesViewModel.uiState.collectAsState()
+
+    val onOpenHomeGlobal = {
+        navController.navigate(Routes.HOME) {
+            popUpTo(Routes.HOME) { inclusive = false }
+            launchSingleTop = true
+        }
+    }
+
+    val onOpenTrainingGlobal = {
+        navController.navigate(Routes.TRAINING) {
+            launchSingleTop = true
+        }
+    }
+
+    val onOpenChallengesGlobal = {
+        navController.navigate(Routes.WEEK) {
+            launchSingleTop = true
+        }
+    }
+
+    val onOpenProfileGlobal = { }
 
     val startRoute = when {
         sessionState.value == null -> null
@@ -145,23 +168,24 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         }
 
         composable(Routes.TRAINING) {
-            TrainingScreen(
+            TrainingShellScreen(
+                title = "Entrenamientos",
                 onBack = { navController.popBackStack() },
-                // Cada card envía el routineId (backend) y se construye una ruta dinámica a screens/routines.
-                onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
-                onOpenHome = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
-                onOpenTraining = { },
-                onOpenChallenges = { navController.navigate(Routes.WEEK) },
-                onOpenProfile = { },
-                categories = trainingUiState.value.categories,
-                isRefreshing = trainingUiState.value.isRefreshing,
-                onRefresh = { trainingViewModel.refreshCategories() }
-            )
+                showBottomBar = true,
+                selectedBottomItem = BottomNavItem.TRAINING,
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            ) {
+                TrainingScreen(
+                    // Cada card envía el routineId (backend) y se construye una ruta dinámica a screens/routines.
+                    onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
+                    categories = trainingUiState.value.categories,
+                    isRefreshing = trainingUiState.value.isRefreshing,
+                    onRefresh = { trainingViewModel.refreshCategories() }
+                )
+            }
         }
 
         composable(
@@ -175,7 +199,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onBack = { navController.popBackStack() },
                 onExerciseClick = { exerciseId ->
                     navController.navigate(Routes.exercise(exerciseId))
-                }
+                },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
             )
         }
 
@@ -185,7 +213,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onBack = { navController.popBackStack() },
                 onExerciseClick = { exerciseId ->
                     navController.navigate(Routes.exercise(exerciseId))
-                }
+                },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
             )
         }
 
@@ -197,7 +229,12 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
             ExerciseDetailScreen(
                 exerciseId = exerciseId,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal,
+                showBottomBar = false
             )
         }
     }
