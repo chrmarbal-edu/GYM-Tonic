@@ -6,19 +6,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
-import androidx.compose.runtime.collectAsState
-/*
-RoutineCatalogScreen sí es una pantalla navegable real.
-Es la pantalla que muestra el detalle de una rutina.
-Aunque el nombre diga “Catalog”, en la práctica actúa como pantalla detalle de rutina.
-*/
+
 @Composable
 fun RoutineCatalogScreen(
     routineId: String,
@@ -27,8 +25,11 @@ fun RoutineCatalogScreen(
     onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
+    onOpenProfile: () -> Unit = {},
+    viewModel: RoutineCatalogViewModel = viewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    // Cada vez que cambia el id de ruta, recargamos su detalle.
     LaunchedEffect(routineId) {
         viewModel.loadRoutine(routineId)
     }
@@ -41,8 +42,22 @@ fun RoutineCatalogScreen(
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
                 onOpenHome = onOpenHome,
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                onOpenTraining = onOpenTraining,
+                onOpenChallenges = onOpenChallenges,
+                onOpenProfile = onOpenProfile
+            ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        is RoutineCatalogUiState.Success -> {
+            TrainingShellScreen(
+                title = state.routine.title,
+                onBack = onBack,
+                showBottomBar = true,
+                selectedBottomItem = BottomNavItem.TRAINING,
                 onOpenHome = onOpenHome,
                 onOpenTraining = onOpenTraining,
                 onOpenChallenges = onOpenChallenges,
@@ -58,23 +73,22 @@ fun RoutineCatalogScreen(
         is RoutineCatalogUiState.Error -> {
             val fallback = state.fallbackRoutine
             if (fallback != null) {
-                RoutineTemplateScreen(
+                TrainingShellScreen(
                     title = fallback.title,
-                    exercises = fallback.exercises,
                     onBack = onBack,
-                    onExerciseClick = onExerciseClick
-                )
-            RoutineTemplateScreen(
-                title = state.routine.title,
-                exercises = state.routine.exercises,
-                onBack = onBack,
-                onExerciseClick = onExerciseClick
-            )
+                    showBottomBar = true,
+                    selectedBottomItem = BottomNavItem.TRAINING,
+                    onOpenHome = onOpenHome,
+                    onOpenTraining = onOpenTraining,
+                    onOpenChallenges = onOpenChallenges,
+                    onOpenProfile = onOpenProfile
+                ) {
+                    RoutineTemplateScreen(
+                        exercises = fallback.exercises,
+                        onExerciseClick = onExerciseClick
                     )
                 }
             } else {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message, textAlign = TextAlign.Center)
                 TrainingShellScreen(
                     title = "Entrenamientos",
                     onBack = onBack,

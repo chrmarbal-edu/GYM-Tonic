@@ -27,6 +27,7 @@ import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
+import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
@@ -71,7 +72,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         }
     }
 
-    val onOpenProfileGlobal = { }
+    val onOpenProfileGlobal = {
+        navController.navigate(Routes.PROFILE) {
+            launchSingleTop = true
+        }
+    }
 
     val startRoute = when {
         sessionState.value == null -> null
@@ -140,7 +145,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenTechnogym = { },
                 onOpenDiscounts = { },
                 onOpenFindGym = { },
-                onOpenClientArea = { },
+                onOpenClientArea = { navController.navigate(Routes.PROFILE) },
                 onInviteFriend = { },
                 onOpenMissions = { navController.navigate(Routes.WEEK) },
             )
@@ -157,7 +162,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 },
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
                 onOpenChallenges = { },
-                onOpenProfile = { },
+                onOpenProfile = onOpenProfileGlobal,
                 onShowMoreCalendar = { },
                 goals = weekUiState.value.goals,
                 calendarDays = weekUiState.value.calendarDays,
@@ -235,6 +240,33 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
                 showBottomBar = false
+            )
+        }
+
+        composable(Routes.PROFILE) {
+            ProfileScreen(
+                onBack = { navController.popBackStack() },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal,
+                onOpenWeek = { navController.navigate(Routes.WEEK) },
+                onOpenRoutine = { routineId ->
+                    navController.navigate(Routes.routine(routineId))
+                },
+                onLogout = {
+                    homeViewModel.logout(
+                        onLoggedOut = {
+                            navController.navigate(Routes.WELCOME) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        },
+                        onError = { }
+                    )
+                }
             )
         }
     }

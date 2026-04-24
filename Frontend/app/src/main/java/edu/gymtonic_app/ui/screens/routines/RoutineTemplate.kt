@@ -1,10 +1,8 @@
 package edu.gymtonic_app.ui.screens.routines
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,17 +16,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -39,45 +32,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
-    val bg = Brush.verticalGradient(
-        listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
-    Box(
+@Composable
+fun RoutineTemplateScreen(
+    exercises: List<RoutineExerciseUi>,
+    onExerciseClick: (String) -> Unit
+) {
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(bg)
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp, top = 42.dp)
+            .padding(horizontal = 14.dp)
     ) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-                Spacer(Modifier.height(10.dp))
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(exercises) { exercise ->
-                        RoutineExerciseRow(
-                            exercise = exercise,
-                            onClick = { onExerciseClick(exercise.id) }
-                        )
-                    }
-                }
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF464A57),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.ejercicios_disponibles, exercises.size),
             fontSize = 12.sp,
@@ -93,7 +59,7 @@ import edu.gymtonic_app.R
 
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp, vertical = 8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             items(exercises) { exercise ->
@@ -103,41 +69,6 @@ import edu.gymtonic_app.R
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun RoutineHeaderRow(
-    title: String,
-    onBack: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = stringResource(R.string.volver),
-                tint = Color(0xFF2D2D2D)
-            )
-        }
-
-        Text(
-            text = title,
-            fontSize = 26.sp,
-            fontWeight = FontWeight.ExtraBold,
-            color = Color(0xFF1D1D1D),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.size(40.dp))
     }
 }
 
@@ -152,7 +83,7 @@ private fun RoutineExerciseRow(
         shadowElevation = 3.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable(onClick = onClick)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
