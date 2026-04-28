@@ -49,6 +49,10 @@ data class RegisterRequest(
 )
 
 data class RegisterResponse(
-    val user: UserDto,
+    val user: UserDto? = null,
+    val data: UserDto? = null,
     val token: String?
-)
+) {
+    // Soporta ambas formas de respuesta (Forma A: user, Forma B: data)
+    fun resolvedUser(): UserDto? = user ?: data
+}

@@ -58,7 +58,7 @@ class RoutineRepository(
 		return RoutineDetailData(
 			id = dto.routineId,
 			title = dto.routineName,
-			exercises = dto.exercises.mapIndexed { index, exercise ->
+			exercises = dto.safeExercises().mapIndexed { index, exercise ->
 				mapRoutineExerciseDtoToData(
 					dto = exercise,
 					routineId = dto.routineId,

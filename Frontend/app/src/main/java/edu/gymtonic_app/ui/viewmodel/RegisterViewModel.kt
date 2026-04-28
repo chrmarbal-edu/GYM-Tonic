@@ -47,18 +47,18 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
             try{
                 val response = authRepository.register(request)
                 Log.i("register",response.toString())
-                if(response.token != null){
+                val user = response.resolvedUser()
+                if(response.token != null && user != null){
                     sessionManager.saveSession(
                         token = response.token,
-
-                        userId = response.user.id,
-                        username = response.user.username,
-                        email = response.user.email,
-                        role = response.user.role
+                        userId = user.id,
+                        username = user.username,
+                        email = user.email,
+                        role = user.role
                     )
-
-
                     _registerState.value = RegisterState.Success(response)
+                } else {
+                    _registerState.value = RegisterState.Error("Usuario o token nulo en respuesta")
                 }
             } catch (e: Exception){
                 _registerState.value = RegisterState.Error(e.message ?: "Error en el registro")

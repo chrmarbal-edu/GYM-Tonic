@@ -80,7 +80,7 @@ class RoutineRemoteDataSource {
             RoutineDto(
                 routineId = detail.routineId,
                 routineName = detail.routineName,
-                imageKey = detail.exercises.firstOrNull()?.imageKey
+                imageKey = detail.safeExercises().firstOrNull()?.imageKey
             )
         }
     }

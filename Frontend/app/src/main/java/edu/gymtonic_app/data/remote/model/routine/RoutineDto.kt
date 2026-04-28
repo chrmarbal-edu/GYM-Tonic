@@ -3,30 +3,33 @@ package edu.gymtonic_app.data.remote.model.routine
 import com.google.gson.annotations.SerializedName
 
 data class RoutineDto(
-    @SerializedName("routineId")
+    @SerializedName("routine_id")
     val routineId: String,
-    @SerializedName("routineName")
+    @SerializedName("routine_name")
     val routineName: String,
-    @SerializedName("imageKey")
+    @SerializedName("image_key")
     val imageKey: String? = null
 )
 
 data class RoutineExerciseDto(
-    @SerializedName("exerciseId")
+    @SerializedName("exercise_id")
     val exerciseId: String? = null,
     @SerializedName("name")
     val name: String,
     @SerializedName("reps")
     val reps: String,
-    @SerializedName("imageKey")
+    @SerializedName("image_key")
     val imageKey: String? = null
 )
 
 data class RoutineDetailDto(
-    @SerializedName("routineId")
+    @SerializedName("routine_id")
     val routineId: String,
-    @SerializedName("routineName")
+    @SerializedName("routine_name")
     val routineName: String,
     @SerializedName("exercises")
-    val exercises: List<RoutineExerciseDto> = emptyList()
-)
+    val exercises: List<RoutineExerciseDto>? = null
+) {
+    // Asegura lista vacía si exercises es null
+    fun safeExercises(): List<RoutineExerciseDto> = exercises ?: emptyList()
+}
