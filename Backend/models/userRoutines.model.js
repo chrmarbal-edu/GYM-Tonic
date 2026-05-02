@@ -15,7 +15,7 @@ userRoutine.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM User_X_Routine")
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
     }
@@ -35,10 +35,10 @@ userRoutine.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -62,7 +62,7 @@ userRoutine.create = async (newUserRoutine, result) => {
         `
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -75,10 +75,10 @@ routineExercise.delete = async function (id, result) {
             .query("DELETE FROM User_X_Routine WHERE user_x_routine_id = @id")
 
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 

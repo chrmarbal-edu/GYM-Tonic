@@ -14,7 +14,7 @@ group.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM Groups")
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
     }
@@ -34,10 +34,10 @@ group.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -58,10 +58,10 @@ group.updateById = async (id, updateGroup, result) => {
 
         const response = await request.query(sqlQuery)
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -84,7 +84,7 @@ group.create = async (newGroup, result) => {
         `
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -97,10 +97,10 @@ group.delete = async function (id, result) {
             .query("DELETE FROM Groups WHERE group_id = @id")
 
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 

@@ -30,10 +30,10 @@ exports.findAllFriends = wrapAsync(async function(req, res, next) {
 
 /* <=============================== FIND FRIENDSHIPS BY USERID ===============================> */
 exports.findFriendsByUserId = wrapAsync(async function (req, res, next) {
-    const {id} = req.params
+    const { userId } = req.params
     const userLogued = req.userLogued
-    if(userLogued && (userLogued.user_role == 1 || userLogued.user_id == id)){
-        await friendsModel.findByUserId(id, async function(err, datosFriendships){
+    if(userLogued && (userLogued.user_role == 1 || userLogued.user_id == userId)){
+        await friendsModel.findByUserId(userId, async function(err, datosFriendships){
             if(err){
                 next(new AppError(err, 404))
             } else{
@@ -85,7 +85,7 @@ exports.create = wrapAsync(async function (req, res, next) {
 
         await friendsModel.create(newFriendship, function(err, datosAmistadCreada) {
             if(err){
-                next(new AppError(datosAmistadCreada, 400))
+                next(new AppError(err, 400))
             } else{
                 res.status(201).json(datosAmistadCreada)
             }

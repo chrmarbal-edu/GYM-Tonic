@@ -17,7 +17,7 @@ mission.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM Missions")
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
     }
@@ -37,10 +37,10 @@ mission.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -67,10 +67,10 @@ mission.updateById = async (id, updateMission, result) => {
 
         const response = await request.query(sqlQuery)
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -101,7 +101,7 @@ mission.create = async (newMission, result) => {
         `
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -114,10 +114,10 @@ mission.delete = async function (id, result) {
             .query("DELETE FROM Missions WHERE mission_id = @id")
 
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 

@@ -1,6 +1,4 @@
-const { error } = require("console")
 const express = require("express")
-const { access } = require("fs")
 const app = express()
 require("dotenv").config()
 const log4js = require("log4js")
@@ -11,12 +9,14 @@ if(app.get("env") == "development"){
             access: {
                 type: "dateFile",
                 filename: "./temp/access.log",
-                pattern: "-yyyy-MM-dd"
+                pattern: "-yyyy-MM-dd",
+                keepFileExt: true
             },
             error: {
                 type: "dateFile",
                 filename: "./temp/error.log",
-                pattern: "-yyyy-MM-dd"
+                pattern: "-yyyy-MM-dd",
+                keepFileExt: true
             }
         },
         categories: {

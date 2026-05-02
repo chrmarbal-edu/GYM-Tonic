@@ -15,7 +15,7 @@ friend.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM Friends")
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
     }
@@ -35,10 +35,10 @@ friend.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -58,10 +58,10 @@ friend.findByUserId = async function (userId, result) {
             `)
 
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -87,10 +87,10 @@ friend.create = async (newFriend, result) => {
         const response = await request.query(sqlQuery)
     
         result(null, response.recordset[0])
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -103,10 +103,10 @@ friend.delete = async function (id, result) {
             .query("DELETE FROM Friends WHERE friend_id = @id")
 
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 

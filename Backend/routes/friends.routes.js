@@ -5,10 +5,10 @@ const jwtMW = require("../middlewares/jwt.mw")
 const rutasProtegidasMW = require("../middlewares/rutasProtegidas.mw")
 
 // FIND ALL
-router.get("/", rutasProtegidasMW.requireAdmin, jwtMW.authenticate, friendsController.findAllFriends)
+router.get("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, friendsController.findAllFriends)
 
 // CREATE FRIENDSHIP
-router.post("/", rutasProtegidasMW.requireAdmin, jwtMW.authenticate, friendsController.create)
+router.post("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, friendsController.create)
 
 // DELETE FRIENDSHIP BY ID
 router.delete("/:id", jwtMW.authenticate, friendsController.deleteFriendById)
@@ -17,6 +17,6 @@ router.delete("/:id", jwtMW.authenticate, friendsController.deleteFriendById)
 router.get("/user/:userId", jwtMW.authenticate, friendsController.findFriendsByUserId)
 
 // FIND BY ID
-router.get("/:id", rutasProtegidasMW.requireAdmin, jwtMW.authenticate, friendsController.findFriendById)
+router.get("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, friendsController.findFriendById)
 
 module.exports = router

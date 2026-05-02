@@ -18,7 +18,7 @@ CREATE TABLE dbo.Users (
     user_email     NVARCHAR(255)     NOT NULL,
     user_height    FLOAT             NOT NULL,
     user_weight    FLOAT             NOT NULL,
-    user_objective INT               NOT NULL,
+    user_objetive  INT               NOT NULL,
     user_points    INT               NULL,
     user_role      INT               NOT NULL,
     CONSTRAINT PK_Users          PRIMARY KEY (user_id),
@@ -67,59 +67,65 @@ GO
 ============================================================ */
 
 CREATE TABLE dbo.Routine_X_Exercise (
-    id          INT IDENTITY(1,1) PRIMARY KEY,
-    routine_id  INT NOT NULL,
-    exercise_id INT NOT NULL,
-    FOREIGN KEY (routine_id)  REFERENCES dbo.Routines(routine_id),
-    FOREIGN KEY (exercise_id) REFERENCES dbo.Exercises(exercise_id)
+    routine_x_exercise_id INT IDENTITY(1,1) NOT NULL,
+    routine_x_exercise_routineid INT NOT NULL,
+    routine_x_exercise_exerciseid INT NOT NULL,
+    CONSTRAINT PK_Routine_X_Exercise PRIMARY KEY (routine_x_exercise_id),
+    FOREIGN KEY (routine_x_exercise_routineid)  REFERENCES dbo.Routines(routine_id),
+    FOREIGN KEY (routine_x_exercise_exerciseid) REFERENCES dbo.Exercises(exercise_id)
 );
 GO
 
 CREATE TABLE dbo.User_X_Routine (
-    id         INT IDENTITY(1,1) PRIMARY KEY,
-    user_id    INT NOT NULL,
-    routine_id INT NOT NULL,
-    FOREIGN KEY (user_id)    REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (routine_id) REFERENCES dbo.Routines(routine_id)
+    user_x_routine_id INT IDENTITY(1,1) NOT NULL,
+    user_x_routine_userid INT NOT NULL,
+    user_x_routine_routineid INT NOT NULL,
+    CONSTRAINT PK_User_X_Routine PRIMARY KEY (user_x_routine_id),
+    FOREIGN KEY (user_x_routine_userid)  REFERENCES dbo.Users(user_id),
+    FOREIGN KEY (user_x_routine_routineid) REFERENCES dbo.Routines(routine_id)
 );
 GO
 
-CREATE TABLE dbo.Group_X_User (
-    id       INT IDENTITY(1,1) PRIMARY KEY,
-    group_id INT NOT NULL,
-    user_id  INT NOT NULL,
-    range    INT NOT NULL,
-    FOREIGN KEY (group_id) REFERENCES dbo.Groups(group_id),
-    FOREIGN KEY (user_id)  REFERENCES dbo.Users(user_id)
+CREATE TABLE dbo.Group_x_user (
+    Group_x_user_id INT IDENTITY(1,1) NOT NULL,
+    Group_x_user_groupid INT NOT NULL,
+    Group_x_user_userid INT NOT NULL,
+    Group_x_user_range INT NOT NULL,
+    CONSTRAINT PK_Group_x_user PRIMARY KEY (Group_x_user_id),
+    FOREIGN KEY (Group_x_user_groupid) REFERENCES dbo.Groups(group_id),
+    FOREIGN KEY (Group_x_user_userid)  REFERENCES dbo.Users(user_id)
 );
 GO
 
 CREATE TABLE dbo.Friends (
-    id    INT IDENTITY(1,1) PRIMARY KEY,
-    user1 INT NOT NULL,
-    user2 INT NOT NULL,
-    FOREIGN KEY (user1) REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (user2) REFERENCES dbo.Users(user_id)
+    friend_id      INT IDENTITY(1,1) NOT NULL,
+    friend_userid1 INT NOT NULL,
+    friend_userid2 INT NOT NULL,
+    CONSTRAINT PK_Friends PRIMARY KEY (friend_id),
+    FOREIGN KEY (friend_userid1) REFERENCES dbo.Users(user_id),
+    FOREIGN KEY (friend_userid2) REFERENCES dbo.Users(user_id)
 );
 GO
 
 CREATE TABLE dbo.Frequest (
-    id       INT IDENTITY(1,1) PRIMARY KEY,
-    sender   INT NOT NULL,
-    receiver INT NOT NULL,
-    status   INT NOT NULL,
-    FOREIGN KEY (sender)   REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (receiver) REFERENCES dbo.Users(user_id)
+    frequest_id       INT IDENTITY(1,1) NOT NULL,
+    frequest_sender   INT NOT NULL,
+    frequest_receiver INT NOT NULL,
+    frequest_status   INT NOT NULL,
+    CONSTRAINT PK_Frequest PRIMARY KEY (frequest_id),
+    FOREIGN KEY (frequest_sender)   REFERENCES dbo.Users(user_id),
+    FOREIGN KEY (frequest_receiver) REFERENCES dbo.Users(user_id)
 );
 GO
 
 CREATE TABLE dbo.User_X_Mission (
-    id         INT IDENTITY(1,1) PRIMARY KEY,
-    user_id    INT  NOT NULL,
-    mission_id INT  NOT NULL,
-    expiration DATE NOT NULL,
-    FOREIGN KEY (user_id)    REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (mission_id) REFERENCES dbo.Missions(mission_id)
+    user_x_mission_id INT IDENTITY(1,1) NOT NULL,
+    user_x_mission_userid INT NOT NULL,
+    user_x_mission_missionid INT NOT NULL,
+    user_x_mission_expiration DATE NOT NULL,
+    CONSTRAINT PK_User_X_Mission PRIMARY KEY (user_x_mission_id),
+    FOREIGN KEY (user_x_mission_userid)    REFERENCES dbo.Users(user_id),
+    FOREIGN KEY (user_x_mission_missionid) REFERENCES dbo.Missions(mission_id)
 );
 GO
 
@@ -128,7 +134,7 @@ GO
 ============================================================ */
 INSERT INTO dbo.Users
     (user_username, user_name, user_password, user_birthdate,
-     user_email, user_height, user_weight, user_objective, user_points, user_role)
+     user_email, user_height, user_weight, user_objetive, user_points, user_role)
 VALUES
     ('admin', 'Administrador',
      '$2b$12$bvvrPTWlj.GC8RDiz3ZtRezksJJVtvmB9GVzJBQUBQfc6ZUxfNExG',
@@ -143,7 +149,7 @@ GO
 -- user_role: 0=normal 1=admin | user_objective: 0=perder peso 1=ganar músculo 2=resistencia
 INSERT INTO dbo.Users
     (user_username, user_name, user_password, user_birthdate,
-     user_email, user_height, user_weight, user_objective, user_points, user_role)
+     user_email, user_height, user_weight, user_objetive, user_points, user_role)
 VALUES
     ('carlos_g', 'Carlos García',   '$2b$12$bvvrPTWlj.GC8RDiz3ZtRezksJJVtvmB9GVzJBQUBQfc6ZUxfNExG', '1995-03-15', 'carlos@example.com', 178, 80, 1, 120, 0),
     ('laura_m',  'Laura Martínez',  '$2b$12$bvvrPTWlj.GC8RDiz3ZtRezksJJVtvmB9GVzJBQUBQfc6ZUxfNExG', '1998-07-22', 'laura@example.com',  165, 60, 0, 340, 0),
@@ -161,14 +167,14 @@ INSERT INTO dbo.Exercises
 VALUES
     ('Sentadilla',           'Ejercicio compuesto de piernas. Baja hasta que los muslos queden paralelos al suelo.',         0, 'https://youtube.com/watch?v=squat',     'squat.jpg'),
     ('Press de banca',       'Ejercicio de empuje para pecho. Tumbado en banco, baja la barra al pecho y empuja.',           0, 'https://youtube.com/watch?v=bench',     'bench.jpg'),
-    ('Peso muerto',          'Levanta la barra desde el suelo manteniendo la espalda recta.',                                0, 'https://youtube.com/watch?v=deadlift',  'deadlift.jpg'),
-    ('Dominadas',            'Cuelga de una barra y tira del cuerpo hasta que la barbilla supere la barra.',                 0, 'https://youtube.com/watch?v=pullup',    'pullup.jpg'),
-    ('Press militar',        'De pie o sentado, empuja la barra por encima de la cabeza.',                                   0, 'https://youtube.com/watch?v=ohpress',   'ohpress.jpg'),
+    ('Peso muerto',          'Levanta la barra desde el suelo manteniendo la espalda recta.',                               0, 'https://youtube.com/watch?v=deadlift',  'deadlift.jpg'),
+    ('Dominadas',            'Cuelga de una barra y tira del cuerpo hasta que la barbilla supere la barra.',                 0, 'https://youtube.com/watch?v=pullup',     'pullup.jpg'),
+    ('Press militar',        'De pie o sentado, empuja la barra por encima de la cabeza.',                                   0, 'https://youtube.com/watch?v=ohpress',    'ohpress.jpg'),
     ('Remo con barra',       'Con el torso inclinado, tira de la barra hacia el abdomen.',                                   0, 'https://youtube.com/watch?v=row',       'row.jpg'),
     ('Carrera continua',     'Mantén un ritmo constante durante el tiempo indicado, controlando la respiración.',            1, 'https://youtube.com/watch?v=running',   'running.jpg'),
-    ('Saltar a la comba',    'Salta alternando pies o con ambos pies juntos a ritmo constante.',                             1, 'https://youtube.com/watch?v=jumprope',  'jumprope.jpg'),
-    ('Burpees',              'Combina sentadilla, plancha, flexión y salto. Ejercicio de alta intensidad.',                  1, 'https://youtube.com/watch?v=burpee',    'burpee.jpg'),
-    ('Bicicleta estática',   'Pedalea a intensidad moderada-alta durante el tiempo indicado.',                               1, 'https://youtube.com/watch?v=bike',      'bike.jpg'),
+    ('Saltar a la comba',     'Salta alternando pies o con ambos pies juntos a ritmo constante.',                             1, 'https://youtube.com/watch?v=jumprope',  'jumprope.jpg'),
+    ('Burpees',               'Combina sentadilla, plancha, flexión y salto. Ejercicio de alta intensidad.',                  1, 'https://youtube.com/watch?v=burpee',     'burpee.jpg'),
+    ('Bicicleta estática',   'Pedalea a intensidad moderada-alta durante el tiempo indicado.',                               1, 'https://youtube.com/watch?v=bike',       'bike.jpg'),
     ('Estiramiento isquios', 'Sentado en el suelo, estira las piernas y alcanza la punta de los pies.',                     2, 'https://youtube.com/watch?v=hamstring', 'hamstring.jpg'),
     ('Yoga - Saludo al sol', 'Secuencia de posturas que trabaja flexibilidad y equilibrio de todo el cuerpo.',               2, 'https://youtube.com/watch?v=sunsalute','sunsalute.jpg');
 GO
@@ -184,7 +190,7 @@ VALUES
 GO
 
 -- Ejercicios por rutina
-INSERT INTO dbo.Routine_X_Exercise (routine_id, exercise_id)
+INSERT INTO dbo.Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid)
 VALUES
     (1,1),(1,2),(1,6),
     (2,2),(2,4),(2,5),(2,6),
@@ -194,7 +200,7 @@ VALUES
 GO
 
 -- Rutinas asignadas a usuarios (IDs 2-9)
-INSERT INTO dbo.User_X_Routine (user_id, routine_id)
+INSERT INTO dbo.User_X_Routine (user_x_routine_userid, user_x_routine_routineid)
 VALUES
     (2,1),(2,3),
     (3,3),(3,5),
@@ -229,7 +235,7 @@ VALUES
 GO
 
 -- Usuarios en grupos (range: 0=miembro 1=moderador 2=líder)
-INSERT INTO dbo.Group_X_User (group_id, user_id, range)
+INSERT INTO dbo.Group_x_user (Group_x_user_groupid, Group_x_user_userid, Group_x_user_range)
 VALUES
     (1,2,2),(1,3,0),(1,4,0),(1,8,1),
     (2,5,2),(2,6,0),(2,7,1),(2,9,0),
@@ -238,13 +244,13 @@ VALUES
 GO
 
 -- Amistades
-INSERT INTO dbo.Friends (user1, user2)
+INSERT INTO dbo.Friends (friend_userid1, friend_userid2)
 VALUES
     (2,3),(2,4),(3,5),(4,8),(5,7),(6,9);
 GO
 
 -- Solicitudes de amistad (status: 0=pendiente 1=aceptada 2=rechazada)
-INSERT INTO dbo.Frequest (sender, receiver, status)
+INSERT INTO dbo.Frequest (frequest_sender, frequest_receiver, frequest_status)
 VALUES
     (6,2,0),
     (7,4,0),
@@ -253,7 +259,7 @@ VALUES
 GO
 
 -- Misiones asignadas a usuarios
-INSERT INTO dbo.User_X_Mission (user_id, mission_id, expiration)
+INSERT INTO dbo.User_X_Mission (user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration)
 VALUES
     (2,1,'2025-12-31'),(2,3,'2025-07-07'),
     (3,2,'2025-12-31'),(3,4,'2025-07-07'),

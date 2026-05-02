@@ -18,7 +18,7 @@ exercise.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM Exercises")
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
     }
@@ -38,10 +38,10 @@ exercise.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -49,8 +49,7 @@ exercise.findById = async function (id, result) {
 exercise.updateById = async (id, updateExercise, result) => {
     try {
         const pool = await sql.connect(dbConn)
-
-        const request = pool.request()
+        const request = await pool.request()
         request.input("id", sql.Int, id)
         request.input("name", sql.VarChar, updateExercise.exercise_name)
         request.input("description", sql.VarChar, updateExercise.exercise_description)
@@ -60,20 +59,21 @@ exercise.updateById = async (id, updateExercise, result) => {
 
         const sqlQuery = `
             UPDATE Exercises SET
-                exercise_name = @name
-                exercise_description = @description
-                exercise_type = @type
-                exercise_video = @video
+                exercise_name = @name,
+                exercise_description = @description,
+                exercise_type = @type,
+                exercise_video = @video,
                 exercise_image = @image
+            OUTPUT INSERTED.*
             WHERE exercise_id = @id
         `
 
         const response = await request.query(sqlQuery)
-        result(null, response)
-        sql.close()
+        result(null, response.recordsets[0][0])
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -82,27 +82,31 @@ exercise.create = async (newExercise, result) => {
     try {
         const pool = await sql.connect(dbConn)
 
-        const request = pool.request()
-        request.input("id", sql.Int, id)
-        request.input("name", sql.VarChar, newExercise.exercise_name)
-        request.input("description", sql.VarChar, newExercise.exercise_description)
-        request.input("type", sql.Int, newExercise.exercise_type)
-        request.input("video", sql.VarChar, newExercise.exercise_video)
-        request.input("image", sql.VarChar, newExercise.exercise_image)
+        const request = await pool.request()
+        request.input("name", sql.VarChar, newExercise.name)
+        request.input("description", sql.VarChar, newExercise.description)
+        request.input("type", sql.Int, newExercise.type)
+        request.input("video", sql.VarChar, newExercise.video)
+        request.input("image", sql.VarChar, newExercise.image)
 
         const sqlQuery = `
             INSERT INTO Exercises (
                 exercise_name, exercise_description, exercise_type, exercise_video,
                 exercise_image
             )
+            OUTPUT INSERTED.*
             VALUES (
                 @name, @description, @type, @video,
                 @image
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response.recordsets[0][0])
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -114,11 +118,11 @@ exercise.delete = async function (id, result) {
             .input("id", sql.Int, id)
             .query("DELETE FROM Exercises WHERE exercise_id = @id")
 
-        result(null, response)
-        sql.close()
+        result(null, response.recordsets[0])
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 

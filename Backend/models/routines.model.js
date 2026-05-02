@@ -14,7 +14,7 @@ routine.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM Routines")
         result(null, response.recordset)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
     }
@@ -23,6 +23,7 @@ routine.findAll = async (result) => {
 /* <=============================== FIND BY ID ===============================> */
 routine.findById = async function (id, result) {
     try {
+        console.log(id)
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("id", sql.Int, id)
@@ -34,10 +35,8 @@ routine.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -58,10 +57,10 @@ routine.updateById = async (id, updateRoutine, result) => {
 
         const response = await request.query(sqlQuery)
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -84,7 +83,7 @@ routine.create = async (newRoutine, result) => {
         `
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 
@@ -97,10 +96,10 @@ routine.delete = async function (id, result) {
             .query("DELETE FROM Routines WHERE routine_id = @id")
 
         result(null, response)
-        sql.close()
+        
     } catch (err) {
         result(err, null)
-        sql.close()
+        
     }
 }
 

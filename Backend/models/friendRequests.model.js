@@ -14,9 +14,8 @@ let fRequest = function(fRequest){
 fRequest.findAll = async (result) => {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request().query("SELECT * FROM Friend_Requests")
+        const response = await pool.request().query("SELECT * FROM Frequest")
         result(null, response.recordset)
-        sql.close()
     } catch (err) {
         result(err, null)
     }
@@ -28,7 +27,7 @@ fRequest.findById = async function (id, result) {
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("id", sql.Int, id)
-            .query("SELECT * FROM Friend_Requests WHERE frequest_id = @id")
+            .query("SELECT * FROM Frequest WHERE frequest_id = @id")
 
         if (response.recordset.length > 0) {
             result(null, response.recordset[0])
@@ -36,10 +35,8 @@ fRequest.findById = async function (id, result) {
             result({ err: "No hay datos" }, null)
         }
 
-        sql.close()
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
@@ -49,22 +46,44 @@ fRequest.create = async (newFRequest, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("id", sql.Int, id)
         request.input("sender", sql.Int, newFRequest.frequest_sender)
         request.input("receiver", sql.Int, newFRequest.frequest_receiver)
-        request.input("status", sql.Int, newFRequest.frequest_status)
 
         const sqlQuery = `
-            INSERT INTO Friend_Requests (
+            INSERT INTO Frequest (
                 frequest_sender, frequest_receiver, frequest_status
             )
             VALUES (
-                @sender, @receiver, @status
+                @sender, @receiver, 0
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response)
     } catch (err) {
         result(err, null)
-        sql.close()
+    }
+}
+
+/* <=============================== UPDATE ===============================> */
+fRequest.update = async function (id, status, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+
+        const request = pool.request()
+        request.input("id", sql.Int, id)
+        request.input("status", sql.Int, status)
+
+        const sqlQuery = `
+            UPDATE Frequest 
+            SET frequest_status = @status 
+            WHERE id_frequest = @id
+        `
+
+        const response = await request.query(sqlQuery)
+        result(null, response)
+    } catch (err) {
+        result(err, null)
     }
 }
 
@@ -74,15 +93,13 @@ fRequest.delete = async function (id, result) {
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("id", sql.Int, id)
-            .query("DELETE FROM Friend_Requests WHERE frequest_id = @id")
+            .query("DELETE FROM Frequest WHERE frequest_id = @id")
 
         result(null, response)
-        sql.close()
     } catch (err) {
         result(err, null)
-        sql.close()
     }
 }
 
 /* <======- EXPORTAMOS EL MODELO -======> */
-module.exports = routine
+module.exports = fRequest

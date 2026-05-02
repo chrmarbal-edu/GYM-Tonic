@@ -1,40 +1,48 @@
 // <============ CONSTANTES Y DEPENDENCIAS ============>
 require("dotenv").config() // npm i dotenv
-const methodOverride = require("method-override") // npm i method-override
 const express = require("express") // npm i express
 const app = express()
 const port = process.env.PORT || process.env.PUERTO
 const path = require("path") // npm i path
+const swaggerUI = require("swagger-ui-express")
 const errorHandlerMW = require("./middlewares/errorHandler.mw")
+const morganMW = require("./middlewares/morgan.mw")
 const userRoutes = require("./routes/users.routes")
 const missionRoutes = require("./routes/missions.routes")
 const routinesRoutes = require("./routes/routines.routes")
 const groupRoutes = require("./routes/groups.routes")
 const exercisesRoutes = require("./routes/exercises.routes")
 const friendsRoutes = require("./routes/friends.routes")
+const friendRequestRoutes = require("./routes/friendRequests.routes")
+const oAuthRoutes = require("./routes/oAuth.routes")
+const specs = require("./utils/swagger")
 
 // <============ CONFIGURACIÓN SERVIDOR ============>
 app.use(express.urlencoded({extended: true})) // Leer Datos req.body
 app.use(express.json()) // Leer Datos JSON en req.body
-app.use(methodOverride("_method")) // Para Poder hacer Patch y Delete
 app.use(express.static(path.join(__dirname, "public"))) // Asignamos la carpeta "public" como la carpeta de contenido estático (imágenes, css, etc.)
+app.use(morganMW.usingMorgan()) // Usamos la configuración de Morgan para añadir los logs de acceso al API
 
 // <============ RUTAS ============>
+app.use(`/api/${process.env.API_VERSION}/docs`,  swaggerUI.serve, swaggerUI.setup(specs))
 app.use(`/api/${process.env.API_VERSION}/users`, userRoutes)
 app.use(`/api/${process.env.API_VERSION}/missions`, missionRoutes)
 app.use(`/api/${process.env.API_VERSION}/routines`, routinesRoutes)
 app.use(`/api/${process.env.API_VERSION}/groups`, groupRoutes)
 app.use(`/api/${process.env.API_VERSION}/exercises`, exercisesRoutes)
-app.use(`/api/${process.env.API_VERSION}/exercises`, friendsRoutes)
+app.use(`/api/${process.env.API_VERSION}/friends`, friendsRoutes)
+app.use(`/api/${process.env.API_VERSION}/friendRequests`, friendRequestRoutes)
+app.use(`/api/${process.env.API_VERSION}/auth`, oAuthRoutes)
 
 // <============ MANEJADOR DE ERRORES ============>
 app.use(errorHandlerMW.errorHandler)
 
 // <============ LEVANTAR SERVIDOR ============>
 app.listen(port, () => {
-    console.log("---------- GYM TONIC ----------")
-    console.log(`http://localhost:${port}`)
+    console.log("<============ DOCUMENTACIÓN API ============>")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/docs`)
 
+    console.log()
     console.log()
 
     console.log("<============ USERS ============>")
@@ -59,6 +67,10 @@ app.listen(port, () => {
 
     console.log("<============= FRIENDS =============>")
     console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/friends`)
+    console.log()
+
+    console.log("<============= FRIEND REQUESTS =============>")
+    console.log(`http://localhost:${port}/api/${process.env.API_VERSION}/friendRequests`)
 
     console.log()
 })

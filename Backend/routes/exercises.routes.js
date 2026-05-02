@@ -3,6 +3,10 @@ const express = require("express")
 const router = express.Router()
 const jwtMW = require("../middlewares/jwt.mw")
 const rutasProtegidasMW = require("../middlewares/rutasProtegidas.mw")
+const multer = require("multer")
+
+const storage = multer.memoryStorage()
+const upload = multer({storage: storage})
 
 // FIND ALL EXERCISES
 router.get("/", jwtMW.authenticate, exercisesController.findAllExercises)
