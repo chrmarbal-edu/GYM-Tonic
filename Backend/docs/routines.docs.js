@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @swagger
  * tags:
  *   name: Rutinas
@@ -67,7 +67,7 @@
  *       200:
  *         description: Rutina obtenida exitosamente
  *       403:
- *         description: No estás registrado
+ *         description: No estÃ¡s registrado
  *       404:
  *         description: Rutina no encontrada
  *
@@ -97,7 +97,7 @@
  *       200:
  *         description: Rutina actualizada exitosamente
  *       403:
- *         description: No autorizado para realizar esta operación (solo admins)
+ *         description: No autorizado para realizar esta operaciÃ³n (solo admins)
  *       404:
  *         description: Rutina no encontrada
  *       500:
@@ -119,7 +119,61 @@
  *       200:
  *         description: Rutina eliminada correctamente
  *       403:
- *         description: No autorizado para realizar esta operación (solo admins)
+ *         description: No autorizado para realizar esta operaciÃ³n (solo admins)
+ *       404:
+ *         description: Rutina no encontrada
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /routine/{id}/with-exercises:
+ *   get:
+ *     summary: Obtener una rutina por ID con sus ejercicios relacionados
+ *     tags: [Rutinas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID de la rutina
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Rutina con ejercicios obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 routine_id:
+ *                   type: integer
+ *                 routine_name:
+ *                   type: string
+ *                 exercises:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       exercise_id:
+ *                         type: integer
+ *                       exercise_name:
+ *                         type: string
+ *                       exercise_description:
+ *                         type: string
+ *                       exercise_type:
+ *                         type: integer
+ *                       exercise_video:
+ *                         type: string
+ *                         nullable: true
+ *                       exercise_image:
+ *                         type: string
+ *                         nullable: true
+ *       403:
+ *         description: No estás registrado
  *       404:
  *         description: Rutina no encontrada
  *       500:
@@ -150,7 +204,8 @@
  *       200:
  *         description: Rutina creada exitosamente
  *       403:
- *         description: No autorizado para realizar esta operación (solo admins)
+ *         description: No autorizado para realizar esta operaciÃ³n (solo admins)
  *       500:
  *         description: Error interno del servidor
  */
+

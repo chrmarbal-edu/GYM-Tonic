@@ -44,6 +44,61 @@ routine.findById = async function (id, result) {
     }
 }
 
+/* <=============================== FIND ROUTINE WITH EXERCISES BY ID ===============================> */
+routine.findByIdWithExercises = async function (id, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("id", sql.Int, id)
+            .query(`
+                SELECT
+                    r.routine_id,
+                    r.routine_name,
+                    e.exercise_id,
+                    e.exercise_name,
+                    e.exercise_description,
+                    e.exercise_type,
+                    e.exercise_video,
+                    e.exercise_image
+                FROM Routines r
+                LEFT JOIN Routine_X_Exercise rxe
+                    ON r.routine_id = rxe.routine_x_exercise_routineid
+                LEFT JOIN Exercises e
+                    ON rxe.routine_x_exercise_exerciseid = e.exercise_id
+                WHERE r.routine_id = @id
+            `)
+
+        if (response.recordset.length === 0) {
+            return result({ err: "No hay datos" }, null)
+        }
+
+        const routineWithExercises = {
+            routine_id: response.recordset[0].routine_id,
+            routine_name: response.recordset[0].routine_name,
+            exercises: []
+        }
+
+        response.recordset.forEach((row) => {
+            if (row.exercise_id === null || row.exercise_id === undefined) {
+                return
+            }
+
+            routineWithExercises.exercises.push({
+                exercise_id: row.exercise_id,
+                exercise_name: row.exercise_name,
+                exercise_description: row.exercise_description,
+                exercise_type: row.exercise_type,
+                exercise_video: row.exercise_video,
+                exercise_image: row.exercise_image
+            })
+        })
+
+        result(null, routineWithExercises)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <=============================== FIND BY NAME OR SLUG ===============================> */
 routine.findByNameOrSlug = async function (nameOrSlug, result) {
     try {

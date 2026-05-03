@@ -10,6 +10,9 @@ router.get("/routines", jwtMW.authenticate, routinesController.findAllRoutinesCS
 // FIND ROUTINE BY NAME/SLUG - CSR
 router.get("/routine/by-name/:name", jwtMW.authenticate, routinesController.findRoutineByNameCSR)
 
+// FIND ROUTINE WITH EXERCISES BY ID - CSR
+router.get("/routine/:id/with-exercises", jwtMW.authenticate, routinesController.findRoutineWithExercisesByIdCSR)
+
 // FIND ROUTINE BY ID - CSR
 router.get("/routine/:id", jwtMW.authenticate, routinesController.findRoutineByIdCSR)
 
