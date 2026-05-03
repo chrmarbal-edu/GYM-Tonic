@@ -64,6 +64,33 @@ exports.findRoutineByIdCSR = wrapAsync(async function (req,res,next){
     }
 })
 
+// #region FIND-NAME - CSR
+/* <=============================== 4. FINDROUTINEBYNAME ===============================> */
+// Buscamos las rutinas por nombre o slug.
+exports.findRoutineByNameCSR = wrapAsync(async function (req,res,next){
+    const {name} = req.params
+    const userLogued = req.userLogued
+
+    if(!userLogued){
+        return next(new AppError("No estas registrado!", 403))
+    }
+
+    await routinesmodel.findByNameOrSlug(name, function(err, datosRoutine){
+        if(err){
+            const isNotFound = err?.err === "No hay datos"
+            const statusCode = isNotFound ? 404 : 500
+            const message = isNotFound ? "Rutina no encontrada" : "Error al buscar rutina"
+            return next(new AppError(message, statusCode))
+        }
+
+        if(!datosRoutine || (Array.isArray(datosRoutine) && datosRoutine.length == 0)){
+            return next(new AppError("Rutina no encontrada", 404))
+        }
+
+        return res.status(200).json(datosRoutine)
+    })
+})
+
 // #region UPDATE - CSR
 /* <=============================== 5. UPDATEROUTINE ===============================> */
 // Actualizamos la rutina.

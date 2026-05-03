@@ -112,7 +112,11 @@ class RoutineRemoteDataSource {
 
     suspend fun getRoutineByIdFromApi(routineId: String): RoutineDetailDto {
         return try {
-            val response = api.getRoutineById(routineId)
+            val response = if (isNumericRoutineId(routineId)) {
+                api.getRoutineById(routineId)
+            } else {
+                api.getRoutineByName(routineId)
+            }
             if (response.isSuccessful) {
                 response.body() ?: throw Exception("Respuesta vacia del servidor")
             } else {
@@ -124,6 +128,10 @@ class RoutineRemoteDataSource {
             Log.e(tag, "Error routine detail exception: ${e.message}")
             getRoutineById(routineId)
         }
+    }
+
+    private fun isNumericRoutineId(routineId: String): Boolean {
+        return routineId.matches(Regex("^\\d+$"))
     }
 }
 

@@ -7,6 +7,9 @@ const rutasProtegidasMW = require("../middlewares/rutasProtegidas.mw")
 // FIND ALL ROUTINES - CSR
 router.get("/routines", jwtMW.authenticate, routinesController.findAllRoutinesCSR)
 
+// FIND ROUTINE BY NAME/SLUG - CSR
+router.get("/routine/by-name/:name", jwtMW.authenticate, routinesController.findRoutineByNameCSR)
+
 // FIND ROUTINE BY ID - CSR
 router.get("/routine/:id", jwtMW.authenticate, routinesController.findRoutineByIdCSR)
 

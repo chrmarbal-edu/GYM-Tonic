@@ -1,10 +1,11 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
-import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseDto
 import edu.gymtonic_app.data.remote.model.routine.RoutineDetailData
+import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseData
+import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseDto
+import java.text.Normalizer
 
 class RoutineRepository(
 	private val routineRemoteDataSource: RoutineRemoteDataSource = RoutineRemoteDataSource()
@@ -14,6 +15,12 @@ class RoutineRepository(
 	private fun routinesById(details: List<RoutineDetailDto>): Map<String, RoutineDetailData> {
 		return details.associate { dto ->
 			dto.routineId to mapRoutineDetailDtoToData(dto)
+		}
+	}
+
+	private fun routinesBySlug(details: List<RoutineDetailDto>): Map<String, RoutineDetailData> {
+		return details.associate { dto ->
+			normalizeRoutineKey(dto.routineName) to mapRoutineDetailDtoToData(dto)
 		}
 	}
 
@@ -45,10 +52,27 @@ class RoutineRepository(
 		}
 	}
 
-	// Ruta remote-first para detalle por id, con fallback progresivo al catálogo local.
+	// Ruta remote-first para detalle por id, con fallback progresivo al catalogo local.
 	suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDetailData> {
 		return runCatching {
-			mapRoutineDetailDtoToData(routineRemoteDataSource.getRoutineByIdFromApi(routineId))
+			val mockDetails = routineRemoteDataSource.getMockRoutineDetails()
+			val fallbackById = routinesById(mockDetails)
+			val fallbackBySlug = routinesBySlug(mockDetails)
+			val dto = routineRemoteDataSource.getRoutineByIdFromApi(routineId)
+			val routineData = mapRoutineDetailDtoToData(dto)
+
+			if (dto.safeExercises().isNotEmpty()) {
+				routineData
+			} else {
+				routineData.copy(
+					exercises = resolveExercisesFallback(
+						requestedRoutineId = routineId,
+						routineName = dto.routineName,
+						fallbackById = fallbackById,
+						fallbackBySlug = fallbackBySlug
+					)
+				)
+			}
 		}.recoverCatching {
 			getRoutineFromMock(routineId)
 		}
@@ -80,6 +104,29 @@ class RoutineRepository(
 			reps = dto.reps,
 			imageKey = dto.imageKey
 		)
+	}
+
+	private fun resolveExercisesFallback(
+		requestedRoutineId: String,
+		routineName: String,
+		fallbackById: Map<String, RoutineDetailData>,
+		fallbackBySlug: Map<String, RoutineDetailData>
+	): List<RoutineExerciseData> {
+		return (
+			fallbackById[requestedRoutineId]
+				?: fallbackBySlug[normalizeRoutineKey(routineName)]
+				?: fallbackById["fullbody"]
+				?: fallbackBySlug["fullbody"]
+			)?.exercises ?: emptyList()
+	}
+
+	private fun normalizeRoutineKey(raw: String): String {
+		val normalized = Normalizer.normalize(raw, Normalizer.Form.NFD)
+		return normalized
+			.replace("\\p{M}+".toRegex(), "")
+			.lowercase()
+			.replace("[\\s_-]+".toRegex(), "")
+			.replace("[^a-z0-9]".toRegex(), "")
 	}
 
 	private fun slugify(raw: String): String {
