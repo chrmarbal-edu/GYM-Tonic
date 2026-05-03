@@ -24,6 +24,34 @@ routine.findAll = async (result) => {
     }
 }
 
+/* <=============================== FIND ALL WITH EXERCISE SUMMARY ===============================> */
+routine.findAllWithExerciseSummary = async (result) => {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request().query(`
+            SELECT
+                r.routine_id,
+                r.routine_name,
+                COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
+                ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
+                ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
+                ISNULL(SUM(CASE WHEN e.exercise_type = 2 THEN 1 ELSE 0 END), 0) AS flexibility_exercises_count,
+                MAX(e.exercise_image) AS routine_image
+            FROM Routines r
+            LEFT JOIN Routine_X_Exercise rxe
+                ON r.routine_id = rxe.routine_x_exercise_routineid
+            LEFT JOIN Exercises e
+                ON rxe.routine_x_exercise_exerciseid = e.exercise_id
+            GROUP BY r.routine_id, r.routine_name
+            ORDER BY r.routine_id DESC
+        `)
+
+        result(null, response.recordset)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <=============================== FIND BY ID ===============================> */
 routine.findById = async function (id, result) {
     try {

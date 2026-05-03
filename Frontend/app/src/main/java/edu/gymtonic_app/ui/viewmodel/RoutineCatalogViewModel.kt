@@ -3,9 +3,9 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.R
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailData
+import edu.gymtonic_app.domain.model.routine.RoutineDetail
+import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -85,7 +85,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    private fun mapRoutineDataToUi(data: RoutineDetailData): RoutineDetailUi {
+    private fun mapRoutineDataToUi(data: RoutineDetail): RoutineDetailUi {
         return RoutineDetailUi(
             id = data.id,
             title = data.title,
@@ -94,28 +94,10 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                     id = exercise.id,
                     name = exercise.name,
                     reps = exercise.reps,
-                    imageRes = imageResFromKey(exercise.imageKey)
+                    imageRes = ImageResourceMapper.fromKey(exercise.imageKey)
                 )
             }
         )
-    }
-
-    private fun imageResFromKey(imageKey: String?): Int {
-        return when (imageKey) {
-            "espalda" -> R.drawable.espalda
-            "fullbody" -> R.drawable.fullbody
-            "pushup" -> R.drawable.pushup
-            "estiramientos" -> R.drawable.estiramientos
-            "brazo" -> R.drawable.brazo
-            "pierna" -> R.drawable.pierna
-            "estocadas" -> R.drawable.estocadas
-            "pressbanca" -> R.drawable.pressbanca
-            "pullover" -> R.drawable.pullover
-            "remo" -> R.drawable.remo
-            "sentadilla" -> R.drawable.sentadilla
-            "pesomuerto" -> R.drawable.pesomuerto
-            else -> R.drawable.fullbody
-        }
     }
 
     /**

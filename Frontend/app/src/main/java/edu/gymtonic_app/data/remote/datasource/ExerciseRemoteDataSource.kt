@@ -1,8 +1,12 @@
 package edu.gymtonic_app.data.remote.datasource
 
+import android.util.Log
 import edu.gymtonic_app.data.remote.model.exercise.ExerciseDetailDto
+import edu.gymtonic_app.data.remote.services.RetrofitClient
 
 class ExerciseRemoteDataSource {
+    private val tag = ExerciseRemoteDataSource::class.java.simpleName
+    private val api = RetrofitClient.apiService
 
     private val mockExercises = listOf(
         ExerciseDetailDto(
@@ -74,6 +78,22 @@ class ExerciseRemoteDataSource {
     )
 
     suspend fun getExerciseById(exerciseId: String): ExerciseDetailDto {
+        return try {
+            val response = api.getExerciseById(exerciseId)
+            if (response.isSuccessful) {
+                response.body() ?: throw Exception("Respuesta vacia del servidor")
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(tag, "Error exercise detail: ${response.code()} ${response.message()} | $errorBody")
+                getExerciseByIdFromMock(exerciseId)
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Error exercise detail exception: ${e.message}")
+            getExerciseByIdFromMock(exerciseId)
+        }
+    }
+
+    private fun getExerciseByIdFromMock(exerciseId: String): ExerciseDetailDto {
         return mockExercises.firstOrNull { it.id == exerciseId }
             ?: throw NoSuchElementException("No existe ejercicio para id=$exerciseId")
     }

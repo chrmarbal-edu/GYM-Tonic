@@ -50,6 +50,50 @@
 
 /**
  * @swagger
+ * /routines/categories:
+ *   get:
+ *     summary: Obtener categorias de rutinas con sus rutinas asociadas
+ *     tags: [Rutinas]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Categorias de rutinas obtenidas exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     example: recent
+ *                   title:
+ *                     type: string
+ *                     example: Recientes
+ *                   routines:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                           example: "1"
+ *                         title:
+ *                           type: string
+ *                           example: Full Body Principiante
+ *                         imageKey:
+ *                           type: string
+ *                           example: squat
+ *       403:
+ *         description: No estÃ¡s registrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
  * /routine/{id}:
  *   get:
  *     summary: Obtener una rutina por ID

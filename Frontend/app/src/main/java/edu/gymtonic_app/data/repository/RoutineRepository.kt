@@ -1,49 +1,49 @@
 package edu.gymtonic_app.data.repository
 
+import edu.gymtonic_app.data.mapper.normalizeRoutineKey
+import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailData
 import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
-import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseData
-import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseDto
-import java.text.Normalizer
+import edu.gymtonic_app.domain.model.routine.RoutineDetail
+import edu.gymtonic_app.domain.model.routine.RoutineExercise
 
 class RoutineRepository(
 	private val routineRemoteDataSource: RoutineRemoteDataSource = RoutineRemoteDataSource()
 ) {
 
 	// Construye el indice por id a partir del mock remoto temporal para evitar duplicidad de datos.
-	private fun routinesById(details: List<RoutineDetailDto>): Map<String, RoutineDetailData> {
+	private fun routinesById(details: List<RoutineDetailDto>): Map<String, RoutineDetail> {
 		return details.associate { dto ->
-			dto.routineId to mapRoutineDetailDtoToData(dto)
+			dto.routineId to dto.toDomain()
 		}
 	}
 
-	private fun routinesBySlug(details: List<RoutineDetailDto>): Map<String, RoutineDetailData> {
+	private fun routinesBySlug(details: List<RoutineDetailDto>): Map<String, RoutineDetail> {
 		return details.associate { dto ->
-			normalizeRoutineKey(dto.routineName) to mapRoutineDetailDtoToData(dto)
+			normalizeRoutineKey(dto.routineName) to dto.toDomain()
 		}
 	}
 
-	suspend fun getRoutineFromMock(routineId: String): RoutineDetailData {
+	suspend fun getRoutineFromMock(routineId: String): RoutineDetail {
 		val byId = routinesById(routineRemoteDataSource.getMockRoutineDetails())
-		return byId[routineId] ?: byId["fullbody"] ?: RoutineDetailData(
+		return byId[routineId] ?: byId["fullbody"] ?: RoutineDetail(
 			id = "fullbody",
 			title = "FullBody",
 			exercises = emptyList()
 		)
 	}
 
-	suspend fun getAllRoutinesFromMock(): List<RoutineDetailData> {
+	suspend fun getAllRoutinesFromMock(): List<RoutineDetail> {
 		return routinesById(routineRemoteDataSource.getMockRoutineDetails()).values.toList()
 	}
 
 	// Ruta remote-first para listado de rutinas, con fallback temporal al hardcode local.
-	suspend fun getRoutinesFromApi(): Result<List<RoutineDetailData>> {
+	suspend fun getRoutinesFromApi(): Result<List<RoutineDetail>> {
 		return runCatching {
 			val fallbackById = routinesById(routineRemoteDataSource.getMockRoutineDetails())
 			routineRemoteDataSource.getRoutinesFromApi().map { dto ->
 				val fallbackRoutine = fallbackById[dto.routineId] ?: fallbackById["fullbody"]
-				RoutineDetailData(
+				RoutineDetail(
 					id = dto.routineId,
 					title = dto.routineName,
 					exercises = fallbackRoutine?.exercises ?: emptyList()
@@ -53,15 +53,17 @@ class RoutineRepository(
 	}
 
 	// Ruta remote-first para detalle por id, con fallback progresivo al catalogo local.
-	suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDetailData> {
+	suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDetail> {
 		return runCatching {
 			val mockDetails = routineRemoteDataSource.getMockRoutineDetails()
 			val fallbackById = routinesById(mockDetails)
 			val fallbackBySlug = routinesBySlug(mockDetails)
 			val dto = routineRemoteDataSource.getRoutineByIdFromApi(routineId)
-			val routineData = mapRoutineDetailDtoToData(dto)
+			val routineData = dto.toDomain()
+			val shouldUseExerciseFallback =
+				routineData.exercises.isEmpty() && !isNumericRoutineId(routineId)
 
-			if (dto.safeExercises().isNotEmpty()) {
+			if (!shouldUseExerciseFallback) {
 				routineData
 			} else {
 				routineData.copy(
@@ -78,63 +80,22 @@ class RoutineRepository(
 		}
 	}
 
-	private fun mapRoutineDetailDtoToData(dto: RoutineDetailDto): RoutineDetailData {
-		return RoutineDetailData(
-			id = dto.routineId,
-			title = dto.routineName,
-			exercises = dto.safeExercises().mapIndexed { index, exercise ->
-				mapRoutineExerciseDtoToData(
-					dto = exercise,
-					routineId = dto.routineId,
-					index = index
-				)
-			}
-		)
-	}
-
-	private fun mapRoutineExerciseDtoToData(
-		dto: RoutineExerciseDto,
-		routineId: String,
-		index: Int
-	): RoutineExerciseData {
-		val fallbackId = "$routineId-${slugify(dto.name)}-$index"
-		return RoutineExerciseData(
-			id = dto.exerciseId?.takeIf { it.isNotBlank() } ?: fallbackId,
-			name = dto.name,
-			reps = dto.reps,
-			imageKey = dto.imageKey
-		)
+	private fun isNumericRoutineId(routineId: String): Boolean {
+		return routineId.matches(Regex("^\\d+$"))
 	}
 
 	private fun resolveExercisesFallback(
 		requestedRoutineId: String,
 		routineName: String,
-		fallbackById: Map<String, RoutineDetailData>,
-		fallbackBySlug: Map<String, RoutineDetailData>
-	): List<RoutineExerciseData> {
+		fallbackById: Map<String, RoutineDetail>,
+		fallbackBySlug: Map<String, RoutineDetail>
+	): List<RoutineExercise> {
 		return (
 			fallbackById[requestedRoutineId]
 				?: fallbackBySlug[normalizeRoutineKey(routineName)]
 				?: fallbackById["fullbody"]
 				?: fallbackBySlug["fullbody"]
 			)?.exercises ?: emptyList()
-	}
-
-	private fun normalizeRoutineKey(raw: String): String {
-		val normalized = Normalizer.normalize(raw, Normalizer.Form.NFD)
-		return normalized
-			.replace("\\p{M}+".toRegex(), "")
-			.lowercase()
-			.replace("[\\s_-]+".toRegex(), "")
-			.replace("[^a-z0-9]".toRegex(), "")
-	}
-
-	private fun slugify(raw: String): String {
-		return raw
-			.lowercase()
-			.replace(" ", "-")
-			.replace("_", "-")
-			.replace("[^a-z0-9-]".toRegex(), "")
 	}
 
 }

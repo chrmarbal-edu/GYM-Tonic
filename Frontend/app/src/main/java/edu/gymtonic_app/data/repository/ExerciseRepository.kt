@@ -1,39 +1,22 @@
 package edu.gymtonic_app.data.repository
 
+import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.datasource.ExerciseRemoteDataSource
-import edu.gymtonic_app.data.remote.model.exercise.ExerciseDetailDto
-
-data class ExerciseDetailData(
-	val id: String,
-	val name: String,
-	val durationSeconds: Int,
-	val imageKey: String,
-	val instructions: List<String>
-)
+import edu.gymtonic_app.domain.model.exercise.ExerciseDetail
 
 class ExerciseRepository(
 	private val exerciseRemoteDataSource: ExerciseRemoteDataSource = ExerciseRemoteDataSource()
 ) {
 
-	suspend fun getExerciseById(exerciseId: String): Result<ExerciseDetailData> {
+	suspend fun getExerciseById(exerciseId: String): Result<ExerciseDetail> {
 		return runCatching {
-			mapDtoToData(exerciseRemoteDataSource.getExerciseById(exerciseId))
+			exerciseRemoteDataSource.getExerciseById(exerciseId).toDomain(exerciseId)
 		}.recoverCatching {
 			buildFallback(exerciseId)
 		}
 	}
 
-	private fun mapDtoToData(dto: ExerciseDetailDto): ExerciseDetailData {
-		return ExerciseDetailData(
-			id = dto.id,
-			name = dto.name,
-			durationSeconds = dto.durationSeconds,
-			imageKey = dto.imageKey,
-			instructions = dto.instructions
-		)
-	}
-
-	private fun buildFallback(exerciseId: String): ExerciseDetailData {
+	private fun buildFallback(exerciseId: String): ExerciseDetail {
 		val normalized = exerciseId.lowercase()
 		val inferredName = when {
 			normalized.contains("estocadas") -> "ESTOCADAS"
@@ -45,7 +28,7 @@ class ExerciseRepository(
 			else -> "EJERCICIO"
 		}
 
-		return ExerciseDetailData(
+		return ExerciseDetail(
 			id = exerciseId,
 			name = inferredName,
 			durationSeconds = 15,

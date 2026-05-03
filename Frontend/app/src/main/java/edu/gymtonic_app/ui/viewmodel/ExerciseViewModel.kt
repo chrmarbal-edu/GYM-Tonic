@@ -2,8 +2,8 @@ package edu.gymtonic_app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.R
 import edu.gymtonic_app.data.repository.ExerciseRepository
+import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,14 +38,14 @@ class ExerciseViewModel(
 			exerciseRepository.getExerciseById(exerciseId)
 				.onSuccess { detail ->
 					_uiState.value = ExerciseUiState.Success(
-						ExerciseDetailUi(
-							id = detail.id,
-							name = detail.name,
-							durationSeconds = detail.durationSeconds,
-							imageRes = imageResFromKey(detail.imageKey),
-							instructions = detail.instructions
+							ExerciseDetailUi(
+								id = detail.id,
+								name = detail.name,
+								durationSeconds = detail.durationSeconds,
+								imageRes = ImageResourceMapper.fromKey(detail.imageKey),
+								instructions = detail.instructions
+							)
 						)
-					)
 				}
 				.onFailure { error ->
 					_uiState.value = ExerciseUiState.Error(
@@ -55,21 +55,4 @@ class ExerciseViewModel(
 		}
 	}
 
-	private fun imageResFromKey(imageKey: String): Int {
-		return when (imageKey) {
-			"espalda" -> R.drawable.espalda
-			"fullbody" -> R.drawable.fullbody
-			"pushup" -> R.drawable.pushup
-			"estiramientos" -> R.drawable.estiramientos
-			"brazo" -> R.drawable.brazo
-			"pierna" -> R.drawable.pierna
-			"estocadas" -> R.drawable.estocadas
-			"pressbanca" -> R.drawable.pressbanca
-			"pullover" -> R.drawable.pullover
-			"remo" -> R.drawable.remo
-			"sentadilla" -> R.drawable.sentadilla
-			"pesomuerto" -> R.drawable.pesomuerto
-			else -> R.drawable.fullbody
-		}
-	}
 }

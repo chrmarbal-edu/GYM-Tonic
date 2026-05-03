@@ -112,16 +112,38 @@ class RoutineRemoteDataSource {
 
     suspend fun getRoutineByIdFromApi(routineId: String): RoutineDetailDto {
         return try {
-            val response = if (isNumericRoutineId(routineId)) {
-                api.getRoutineById(routineId)
+            val detailResponse = if (isNumericRoutineId(routineId)) {
+                api.getRoutineWithExercisesById(routineId)
             } else {
-                api.getRoutineByName(routineId)
+                val findByNameResponse = api.getRoutineByName(routineId)
+                if (!findByNameResponse.isSuccessful) {
+                    val errorBody = findByNameResponse.errorBody()?.string()
+                    Log.e(
+                        tag,
+                        "Error routine by name: ${findByNameResponse.code()} ${findByNameResponse.message()} | $errorBody"
+                    )
+                    return getRoutineById(routineId)
+                }
+
+                val routineByName = findByNameResponse.body()
+                    ?: throw Exception("Respuesta vacia al buscar rutina por nombre")
+                val resolvedRoutineId = routineByName.routineId
+
+                if (!isNumericRoutineId(resolvedRoutineId)) {
+                    return routineByName
+                } else {
+                    api.getRoutineWithExercisesById(resolvedRoutineId)
+                }
             }
-            if (response.isSuccessful) {
-                response.body() ?: throw Exception("Respuesta vacia del servidor")
+
+            if (detailResponse.isSuccessful) {
+                detailResponse.body() ?: throw Exception("Respuesta vacia del servidor")
             } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e(tag, "Error routine detail: ${response.code()} ${response.message()} | $errorBody")
+                val errorBody = detailResponse.errorBody()?.string()
+                Log.e(
+                    tag,
+                    "Error routine detail: ${detailResponse.code()} ${detailResponse.message()} | $errorBody"
+                )
                 getRoutineById(routineId)
             }
         } catch (e: Exception) {
