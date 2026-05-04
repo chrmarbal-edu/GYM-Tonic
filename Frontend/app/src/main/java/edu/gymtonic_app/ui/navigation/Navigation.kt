@@ -31,6 +31,8 @@ import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
 import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
+import edu.gymtonic_app.ui.screens.profile.AccountScreen
+import edu.gymtonic_app.ui.screens.profile.SettingsScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
@@ -197,18 +199,17 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         }
 
         composable(Routes.CREATE_ROUTINE) {
-            TrainingShellScreen(
-                title = "Crear Rutina",
+            CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
-                showBottomBar = true,
-                selectedBottomItem = BottomNavItem.TRAINING,
+                onSave = { 
+                    // Por ahora solo volvemos atrás al guardar
+                    navController.popBackStack() 
+                },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
-            ) {
-                CreateRoutineScreen()
-            }
+            )
         }
 
         composable(
@@ -284,7 +285,29 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                         },
                         onError = { }
                     )
-                }
+                },
+                onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) }
+            )
+        }
+
+        composable(Routes.ACCOUNT) {
+            AccountScreen(
+                onBack = { navController.popBackStack() },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            )
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
             )
         }
     }
