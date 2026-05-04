@@ -12,6 +12,26 @@ const normalizeRoutineNameOrSlug = (value = "") => {
     return value.toLowerCase().replace(/[\s_-]+/g, "")
 }
 
+const repsByExerciseType = (exerciseType) => {
+    if (exerciseType === 1) {
+        return "x20"
+    }
+
+    if (exerciseType === 2) {
+        return "x30s"
+    }
+
+    return "x12"
+}
+
+const toImageKey = (image = "") => {
+    if (!image || typeof image !== "string") {
+        return ""
+    }
+
+    return image.replace(/\.[^/.]+$/, "")
+}
+
 /* <=============================== FIND ALL ===============================> */
 routine.findAll = async (result) => {
     try {
@@ -101,7 +121,7 @@ routine.findByIdWithExercises = async function (id, result) {
         }
 
         const routineWithExercises = {
-            routine_id: response.recordset[0].routine_id,
+            routine_id: String(response.recordset[0].routine_id),
             routine_name: response.recordset[0].routine_name,
             exercises: []
         }
@@ -112,12 +132,11 @@ routine.findByIdWithExercises = async function (id, result) {
             }
 
             routineWithExercises.exercises.push({
-                exercise_id: row.exercise_id,
+                exercise_id: String(row.exercise_id),
                 exercise_name: row.exercise_name,
-                exercise_description: row.exercise_description,
-                exercise_type: row.exercise_type,
-                exercise_video: row.exercise_video,
-                exercise_image: row.exercise_image
+                reps: repsByExerciseType(row.exercise_type),
+                image_key: toImageKey(row.exercise_image),
+                instructions: row.exercise_description ? [row.exercise_description] : []
             })
         })
 
