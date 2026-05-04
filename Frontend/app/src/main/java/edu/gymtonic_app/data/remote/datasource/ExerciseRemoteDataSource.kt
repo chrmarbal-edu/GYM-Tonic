@@ -8,76 +8,8 @@ class ExerciseRemoteDataSource {
     private val tag = ExerciseRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
-    private val mockExercises = listOf(
-        ExerciseDetailDto(
-            id = "fullbody-estocadas-0",
-            name = "ESTOCADAS",
-            durationSeconds = 15,
-            imageKey = "estocadas",
-            instructions = listOf(
-                "Da un paso largo al frente y baja el cuerpo controlado.",
-                "Mantén el tronco recto y el abdomen activo.",
-                "Empuja con el talón delantero para volver al inicio."
-            )
-        ),
-        ExerciseDetailDto(
-            id = "fullbody-press-banca-1",
-            name = "PRESS BANCA",
-            durationSeconds = 15,
-            imageKey = "pressbanca",
-            instructions = listOf(
-                "Alinea muñecas y codos para un empuje estable.",
-                "Baja la barra de forma controlada hasta el pecho.",
-                "Empuja manteniendo escapulas retraidas."
-            )
-        ),
-        ExerciseDetailDto(
-            id = "fullbody-pull-over-2",
-            name = "PULL OVER",
-            durationSeconds = 15,
-            imageKey = "pullover",
-            instructions = listOf(
-                "Sujeta una mancuerna con ambos brazos extendidos.",
-                "Desciende por detrás de la cabeza sin perder control.",
-                "Vuelve al centro activando dorsal y pecho."
-            )
-        ),
-        ExerciseDetailDto(
-            id = "fullbody-remo-3",
-            name = "REMO",
-            durationSeconds = 15,
-            imageKey = "remo",
-            instructions = listOf(
-                "Inclina el tronco con espalda neutra.",
-                "Lleva los codos hacia atrás cerca del cuerpo.",
-                "Controla la bajada sin perder la postura."
-            )
-        ),
-        ExerciseDetailDto(
-            id = "fullbody-sentadilla-4",
-            name = "SENTADILLA",
-            durationSeconds = 15,
-            imageKey = "sentadilla",
-            instructions = listOf(
-                "Separa pies al ancho de hombros.",
-                "Baja la cadera manteniendo rodillas alineadas.",
-                "Sube empujando desde talones."
-            )
-        ),
-        ExerciseDetailDto(
-            id = "fullbody-peso-muerto-5",
-            name = "PESO MUERTO",
-            durationSeconds = 15,
-            imageKey = "pesomuerto",
-            instructions = listOf(
-                "Mantén la barra pegada al cuerpo.",
-                "Hinge de cadera con espalda neutra.",
-                "Extiende cadera y rodillas para completar la repeticion."
-            )
-        )
-    )
-
     suspend fun getExerciseById(exerciseId: String): ExerciseDetailDto {
+        // PRIMARY: consumo real del backend (/exercises/{id}).
         return try {
             val response = api.getExerciseById(exerciseId)
             if (response.isSuccessful) {
@@ -85,17 +17,49 @@ class ExerciseRemoteDataSource {
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e(tag, "Error exercise detail: ${response.code()} ${response.message()} | $errorBody")
-                getExerciseByIdFromMock(exerciseId)
+                // FALLBACK TEMPORAL: solo para transicion segura si la API falla.
+                buildFallbackExercise(exerciseId)
             }
         } catch (e: Exception) {
             Log.e(tag, "Error exercise detail exception: ${e.message}")
-            getExerciseByIdFromMock(exerciseId)
+            // FALLBACK TEMPORAL: solo para transicion segura si la API falla.
+            buildFallbackExercise(exerciseId)
         }
     }
 
-    private fun getExerciseByIdFromMock(exerciseId: String): ExerciseDetailDto {
-        return mockExercises.firstOrNull { it.id == exerciseId }
-            ?: throw NoSuchElementException("No existe ejercicio para id=$exerciseId")
+    // FALLBACK TEMPORAL: eliminar al completar la migracion al backend real.
+    private fun buildFallbackExercise(exerciseId: String): ExerciseDetailDto {
+        val normalized = exerciseId.lowercase()
+        val inferredName = when {
+            normalized.contains("estocadas") -> "ESTOCADAS"
+            normalized.contains("press") -> "PRESS BANCA"
+            normalized.contains("pull") -> "PULL OVER"
+            normalized.contains("remo") -> "REMO"
+            normalized.contains("sentadilla") -> "SENTADILLA"
+            normalized.contains("peso") -> "PESO MUERTO"
+            else -> "EJERCICIO"
+        }
+
+        val inferredImageKey = when {
+            normalized.contains("estocadas") -> "estocadas"
+            normalized.contains("press") -> "pressbanca"
+            normalized.contains("pull") -> "pullover"
+            normalized.contains("remo") -> "remo"
+            normalized.contains("sentadilla") -> "sentadilla"
+            normalized.contains("peso") -> "pesomuerto"
+            else -> "fullbody"
+        }
+
+        return ExerciseDetailDto(
+            id = exerciseId,
+            name = inferredName,
+            durationSeconds = 15,
+            imageKey = inferredImageKey,
+            instructions = listOf(
+                "Manten tecnica controlada durante toda la serie.",
+                "Respira de forma constante y evita compensaciones.",
+                "Ajusta la carga para completar repeticiones con buena forma."
+            )
+        )
     }
 }
-

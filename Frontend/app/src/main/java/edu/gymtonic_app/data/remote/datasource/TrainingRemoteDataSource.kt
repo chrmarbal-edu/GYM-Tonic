@@ -10,6 +10,7 @@ class TrainingRemoteDataSource {
     private val api = RetrofitClient.apiService
 
     suspend fun getTrainingCategories(): List<TrainingCategoryDto> {
+        // PRIMARY: consumo real del backend (/routines/categories).
         return try {
             val response = api.getRoutineCategories()
             if (response.isSuccessful) {
@@ -17,14 +18,17 @@ class TrainingRemoteDataSource {
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e(tag, "Error categories: ${response.code()} ${response.message()} | $errorBody")
+                // FALLBACK TEMPORAL: solo para transicion segura si la API falla.
                 buildFallbackCategories()
             }
         } catch (e: Exception) {
             Log.e(tag, "Error categories exception: ${e.message}")
+            // FALLBACK TEMPORAL: solo para transicion segura si la API falla.
             buildFallbackCategories()
         }
     }
 
+    // FALLBACK TEMPORAL: eliminar al completar la migracion al backend real.
     private fun buildFallbackCategories(): List<TrainingCategoryDto> {
         return listOf(
             TrainingCategoryDto(
