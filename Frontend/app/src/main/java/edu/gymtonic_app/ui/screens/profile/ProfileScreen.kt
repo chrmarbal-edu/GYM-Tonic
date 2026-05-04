@@ -65,6 +65,8 @@ fun ProfileScreen(
     onOpenWeek: () -> Unit,
     onOpenRoutine: (String) -> Unit,
     onLogout: () -> Unit,
+    onOpenAccount: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -84,12 +86,18 @@ fun ProfileScreen(
                 DrawerActionRow(
                     label = "Cuenta",
                     icon = Icons.Outlined.AccountCircle,
-                    onClick = { scope.launch { drawerState.close() } }
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onOpenAccount()
+                    }
                 )
                 DrawerActionRow(
-                    label = "Privacidad",
+                    label = "Ajustes",
                     icon = Icons.Outlined.Settings,
-                    onClick = { scope.launch { drawerState.close() } }
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onOpenSettings()
+                    }
                 )
                 DrawerActionRow(
                     label = "Cerrar sesion",
