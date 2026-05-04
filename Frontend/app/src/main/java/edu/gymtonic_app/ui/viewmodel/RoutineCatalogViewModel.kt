@@ -34,19 +34,20 @@ sealed class RoutineCatalogUiState {
     ) : RoutineCatalogUiState()
 }
 
-//hardcodeado en memoria, usado como mock mientras no llega la integración real.
+// ViewModel del detalle de rutina con flujo principal remote-first.
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
     private val routineRepository = RoutineRepository()
     private val _uiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
     val uiState: StateFlow<RoutineCatalogUiState> = _uiState.asStateFlow()
 
-    init {
-        loadRoutine("fullbody")
-    }
-
     // Carga remote-first para el detalle de rutina y deja fallback local en caso de error.
     fun loadRoutine(routineId: String) {
+        if (routineId.isBlank()) {
+            _uiState.value = RoutineCatalogUiState.Error(message = "Rutina no valida")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = RoutineCatalogUiState.Loading
 
@@ -72,11 +73,11 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             routineRepository.getRoutinesFromApi()
                 .onSuccess { routinesData ->
                     val firstRoutineData = routinesData.firstOrNull()
-                        ?: routineRepository.getRoutineFromMock("fullbody")
+                        ?: routineRepository.getRoutineFromMock("")
                     _uiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(firstRoutineData))
                 }
                 .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock("fullbody"))
+                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(""))
                     _uiState.value = RoutineCatalogUiState.Error(
                         message = error.message ?: "No se pudo cargar el catalogo",
                         fallbackRoutine = fallback
@@ -111,7 +112,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
 
     /**
      * Futuro endpoint: detalle de rutina por id desde API.
-     * Se deja comentado para no afectar el flujo actual hardcodeado.
+     * Se deja comentado para no afectar el flujo actual.
      *
      * suspend fun fetchRoutineByIdFromApi(routineId: String): Result<RoutineDetailUi> {
      *     return routineRepository.getRoutineByIdFromApi(routineId)

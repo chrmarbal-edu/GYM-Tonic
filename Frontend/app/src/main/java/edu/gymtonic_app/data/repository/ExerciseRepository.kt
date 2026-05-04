@@ -32,7 +32,7 @@ class ExerciseRepository(
 			id = exerciseId,
 			name = inferredName,
 			durationSeconds = 15,
-			imageKey = "fullbody",
+			imageKey = "squat",
 			instructions = listOf(
 				"Mantén tecnica controlada durante toda la serie.",
 				"Respira de forma constante y evita compensaciones.",

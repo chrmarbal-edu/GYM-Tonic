@@ -35,36 +35,34 @@ class TrainingRemoteDataSource {
                 id = "recent",
                 title = "Recientes",
                 routines = listOf(
-                    TrainingRoutineDto("back", "Espalda", "espalda"),
-                    TrainingRoutineDto("fullbody", "Full Body", "fullbody"),
-                    TrainingRoutineDto("push", "Empujes", "pushup")
+                    TrainingRoutineDto("5", "Flexibilidad y Movilidad", "sunsalute"),
+                    TrainingRoutineDto("4", "Piernas y Gluteos", "squat"),
+                    TrainingRoutineDto("3", "Cardio Quema Grasa", "running")
                 )
             ),
             TrainingCategoryDto(
                 id = "beginners",
                 title = "Para Principiantes",
                 routines = listOf(
-                    TrainingRoutineDto("stretch", "Estiramientos", "estiramientos"),
-                    TrainingRoutineDto("arm", "Brazo", "brazo"),
-                    TrainingRoutineDto("calves", "Gemelos", "pierna")
+                    TrainingRoutineDto("1", "Full Body Principiante", "squat")
                 )
             ),
             TrainingCategoryDto(
                 id = "muscle_groups",
                 title = "Por Grupo Muscular",
                 routines = listOf(
-                    TrainingRoutineDto("calves", "Gemelos", "pierna"),
-                    TrainingRoutineDto("arm", "Brazo", "brazo"),
-                    TrainingRoutineDto("back", "Espalda", "espalda")
+                    TrainingRoutineDto("2", "Tren Superior Avanzado", "row"),
+                    TrainingRoutineDto("1", "Full Body Principiante", "squat"),
+                    TrainingRoutineDto("4", "Piernas y Gluteos", "squat")
                 )
             ),
             TrainingCategoryDto(
                 id = "recommended",
                 title = "Recomendados",
                 routines = listOf(
-                    TrainingRoutineDto("fullbody", "Full Body", "fullbody"),
-                    TrainingRoutineDto("push", "Empujes", "pushup"),
-                    TrainingRoutineDto("stretch", "Estiramientos", "estiramientos")
+                    TrainingRoutineDto("3", "Cardio Quema Grasa", "running"),
+                    TrainingRoutineDto("2", "Tren Superior Avanzado", "row"),
+                    TrainingRoutineDto("1", "Full Body Principiante", "squat")
                 )
             )
         )

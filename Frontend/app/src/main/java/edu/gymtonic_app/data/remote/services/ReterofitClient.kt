@@ -106,9 +106,6 @@ interface ApiService {
     @GET("routines/routine/{routineId}")
     suspend fun getRoutineById(@Path("routineId") routineId: String): Response<RoutineDetailDto>
 
-    @GET("routines/routine/by-name/{name}")
-    suspend fun getRoutineByName(@Path("name") name: String): Response<RoutineDetailDto>
-
     @GET("routines/routine/{routineId}/with-exercises")
     suspend fun getRoutineWithExercisesById(@Path("routineId") routineId: String): Response<RoutineDetailDto>
 

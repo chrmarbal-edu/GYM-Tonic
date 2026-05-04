@@ -10,59 +10,51 @@ class RoutineRemoteDataSource {
     private val tag = RoutineRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
-    // FALLBACK TEMPORAL: respaldo local minimo para no romper la UX si el backend falla.
+    // FALLBACK TEMPORAL: solo para emergencia cuando backend no responde.
     private val fallbackRoutineDetails: List<RoutineDetailDto> = listOf(
         RoutineDetailDto(
-            routineId = "fullbody",
-            routineName = "Full Body",
+            routineId = "1",
+            routineName = "Full Body Principiante",
             exercises = listOf(
-                RoutineExerciseDto(name = "SENTADILLA", reps = "x12", imageKey = "sentadilla"),
-                RoutineExerciseDto(name = "PRESS BANCA", reps = "x12", imageKey = "pressbanca")
+                RoutineExerciseDto(name = "Sentadilla", reps = "x12", imageKey = "squat"),
+                RoutineExerciseDto(name = "Press de banca", reps = "x12", imageKey = "bench")
             )
         ),
         RoutineDetailDto(
-            routineId = "back",
-            routineName = "Espalda",
+            routineId = "2",
+            routineName = "Tren Superior Avanzado",
             exercises = listOf(
-                RoutineExerciseDto(name = "REMO", reps = "x12", imageKey = "remo"),
-                RoutineExerciseDto(name = "PESO MUERTO", reps = "x10", imageKey = "pesomuerto")
+                RoutineExerciseDto(name = "Dominadas", reps = "x12", imageKey = "pullup"),
+                RoutineExerciseDto(name = "Remo con barra", reps = "x12", imageKey = "row")
             )
         ),
         RoutineDetailDto(
-            routineId = "arm",
-            routineName = "Brazo",
+            routineId = "3",
+            routineName = "Cardio Quema Grasa",
             exercises = listOf(
-                RoutineExerciseDto(name = "CURL BICEPS", reps = "x12", imageKey = "brazo"),
-                RoutineExerciseDto(name = "EXTENSION TRICEPS", reps = "x12", imageKey = "brazo")
+                RoutineExerciseDto(name = "Carrera continua", reps = "x20", imageKey = "running"),
+                RoutineExerciseDto(name = "Burpees", reps = "x20", imageKey = "burpee")
             )
         ),
         RoutineDetailDto(
-            routineId = "calves",
-            routineName = "Gemelos",
+            routineId = "4",
+            routineName = "Piernas y Gluteos",
             exercises = listOf(
-                RoutineExerciseDto(name = "ELEVACION TALONES", reps = "x20", imageKey = "pierna"),
-                RoutineExerciseDto(name = "ESTOCADAS", reps = "x12", imageKey = "estocadas")
+                RoutineExerciseDto(name = "Sentadilla", reps = "x12", imageKey = "squat"),
+                RoutineExerciseDto(name = "Peso muerto", reps = "x12", imageKey = "deadlift")
             )
         ),
         RoutineDetailDto(
-            routineId = "push",
-            routineName = "Empujes",
+            routineId = "5",
+            routineName = "Flexibilidad y Movilidad",
             exercises = listOf(
-                RoutineExerciseDto(name = "PUSH UPS", reps = "x15", imageKey = "pushup"),
-                RoutineExerciseDto(name = "FONDOS", reps = "x12", imageKey = "pushup")
-            )
-        ),
-        RoutineDetailDto(
-            routineId = "stretch",
-            routineName = "Estiramientos",
-            exercises = listOf(
-                RoutineExerciseDto(name = "MOVILIDAD HOMBRO", reps = "x30s", imageKey = "estiramientos"),
-                RoutineExerciseDto(name = "ISQUIOS", reps = "x30s", imageKey = "estiramientos")
+                RoutineExerciseDto(name = "Estiramiento isquios", reps = "x30s", imageKey = "hamstring"),
+                RoutineExerciseDto(name = "Yoga - Saludo al sol", reps = "x30s", imageKey = "sunsalute")
             )
         )
     )
 
-    // FALLBACK TEMPORAL: usado solo cuando falla el consumo principal.
+    // FALLBACK TEMPORAL: solo si falla el consumo principal.
     suspend fun getRoutines(): List<RoutineDto> {
         return fallbackRoutineDetails.map { detail ->
             RoutineDto(
@@ -73,10 +65,10 @@ class RoutineRemoteDataSource {
         }
     }
 
-    // FALLBACK TEMPORAL: usado solo cuando falla el detalle remoto.
+    // FALLBACK TEMPORAL: solo si falla el detalle remoto.
     suspend fun getRoutineById(routineId: String): RoutineDetailDto {
         return fallbackRoutineDetails.firstOrNull { it.routineId == routineId }
-            ?: fallbackRoutineDetails.first { it.routineId == "fullbody" }
+            ?: fallbackRoutineDetails.first()
     }
 
     // FALLBACK TEMPORAL: dependencia de compatibilidad para el repositorio actual.
@@ -93,21 +85,18 @@ class RoutineRemoteDataSource {
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e(tag, "Error routines: ${response.code()} ${response.message()} | $errorBody")
-                // FALLBACK TEMPORAL: solo si el backend falla.
                 getRoutines()
             }
         } catch (e: Exception) {
             Log.e(tag, "Error routines exception: ${e.message}")
-            // FALLBACK TEMPORAL: solo si el backend falla.
             getRoutines()
         }
     }
 
     suspend fun getRoutineByIdFromApi(routineId: String): RoutineDetailDto {
-        // PRIMARY: siempre intenta detalle remoto por /routine/{id}/with-exercises.
+        // PRIMARY: solo endpoint por id real.
         return try {
-            val resolvedRoutineId = resolveRoutineIdForDetail(routineId)
-            val detailResponse = api.getRoutineWithExercisesById(resolvedRoutineId)
+            val detailResponse = api.getRoutineWithExercisesById(routineId)
 
             if (detailResponse.isSuccessful) {
                 detailResponse.body() ?: throw Exception("Respuesta vacia del servidor")
@@ -117,40 +106,11 @@ class RoutineRemoteDataSource {
                     tag,
                     "Error routine detail: ${detailResponse.code()} ${detailResponse.message()} | $errorBody"
                 )
-                // FALLBACK TEMPORAL: solo si el backend falla.
                 getRoutineById(routineId)
             }
         } catch (e: Exception) {
             Log.e(tag, "Error routine detail exception: ${e.message}")
-            // FALLBACK TEMPORAL: solo si el backend falla.
             getRoutineById(routineId)
         }
-    }
-
-    private suspend fun resolveRoutineIdForDetail(routineId: String): String {
-        if (isNumericRoutineId(routineId)) {
-            return routineId
-        }
-
-        val response = api.getRoutineByName(routineId)
-        if (!response.isSuccessful) {
-            val errorBody = response.errorBody()?.string()
-            Log.e(tag, "Error routine by name: ${response.code()} ${response.message()} | $errorBody")
-            throw Exception("No se pudo resolver la rutina por nombre")
-        }
-
-        val routineByName = response.body()
-            ?: throw Exception("Respuesta vacia al buscar rutina por nombre")
-        val resolvedRoutineId = routineByName.routineId
-
-        if (!isNumericRoutineId(resolvedRoutineId)) {
-            throw Exception("La rutina resuelta no tiene id numerico")
-        }
-
-        return resolvedRoutineId
-    }
-
-    private fun isNumericRoutineId(routineId: String): Boolean {
-        return routineId.matches(Regex("^\\d+$"))
     }
 }

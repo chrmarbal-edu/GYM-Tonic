@@ -47,7 +47,7 @@ class ExerciseRemoteDataSource {
             normalized.contains("remo") -> "remo"
             normalized.contains("sentadilla") -> "sentadilla"
             normalized.contains("peso") -> "pesomuerto"
-            else -> "fullbody"
+            else -> "squat"
         }
 
         return ExerciseDetailDto(
