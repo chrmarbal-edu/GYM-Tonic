@@ -7,10 +7,10 @@ import androidx.room.PrimaryKey
 data class ExerciseEntity(
     @PrimaryKey(autoGenerate = true)
     val exercise_id: Int = 0,
-
     val exercise_name: String,
     val exercise_description: String,
     val exercise_type: Int,
     val exercise_video: String? = null,
-    val exercise_image: String? = null
+    val exercise_image: String? = null,
+    val is_favorite: Boolean = false
 )
