@@ -7,11 +7,12 @@ import kotlinx.coroutines.flow.map
 class ExerciseLocalDataSource(
 	private val exerciseDao: ExerciseDao
 ) {
-
+	// Obtener lista de favoritos
 	fun observeFavoriteIds(): Flow<Set<Int>> {
 		return exerciseDao.observeFavoriteIds().map { it.toSet() }
 	}
 
+	// Toggle favorito
 	suspend fun toggleFavorite(exerciseId: Int): Boolean {
 		val current = exerciseDao.isFavoriteById(exerciseId) ?: false
 		val next = !current
@@ -22,4 +23,3 @@ class ExerciseLocalDataSource(
 		return next
 	}
 }
-//(ExerciseDao)

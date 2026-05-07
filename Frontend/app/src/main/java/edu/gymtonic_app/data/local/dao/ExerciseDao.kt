@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ExerciseDao {
 
+    //Selects de ejercicios-----------------------------------------------------------------------------
     @Query("SELECT * FROM exercises ORDER BY exercise_name ASC")
     fun getAllExercises(): Flow<List<ExerciseEntity>>
 
@@ -21,23 +22,10 @@ interface ExerciseDao {
     @Query("SELECT * FROM exercises WHERE exercise_id = :id LIMIT 1")
     suspend fun getExerciseByIdOnce(id: Int): ExerciseEntity?
 
-    @Query(
-        """
-        SELECT * FROM exercises
-        WHERE exercise_type = :type
-        ORDER BY exercise_name ASC
-    """
-    )
+    @Query("""SELECT * FROM exercises WHERE exercise_type = :type ORDER BY exercise_name ASC """)
     fun getExercisesByType(type: Int): Flow<List<ExerciseEntity>>
 
-    @Query(
-        """
-        SELECT * FROM exercises
-        WHERE exercise_name LIKE '%' || :query || '%'
-           OR exercise_description LIKE '%' || :query || '%'
-        ORDER BY exercise_name ASC
-    """
-    )
+    @Query("""SELECT * FROM exercises WHERE exercise_name LIKE '%' || :query || '%' OR exercise_description LIKE '%' || :query || '%' ORDER BY exercise_name ASC """)
     fun searchExercises(query: String): Flow<List<ExerciseEntity>>
 
     @Query("SELECT exercise_id FROM exercises WHERE is_favorite = 1")
@@ -46,30 +34,34 @@ interface ExerciseDao {
     @Query("SELECT is_favorite FROM exercises WHERE exercise_id = :id LIMIT 1")
     suspend fun isFavoriteById(id: Int): Boolean?
 
+    //Inserts de ejercicios----------------------------------------------------------------
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertExercise(exercise: ExerciseEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertExercises(exercises: List<ExerciseEntity>): List<Long>
 
-    @Update
-    suspend fun updateExercise(exercise: ExerciseEntity): Int
+    //Selects-----------------------------------------------------------------------------
+    @Query("SELECT COUNT(*) FROM exercises")
+    fun countExercises(): Flow<Int>
 
-    @Delete
-    suspend fun deleteExercise(exercise: ExerciseEntity): Int
+    @Query("SELECT COUNT(*) FROM exercises WHERE exercise_name = :name")
+    suspend fun existsByName(name: String): Int
 
+    //Borrado --------------------------------------------------------------------------
     @Query("DELETE FROM exercises WHERE exercise_id = :id")
     suspend fun deleteExerciseById(id: Int): Int
 
     @Query("DELETE FROM exercises")
     suspend fun deleteAllExercises(): Int
 
+    @Delete
+    suspend fun deleteExercise(exercise: ExerciseEntity): Int
+
+    //Update---------------------------------------------------------------------------------
     @Query("UPDATE exercises SET is_favorite = :isFavorite WHERE exercise_id = :id")
     suspend fun setFavorite(id: Int, isFavorite: Boolean): Int
 
-    @Query("SELECT COUNT(*) FROM exercises")
-    fun countExercises(): Flow<Int>
-
-    @Query("SELECT COUNT(*) FROM exercises WHERE exercise_name = :name")
-    suspend fun existsByName(name: String): Int
+    @Update
+    suspend fun updateExercise(exercise: ExerciseEntity): Int
 }
