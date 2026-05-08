@@ -4,6 +4,7 @@ const userMissionsModel = require("../models/userMissions.model")
 const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
+const { DateTime } = require("mssql")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -335,7 +336,7 @@ exports.findUserMissionByMissionId = wrapAsync(async function (req,res,next){
 
 /* <=============================== CREATE USER MISSION ===============================> */
 exports.createUserMission = wrapAsync(async function (req,res,next){
-    const {userId, missionId, expiration} = req.body
+    const {userId, missionId, expiration, progress} = req.body
     const userLogued = req.userLogued
 
     if(userLogued && (userLogued.user_role == 1 || userLogued.user_id == userId)){
@@ -345,6 +346,7 @@ exports.createUserMission = wrapAsync(async function (req,res,next){
         newUserMission.missionId = missionId
         newUserMission.expiration = expiration
         newUserMission.completed = false
+        newUserMission.progress = progress || 0
 
         await userMissionsModel.create(newUserMission, function(err,datosUserMissionCreado){
             if(err){
@@ -361,7 +363,7 @@ exports.createUserMission = wrapAsync(async function (req,res,next){
 /* <=============================== UPDATE USER MISSION ===============================> */
 exports.updateUserMission = wrapAsync(async function (req,res,next){
     const {id} = req.params
-    const {userId, missionId, expiration, completed} = req.body
+    const {userId, missionId, expiration, completed, progress} = req.body
     const userLogued = req.userLogued
     
     if(userLogued && userLogued.user_role == 1){
@@ -392,6 +394,10 @@ exports.updateUserMission = wrapAsync(async function (req,res,next){
                 updateData.user_x_mission_completed = completed
             }
 
+            if(progress !== undefined){
+                updateData.user_x_mission_progress = progress
+            }
+
             await userMissionsModel.updateById(id, updateData, function(err, datosUserMissionActualizada) {
                 if(err){
                     return next(new AppError(err, 500))
@@ -410,11 +416,29 @@ exports.completeMissionById = wrapAsync(async function (req,res,next){
     const {id} = req.params
     const userLogued = req.userLogued
     
-    
-    if(userLogued){
-        await userMissionsModel.updateById
+    const missionFound = await userMissionsModel.findById(id)
+
+    if(!missionFound || missionFound.length == 0){
+        return next(new AppError("Misión no encontrada", 404))
     } else{
-        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+        if(userLogued && userLogued.user_id == missionFound.user_x_mission_userid){
+            const today = new Date()
+            const expirationDate = new Date(missionFound.user_x_mission_expiration)
+
+            if(expirationDate < today){
+                return next(new AppError("Misión Expirada", 400))
+            } else{
+                await userMissionsModel.completeMission(id, function(err, datosUserMissionActualizada) {
+                    if(err){
+                        return next(new AppError(err, 500))
+                    } else{
+                        res.status(200).json(datosUserMissionActualizada)
+                    }
+                })
+            }
+        } else{
+            return next(new AppError("No estás autorizado para realizar esta petición", 403))
+        }
     }
 
 })

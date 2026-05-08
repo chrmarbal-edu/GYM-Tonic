@@ -7,6 +7,13 @@
 
 /**
  * @swagger
+ * tags:
+ *   name: Misiones de Usuario
+ *   description: API para gestionar la asignación y progreso de misiones para los usuarios
+ */
+
+/**
+ * @swagger
  * /users:
  *   get:
  *     summary: Obtener todos los usuarios
@@ -66,8 +73,9 @@
  *                 type: number
  *                 description: Peso en kg (40-200)
  *               objective:
- *                 type: number
- *                 description: Objetivo (valor numérico mayor a 0)
+ *                 type: integer
+ *                 description: "Objetivo: 0 (Mantenimiento), 1 (Pérdida de peso), 2 (Ganancia muscular), 3 (Rendimiento)"
+ *                 enum: [0, 1, 2, 3]
  *     responses:
  *       201:
  *         description: Usuario registrado exitosamente (incluye token si no es admin)
@@ -199,8 +207,9 @@
  *                 type: number
  *                 description: Peso en kg (40-200)
  *               objective:
- *                 type: number
- *                 description: Objetivo (valor numérico mayor a 0)
+ *                 type: integer
+ *                 description: "Objetivo: 0 (Mantenimiento), 1 (Pérdida de peso), 2 (Ganancia muscular), 3 (Rendimiento)"
+ *                 enum: [0, 1, 2, 3]
  *     responses:
  *       200:
  *         description: Usuario actualizado exitosamente
@@ -236,4 +245,163 @@
  *         description: Usuario no encontrado
  *       500:
  *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /users/missions:
+ *   get:
+ *     summary: Obtener todas las misiones de todos los usuarios
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de misiones de usuarios obtenida
+ *       403:
+ *         description: No autorizado
+ *
+ *   post:
+ *     summary: Asignar una misión a un usuario
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - missionId
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               missionId:
+ *                 type: integer
+ *               expiration:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Misión asignada exitosamente
+ *       403:
+ *         description: No autorizado
+ */
+
+/**
+ * @swagger
+ * /users/missions/user/{userId}:
+ *   get:
+ *     summary: Obtener misiones asignadas a un usuario específico
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Misiones del usuario obtenidas
+ *       404:
+ *         description: Misiones no encontradas
+ */
+
+/**
+ * @swagger
+ * /users/missions/mission/{missionId}:
+ *   get:
+ *     summary: Obtener todos los usuarios que tienen una misión específica
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: missionId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios para esa misión
+ *       404:
+ *         description: Misión no encontrada
+ */
+
+/**
+ * @swagger
+ * /users/missions/{id}:
+ *   get:
+ *     summary: Obtener una asignación de misión por su ID (Admin)
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Datos de la misión de usuario
+ *       403:
+ *         description: Solo para administradores
+ *       404:
+ *         description: No encontrado
+ *
+ *   patch:
+ *     summary: Actualizar una misión de usuario (Admin)
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               userId:
+ *                 type: integer
+ *               missionId:
+ *                 type: integer
+ *               expiration:
+ *                 type: string
+ *                 format: date-time
+ *               completed:
+ *                 type: integer
+ *                 description: "0: No completada, 1: Completada"
+ *                 enum: [0, 1]
+ *     responses:
+ *       200:
+ *         description: Misión actualizada correctamente
+ *       403:
+ *         description: No autorizado
+ *
+ *   delete:
+ *     summary: Eliminar una asignación de misión (Admin)
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Asignación eliminada
+ *       403:
+ *         description: No autorizado
  */

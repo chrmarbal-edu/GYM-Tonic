@@ -8,6 +8,7 @@ let userMission = function(userMission){
     this.user_x_mission_missionid = userMission.user_x_mission_missionid
     this.user_x_mission_expiration = userMission.user_x_mission_expiration
     this.user_x_mission_completed = userMission.user_x_mission_completed
+    this.user_x_mission_progress = userMission.user_x_mission_progress
 }
 
 /* <=============================== FIND ALL ===============================> */
@@ -82,17 +83,18 @@ userMission.create = async (newUserMission, result) => {
         const pool = await sql.connect(dbConn)
         const request = pool.request()
         
-        request.input("userId", sql.Int, newUserMission.user_x_mission_userid)
-        request.input("missionId", sql.Int, newUserMission.user_x_mission_missionid)
-        request.input("expiration", sql.DateTime, newUserMission.user_x_mission_expiration)
-        request.input("completed", sql.Bit, newUserMission.user_x_mission_completed || 0)
+        request.input("userId", sql.Int, newUserMission.userId)
+        request.input("missionId", sql.Int, newUserMission.missionId)
+        request.input("expiration", sql.DateTime, newUserMission.expiration)
+        request.input("completed", sql.Bit, newUserMission.completed || 0)
+        request.input("progress", sql.Int, newUserMission.progress || 0)
 
         const sqlQuery = `
             INSERT INTO User_X_Mission (
-                user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration, user_x_mission_completed
+                user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration, user_x_mission_completed, user_x_mission_progress
             )
             VALUES (
-                @userId, @missionId, @expiration, @completed
+                @userId, @missionId, @expiration, @completed, @progress
             )
         `
         await request.query(sqlQuery)
@@ -113,13 +115,15 @@ userMission.updateById = async (id, updatedUserMission, result) => {
         request.input("missionId", sql.Int, updatedUserMission.user_x_mission_missionid)
         request.input("expiration", sql.DateTime, updatedUserMission.user_x_mission_expiration)
         request.input("completed", sql.Bit, updatedUserMission.user_x_mission_completed)
+        request.input("progress", sql.Int, updatedUserMission.user_x_mission_progress)
 
         const sqlQuery = `
             UPDATE User_X_Mission SET
                 user_x_mission_userid = @userId,
                 user_x_mission_missionid = @missionId,
                 user_x_mission_expiration = @expiration,
-                user_x_mission_completed = @completed
+                user_x_mission_completed = @completed,
+                user_x_mission_progress = @progress
             OUTPUT INSERTED.*
             WHERE user_x_mission_id = @id
         `
@@ -131,7 +135,23 @@ userMission.updateById = async (id, updatedUserMission, result) => {
 }
 
 /* <=============================== COMPLETE MISSION ===============================> */
+userMission.completeMission = async (id, result) => {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("id", sql.Int, id)
+            .query(`
+                UPDATE User_X_Mission 
+                SET user_x_mission_completed = 1
+                OUTPUT INSERTED.* 
+                WHERE user_x_mission_id = @id
+            `)
 
+        result(null, response.recordset[0])
+    } catch (err) {
+        result(err, null)
+    }
+}
 
 /* <=============================== DELETE ===============================> */
 userMission.delete = async function (id, result) {
