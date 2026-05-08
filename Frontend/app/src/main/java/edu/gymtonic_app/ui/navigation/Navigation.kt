@@ -231,20 +231,6 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
             )
         }
 
-        composable(Routes.EXERCISES) {
-            RoutineCatalogScreen(
-                routineId = "fullbody",
-                onBack = { navController.popBackStack() },
-                onExerciseClick = { exerciseId ->
-                    navController.navigate(Routes.exercise(exerciseId))
-                },
-                onOpenHome = onOpenHomeGlobal,
-                onOpenTraining = onOpenTrainingGlobal,
-                onOpenChallenges = onOpenChallengesGlobal,
-                onOpenProfile = onOpenProfileGlobal
-            )
-        }
-
         composable(
             route = Routes.EXERCISE_DETAIL,
             arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })

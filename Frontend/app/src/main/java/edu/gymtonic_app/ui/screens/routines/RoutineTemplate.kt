@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,7 +42,9 @@ import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 @Composable
 fun RoutineTemplateScreen(
     exercises: List<RoutineExerciseUi>,
-    onExerciseClick: (String) -> Unit
+    onExerciseClick: (String) -> Unit,
+    isFavorite: (String) -> Boolean,
+    onToggleFavorite: (RoutineExerciseUi) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -63,8 +70,12 @@ fun RoutineTemplateScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             items(exercises) { exercise ->
+                val parsedId = exercise.id.toIntOrNull()
                 RoutineExerciseRow(
                     exercise = exercise,
+                    isFavorite = isFavorite(exercise.id),
+                    favoriteEnabled = parsedId != null,
+                    onToggleFavorite = { onToggleFavorite(exercise) },
                     onClick = { onExerciseClick(exercise.id) }
                 )
             }
@@ -75,6 +86,9 @@ fun RoutineTemplateScreen(
 @Composable
 private fun RoutineExerciseRow(
     exercise: RoutineExerciseUi,
+    isFavorite: Boolean,
+    favoriteEnabled: Boolean,
+    onToggleFavorite: () -> Unit,
     onClick: () -> Unit
 ) {
     Surface(
@@ -117,6 +131,17 @@ private fun RoutineExerciseRow(
                 )
             }
 
+            IconButton(
+                onClick = onToggleFavorite,
+                enabled = favoriteEnabled
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Quitar favorito" else "Marcar favorito",
+                    tint = if (favoriteEnabled) Color(0xFFE53935) else Color(0xFF9EA3AF)
+                )
+            }
+
             Surface(
                 shape = RoundedCornerShape(10.dp),
                 color = Color(0xFF8B8EEA)
@@ -132,4 +157,3 @@ private fun RoutineExerciseRow(
         }
     }
 }
-

@@ -1,5 +1,6 @@
 package edu.gymtonic_app.ui.screens.routines
 
+import android.app.Application
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -10,10 +11,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
 
@@ -28,6 +33,9 @@ fun RoutineCatalogScreen(
     onOpenProfile: () -> Unit = {},
     viewModel: RoutineCatalogViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(routineId) {
@@ -65,7 +73,20 @@ fun RoutineCatalogScreen(
             ) {
                 RoutineTemplateScreen(
                     exercises = state.routine.exercises,
-                    onExerciseClick = onExerciseClick
+                    onExerciseClick = onExerciseClick,
+                    isFavorite = exerciseViewModel::isFavorite,
+                    onToggleFavorite = { routineExercise ->
+                        exerciseViewModel.onToggleFavorite(
+                            FavoriteExercisePayload(
+                                id = routineExercise.id,
+                                name = routineExercise.name,
+                                description = routineExercise.reps,
+                                type = 0,
+                                video = null,
+                                image = null
+                            )
+                        )
+                    }
                 )
             }
         }
@@ -85,7 +106,20 @@ fun RoutineCatalogScreen(
                 ) {
                     RoutineTemplateScreen(
                         exercises = fallback.exercises,
-                        onExerciseClick = onExerciseClick
+                        onExerciseClick = onExerciseClick,
+                        isFavorite = exerciseViewModel::isFavorite,
+                        onToggleFavorite = { routineExercise ->
+                            exerciseViewModel.onToggleFavorite(
+                                FavoriteExercisePayload(
+                                    id = routineExercise.id,
+                                    name = routineExercise.name,
+                                    description = routineExercise.reps,
+                                    type = 0,
+                                    video = null,
+                                    image = null
+                                )
+                            )
+                        }
                     )
                 }
             } else {
@@ -107,4 +141,3 @@ fun RoutineCatalogScreen(
         }
     }
 }
-

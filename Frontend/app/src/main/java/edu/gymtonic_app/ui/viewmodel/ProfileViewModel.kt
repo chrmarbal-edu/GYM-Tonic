@@ -3,12 +3,12 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.R
 import edu.gymtonic_app.data.remote.model.auth.SessionManager
 import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
 import edu.gymtonic_app.data.repository.GroupRepository
 import edu.gymtonic_app.data.repository.TrainingRepository
 import edu.gymtonic_app.data.repository.WeekRepository
+import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -83,7 +83,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 				ProfileRoutineUi(
 					id = routine.id,
 					title = routine.title,
-					imageRes = imageResFromKey(routine.imageKey)
+					imageRes = ImageResourceMapper.fromKey(routine.imageKey)
 				)
 			}
 
@@ -103,18 +103,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 					groups = groups
 				)
 			)
-		}
-	}
-
-	private fun imageResFromKey(imageKey: String): Int {
-		return when (imageKey) {
-			"espalda" -> R.drawable.espalda
-			"fullbody" -> R.drawable.fullbody
-			"pushup" -> R.drawable.pushup
-			"estiramientos" -> R.drawable.estiramientos
-			"brazo" -> R.drawable.brazo
-			"pierna" -> R.drawable.pierna
-			else -> R.drawable.fullbody
 		}
 	}
 }

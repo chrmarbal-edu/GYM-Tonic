@@ -3,4 +3,7 @@
     <string name="ejercicios_disponibles">%1$d Ejercicios disponibles</string>
     <string name="volver">Volver</string>
     <string name="series_y_repeticiones">Series y repeticiones</string>
+    <string name="ejercicio">Ejercicio</string>
+    <string name="quitar_favorito">Quitar favorito</string>
+    <string name="marcar_favorito">Marcar favorito</string>
 </resources>

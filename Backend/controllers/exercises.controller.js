@@ -2,6 +2,26 @@
 const exercisesModel = require("../models/exercises.model")
 const AppError = require("../utils/AppError")
 
+const durationByExerciseType = (exerciseType) => {
+    if (exerciseType === 1) {
+        return 20
+    }
+
+    if (exerciseType === 2) {
+        return 30
+    }
+
+    return 15
+}
+
+const toImageKey = (image = "") => {
+    if (!image || typeof image !== "string") {
+        return ""
+    }
+
+    return image.replace(/\.[^/.]+$/, "")
+}
+
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
     return function (req, res, next) {
@@ -28,14 +48,22 @@ exports.findExerciseById = wrapAsync(async function (req, res, next) {
 
     await exercisesModel.findById(id, function(err, datosExercise){
         if(err){
-            next(new AppError(err, 404))
+            return next(new AppError(err, 404))
         }
 
-        if(!datosExercise || datosExercise.length == 0){
+        if(!datosExercise || (Array.isArray(datosExercise) && datosExercise.length == 0)){
             return next(new AppError("Ejercicio no encontrado", 404))
         }
 
-        res.status(200).json(datosExercise)
+        const exerciseDetail = {
+            id: String(datosExercise.exercise_id),
+            name: datosExercise.exercise_name,
+            duration_seconds: durationByExerciseType(datosExercise.exercise_type),
+            image_key: toImageKey(datosExercise.exercise_image),
+            instructions: datosExercise.exercise_description ? [datosExercise.exercise_description] : []
+        }
+
+        return res.status(200).json(exerciseDetail)
     })
 })
 

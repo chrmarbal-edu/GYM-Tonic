@@ -1,39 +1,50 @@
 package edu.gymtonic_app.data.repository
 
+import edu.gymtonic_app.data.local.datasource.local.exercise.ExerciseLocalDataSource
+import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.datasource.ExerciseRemoteDataSource
-import edu.gymtonic_app.data.remote.model.exercise.ExerciseDetailDto
-
-data class ExerciseDetailData(
-	val id: String,
-	val name: String,
-	val durationSeconds: Int,
-	val imageKey: String,
-	val instructions: List<String>
-)
+import edu.gymtonic_app.domain.model.exercise.ExerciseDetail
+import kotlinx.coroutines.flow.Flow
 
 class ExerciseRepository(
-	private val exerciseRemoteDataSource: ExerciseRemoteDataSource = ExerciseRemoteDataSource()
+	private val exerciseRemoteDataSource: ExerciseRemoteDataSource ,
+	private val exerciseLocalDataSource: ExerciseLocalDataSource
 ) {
 
-	suspend fun getExerciseById(exerciseId: String): Result<ExerciseDetailData> {
+	//region Room
+	//devuelve le listado de favoritas desde room para crear las rutinas con ellos
+	fun getFavExercises(): Flow<List<ExerciseEntity>> {
+		return exerciseLocalDataSource.getExercises()
+	}
+
+	//Si esta en room, elimina y si no esta anyade
+	suspend fun updateFavWord(exercise: ExerciseEntity) {
+		val state: ExerciseEntity? = exerciseLocalDataSource.getFavExerciseById(exercise.exercise_id)
+		if (state == null) { //no ta
+			exerciseLocalDataSource.insertExercise(exercise)
+		} else {
+			exerciseLocalDataSource.deleteExercise(exercise)
+		}
+	}
+	//endregion
+
+	//region Retrofit
+
+	//Metodo para obtener un ejercicio por id del servidor
+	suspend fun getExerciseById(exerciseId: String): Result<ExerciseDetail> {
+		// Devuelve el resultado de la llamada al servidor
 		return runCatching {
-			mapDtoToData(exerciseRemoteDataSource.getExerciseById(exerciseId))
+			//Si la llamada es exitosa, devuelve el ejercicio
+			exerciseRemoteDataSource.getExerciseById(exerciseId).toDomain(exerciseId)
+		// Si falla, devuelve un fallback
 		}.recoverCatching {
 			buildFallback(exerciseId)
 		}
 	}
 
-	private fun mapDtoToData(dto: ExerciseDetailDto): ExerciseDetailData {
-		return ExerciseDetailData(
-			id = dto.id,
-			name = dto.name,
-			durationSeconds = dto.durationSeconds,
-			imageKey = dto.imageKey,
-			instructions = dto.instructions
-		)
-	}
-
-	private fun buildFallback(exerciseId: String): ExerciseDetailData {
+	//Metodo de apoyo para fallbacks
+	private fun buildFallback(exerciseId: String): ExerciseDetail {
 		val normalized = exerciseId.lowercase()
 		val inferredName = when {
 			normalized.contains("estocadas") -> "ESTOCADAS"
@@ -45,11 +56,11 @@ class ExerciseRepository(
 			else -> "EJERCICIO"
 		}
 
-		return ExerciseDetailData(
+		return ExerciseDetail(
 			id = exerciseId,
 			name = inferredName,
 			durationSeconds = 15,
-			imageKey = "fullbody",
+			imageKey = "squat",
 			instructions = listOf(
 				"Mantén tecnica controlada durante toda la serie.",
 				"Respira de forma constante y evita compensaciones.",
@@ -57,4 +68,5 @@ class ExerciseRepository(
 			)
 		)
 	}
+	//endregion
 }

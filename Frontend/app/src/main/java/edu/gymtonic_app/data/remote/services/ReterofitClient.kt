@@ -5,8 +5,10 @@ import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.data.remote.model.auth.LoginRequest
 import edu.gymtonic_app.data.remote.model.auth.LoginResponse
 import edu.gymtonic_app.data.remote.model.auth.SessionManager
+import edu.gymtonic_app.data.remote.model.exercise.ExerciseDetailDto
 import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.model.routine.RoutineDto
+import edu.gymtonic_app.data.remote.model.training.TrainingCategoryDto
 import edu.gymtonic_app.data.remote.model.user.RegisterRequest
 import edu.gymtonic_app.data.remote.model.user.RegisterResponse
 import kotlinx.coroutines.flow.first
@@ -103,5 +105,15 @@ interface ApiService {
 
     @GET("routines/routine/{routineId}")
     suspend fun getRoutineById(@Path("routineId") routineId: String): Response<RoutineDetailDto>
+
+    @GET("routines/routine/{routineId}/with-exercises")
+    suspend fun getRoutineWithExercisesById(@Path("routineId") routineId: String): Response<RoutineDetailDto>
+
+    @GET("routines/routines/categories")
+    suspend fun getRoutineCategories(): Response<List<TrainingCategoryDto>>
+
+    // EXERCISES
+    @GET("exercises/{exerciseId}")
+    suspend fun getExerciseById(@Path("exerciseId") exerciseId: String): Response<ExerciseDetailDto>
 
 }

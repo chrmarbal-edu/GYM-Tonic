@@ -10,91 +10,74 @@ class RoutineRemoteDataSource {
     private val tag = RoutineRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
-    private val mockRoutineDetails: List<RoutineDetailDto> = listOf(
+    // FALLBACK TEMPORAL: solo para emergencia cuando backend no responde.
+    private val fallbackRoutineDetails: List<RoutineDetailDto> = listOf(
         RoutineDetailDto(
-            routineId = "fullbody",
-            routineName = "FullBody",
+            routineId = "1",
+            routineName = "Full Body Principiante",
             exercises = listOf(
-                RoutineExerciseDto(name = "ESTOCADAS", reps = "x10", imageKey = "estocadas"),
-                RoutineExerciseDto(name = "PRESS BANCA", reps = "x10", imageKey = "pressbanca"),
-                RoutineExerciseDto(name = "PULL OVER", reps = "x12", imageKey = "pullover"),
-                RoutineExerciseDto(name = "REMO", reps = "x15", imageKey = "remo"),
-                RoutineExerciseDto(name = "SENTADILLA", reps = "x15", imageKey = "sentadilla"),
-                RoutineExerciseDto(name = "PESO MUERTO", reps = "x20", imageKey = "pesomuerto")
+                RoutineExerciseDto(name = "Sentadilla", reps = "x12", imageKey = "squat"),
+                RoutineExerciseDto(name = "Press de banca", reps = "x12", imageKey = "bench")
             )
         ),
         RoutineDetailDto(
-            routineId = "back",
-            routineName = "Espalda",
+            routineId = "2",
+            routineName = "Tren Superior Avanzado",
             exercises = listOf(
-                RoutineExerciseDto(name = "JALON AL PECHO", reps = "x12", imageKey = "remo"),
-                RoutineExerciseDto(name = "REMO CON BARRA", reps = "x10", imageKey = "remo"),
-                RoutineExerciseDto(name = "PESO MUERTO", reps = "x8", imageKey = "pesomuerto"),
-                RoutineExerciseDto(name = "PULL OVER", reps = "x12", imageKey = "pullover")
+                RoutineExerciseDto(name = "Dominadas", reps = "x12", imageKey = "pullup"),
+                RoutineExerciseDto(name = "Remo con barra", reps = "x12", imageKey = "row")
             )
         ),
         RoutineDetailDto(
-            routineId = "arm",
-            routineName = "Brazo",
+            routineId = "3",
+            routineName = "Cardio Quema Grasa",
             exercises = listOf(
-                RoutineExerciseDto(name = "CURL BICEPS", reps = "x12", imageKey = "brazo"),
-                RoutineExerciseDto(name = "EXTENSION TRICEPS", reps = "x12", imageKey = "brazo"),
-                RoutineExerciseDto(name = "MARTILLO", reps = "x10", imageKey = "brazo"),
-                RoutineExerciseDto(name = "FONDOS", reps = "x10", imageKey = "pushup")
+                RoutineExerciseDto(name = "Carrera continua", reps = "x20", imageKey = "running"),
+                RoutineExerciseDto(name = "Burpees", reps = "x20", imageKey = "burpee")
             )
         ),
         RoutineDetailDto(
-            routineId = "calves",
-            routineName = "Gemelos",
+            routineId = "4",
+            routineName = "Piernas y Gluteos",
             exercises = listOf(
-                RoutineExerciseDto(name = "ELEVACION TALONES", reps = "x20", imageKey = "pierna"),
-                RoutineExerciseDto(name = "SENTADILLA", reps = "x12", imageKey = "sentadilla"),
-                RoutineExerciseDto(name = "ESTOCADAS", reps = "x12", imageKey = "estocadas"),
-                RoutineExerciseDto(name = "PRENSA", reps = "x10", imageKey = "pierna")
+                RoutineExerciseDto(name = "Sentadilla", reps = "x12", imageKey = "squat"),
+                RoutineExerciseDto(name = "Peso muerto", reps = "x12", imageKey = "deadlift")
             )
         ),
         RoutineDetailDto(
-            routineId = "push",
-            routineName = "Empujes",
+            routineId = "5",
+            routineName = "Flexibilidad y Movilidad",
             exercises = listOf(
-                RoutineExerciseDto(name = "PUSH UPS", reps = "x15", imageKey = "pushup"),
-                RoutineExerciseDto(name = "PRESS BANCA", reps = "x10", imageKey = "pressbanca"),
-                RoutineExerciseDto(name = "PRESS MILITAR", reps = "x10", imageKey = "pushup"),
-                RoutineExerciseDto(name = "FONDOS", reps = "x12", imageKey = "pushup")
-            )
-        ),
-        RoutineDetailDto(
-            routineId = "stretch",
-            routineName = "Estiramientos",
-            exercises = listOf(
-                RoutineExerciseDto(name = "MOVILIDAD HOMBRO", reps = "x30s", imageKey = "estiramientos"),
-                RoutineExerciseDto(name = "ISQUIOS", reps = "x30s", imageKey = "estiramientos"),
-                RoutineExerciseDto(name = "CADERA", reps = "x30s", imageKey = "estiramientos"),
-                RoutineExerciseDto(name = "LUMBAR", reps = "x30s", imageKey = "estiramientos")
+                RoutineExerciseDto(name = "Estiramiento isquios", reps = "x30s", imageKey = "hamstring"),
+                RoutineExerciseDto(name = "Yoga - Saludo al sol", reps = "x30s", imageKey = "sunsalute")
             )
         )
     )
 
+    // FALLBACK TEMPORAL: solo si falla el consumo principal.
     suspend fun getRoutines(): List<RoutineDto> {
-        return mockRoutineDetails.map { detail ->
+        return fallbackRoutineDetails.map { detail ->
             RoutineDto(
                 routineId = detail.routineId,
                 routineName = detail.routineName,
-                imageKey = detail.safeExercises().firstOrNull()?.imageKey
+                imageKey = detail.safeExercises().firstOrNull()?.resolvedImageKey()
             )
         }
     }
 
+    // FALLBACK TEMPORAL: solo si falla el detalle remoto.
     suspend fun getRoutineById(routineId: String): RoutineDetailDto {
-        return mockRoutineDetails.firstOrNull { it.routineId == routineId }
-            ?: mockRoutineDetails.first { it.routineId == "fullbody" }
+        return fallbackRoutineDetails.firstOrNull { it.routineId == routineId }
+            ?: fallbackRoutineDetails.first()
     }
 
+    // FALLBACK TEMPORAL: dependencia de compatibilidad para el repositorio actual.
     fun getMockRoutineDetails(): List<RoutineDetailDto> {
-        return mockRoutineDetails
+        return fallbackRoutineDetails
     }
 
     suspend fun getRoutinesFromApi(): List<RoutineDto> {
+        // PRIMARY: consumo real del backend.
         return try {
             val response = api.getRoutines()
             if (response.isSuccessful) {
@@ -111,13 +94,18 @@ class RoutineRemoteDataSource {
     }
 
     suspend fun getRoutineByIdFromApi(routineId: String): RoutineDetailDto {
+        // PRIMARY: solo endpoint por id real.
         return try {
-            val response = api.getRoutineById(routineId)
-            if (response.isSuccessful) {
-                response.body() ?: throw Exception("Respuesta vacia del servidor")
+            val detailResponse = api.getRoutineWithExercisesById(routineId)
+
+            if (detailResponse.isSuccessful) {
+                detailResponse.body() ?: throw Exception("Respuesta vacia del servidor")
             } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e(tag, "Error routine detail: ${response.code()} ${response.message()} | $errorBody")
+                val errorBody = detailResponse.errorBody()?.string()
+                Log.e(
+                    tag,
+                    "Error routine detail: ${detailResponse.code()} ${detailResponse.message()} | $errorBody"
+                )
                 getRoutineById(routineId)
             }
         } catch (e: Exception) {
@@ -126,4 +114,3 @@ class RoutineRemoteDataSource {
         }
     }
 }
-

@@ -3,9 +3,9 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.R
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailData
+import edu.gymtonic_app.domain.model.routine.RoutineDetail
+import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,19 +34,20 @@ sealed class RoutineCatalogUiState {
     ) : RoutineCatalogUiState()
 }
 
-//hardcodeado en memoria, usado como mock mientras no llega la integración real.
+// ViewModel del detalle de rutina con flujo principal remote-first.
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
     private val routineRepository = RoutineRepository()
     private val _uiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
     val uiState: StateFlow<RoutineCatalogUiState> = _uiState.asStateFlow()
 
-    init {
-        loadRoutine("fullbody")
-    }
-
     // Carga remote-first para el detalle de rutina y deja fallback local en caso de error.
     fun loadRoutine(routineId: String) {
+        if (routineId.isBlank()) {
+            _uiState.value = RoutineCatalogUiState.Error(message = "Rutina no valida")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = RoutineCatalogUiState.Loading
 
@@ -72,11 +73,11 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             routineRepository.getRoutinesFromApi()
                 .onSuccess { routinesData ->
                     val firstRoutineData = routinesData.firstOrNull()
-                        ?: routineRepository.getRoutineFromMock("fullbody")
+                        ?: routineRepository.getRoutineFromMock("")
                     _uiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(firstRoutineData))
                 }
                 .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock("fullbody"))
+                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(""))
                     _uiState.value = RoutineCatalogUiState.Error(
                         message = error.message ?: "No se pudo cargar el catalogo",
                         fallbackRoutine = fallback
@@ -85,7 +86,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    private fun mapRoutineDataToUi(data: RoutineDetailData): RoutineDetailUi {
+    private fun mapRoutineDataToUi(data: RoutineDetail): RoutineDetailUi {
         return RoutineDetailUi(
             id = data.id,
             title = data.title,
@@ -94,28 +95,10 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                     id = exercise.id,
                     name = exercise.name,
                     reps = exercise.reps,
-                    imageRes = imageResFromKey(exercise.imageKey)
+                    imageRes = ImageResourceMapper.fromKey(exercise.imageKey)
                 )
             }
         )
-    }
-
-    private fun imageResFromKey(imageKey: String?): Int {
-        return when (imageKey) {
-            "espalda" -> R.drawable.espalda
-            "fullbody" -> R.drawable.fullbody
-            "pushup" -> R.drawable.pushup
-            "estiramientos" -> R.drawable.estiramientos
-            "brazo" -> R.drawable.brazo
-            "pierna" -> R.drawable.pierna
-            "estocadas" -> R.drawable.estocadas
-            "pressbanca" -> R.drawable.pressbanca
-            "pullover" -> R.drawable.pullover
-            "remo" -> R.drawable.remo
-            "sentadilla" -> R.drawable.sentadilla
-            "pesomuerto" -> R.drawable.pesomuerto
-            else -> R.drawable.fullbody
-        }
     }
 
     /**
@@ -129,7 +112,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
 
     /**
      * Futuro endpoint: detalle de rutina por id desde API.
-     * Se deja comentado para no afectar el flujo actual hardcodeado.
+     * Se deja comentado para no afectar el flujo actual.
      *
      * suspend fun fetchRoutineByIdFromApi(routineId: String): Result<RoutineDetailUi> {
      *     return routineRepository.getRoutineByIdFromApi(routineId)
