@@ -123,6 +123,7 @@ CREATE TABLE dbo.User_X_Mission (
     user_x_mission_userid INT NOT NULL,
     user_x_mission_missionid INT NOT NULL,
     user_x_mission_expiration DATE NOT NULL,
+    user_x_mission_completed BIT DEFAULT 0 NOT NULL,
     CONSTRAINT PK_User_X_Mission PRIMARY KEY (user_x_mission_id),
     FOREIGN KEY (user_x_mission_userid)    REFERENCES dbo.Users(user_id),
     FOREIGN KEY (user_x_mission_missionid) REFERENCES dbo.Missions(mission_id)
@@ -259,16 +260,16 @@ VALUES
 GO
 
 -- Misiones asignadas a usuarios
-INSERT INTO dbo.User_X_Mission (user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration)
+INSERT INTO dbo.User_X_Mission (user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration, user_x_mission_completed)
 VALUES
-    (2,1,'2025-12-31'),(2,3,'2025-07-07'),
-    (3,2,'2025-12-31'),(3,4,'2025-07-07'),
-    (4,5,'2025-07-31'),(4,7,'2025-12-31'),
-    (5,3,'2025-07-07'),(5,8,'2025-07-07'),
-    (6,1,'2025-12-31'),
-    (7,2,'2025-12-31'),(7,6,'2025-07-31'),
-    (8,5,'2025-07-31'),(8,7,'2025-12-31'),
-    (9,1,'2025-12-31'),(9,4,'2025-07-07');
+    (2,1,'2025-12-31', 0),(2,3,'2025-07-07', 1),
+    (3,2,'2025-12-31', 0),(3,4,'2025-07-07', 0),
+    (4,5,'2025-07-31', 1),(4,7,'2025-12-31', 0),
+    (5,3,'2025-07-07', 0),(5,8,'2025-07-07', 0),
+    (6,1,'2025-12-31', 1),
+    (7,2,'2025-12-31', 0),(7,6,'2025-07-31', 0),
+    (8,5,'2025-07-31', 0),(8,7,'2025-12-31', 1),
+    (9,1,'2025-12-31', 0),(9,4,'2025-07-07', 0);
 GO
 
 PRINT 'GymTonic - BD creada y poblada correctamente.';

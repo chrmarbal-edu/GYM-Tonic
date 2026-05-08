@@ -1,6 +1,6 @@
 /* <=============================== DEPENDENCIAS ===============================> */
 const userModel = require("../models/users.model")
-const fs = require("fs").promises
+const userMissionsModel = require("../models/userMissions.model")
 const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
@@ -14,6 +14,7 @@ function wrapAsync(fn) {
     }
 }
 
+// #region USERS
 
 /* <=============================== FIND ALL USERS ===============================> */
 exports.findAllUsers = wrapAsync(async function (req,res,next) { 
@@ -24,7 +25,7 @@ exports.findAllUsers = wrapAsync(async function (req,res,next) {
             const userLogued = req.userLogued
 
             if(userLogued.user_role != 1){
-                return next(new AppError("No tienes permiso para realizar esta petición", 403))
+                return next(new AppError("No estás autorizado para realizar esta petición", 403))
             }
                   
             res.status(200).json(datosUser)
@@ -35,8 +36,6 @@ exports.findAllUsers = wrapAsync(async function (req,res,next) {
 /* <=============================== FIND USER BY ID ===============================> */
 exports.findUserById = wrapAsync(async function (req,res,next){
     const {id} = req.params
-    // const userLogued = req.userLogued
-    // console.log(id);
     await userModel.findById(id,function(err,datosUsuario){
         if(err){
             next(new AppError(err,404))
@@ -53,7 +52,6 @@ exports.findUserById = wrapAsync(async function (req,res,next){
 /* <=============================== UPDATE USER ===============================> */
 exports.updateUser = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    // const userLogued = req.userLogued
     let { username, name, currentPassword = "", newPassword = "", email, height, weight, objective} = req.body
     
     // BUSCAMOS USUARIO
@@ -129,21 +127,20 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
 
 /* <=============================== REGISTER ===============================> */
 exports.register = wrapAsync(async function (req, res, next) {
-    // const userLogued = req.userLogued?.data;
     let { username, name, password, birthdate, email, height, weight, objective} = req.body
 
     // VALIDACIONES DE CONTRASEÑA
-     if(password.length<8){
-         next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
-     }else if(!password.match(/[A-Z]/)){
+    if(password.length<8){
+        next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
+    } else if(!password.match(/[A-Z]/)){
         next(new AppError("La contraseña debe tener una mayúscula",400))
-     }else if(!password.match(/[a-z]/)){
+    } else if(!password.match(/[a-z]/)){
         next(new AppError("La contraseña debe tener una minúscula",400))
-     }else if(!password.match(/[/\d/]/)){
+    } else if(!password.match(/[/\d/]/)){
         next(new AppError("La contraseña debe tener un número",400))
-     }else if(!password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
+    } else if(!password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
         next(new AppError("La contraseña debe tener un carácter especial",400))
-     }else{
+    } else{
         let newUser = {}
 
         newUser = {
@@ -164,7 +161,6 @@ exports.register = wrapAsync(async function (req, res, next) {
                 if(err){
                     return next(new AppError(err, 500))
                 } else{
-                    
                     if(req.userLogued && req.userLogued.user_role == 1){
                         res.status(201).json({user: datosUsuarioCreado, token: null})
                     } else if(!req.userLogued){
@@ -182,8 +178,6 @@ exports.register = wrapAsync(async function (req, res, next) {
         } else{
             return next(new AppError("No tienes permisos para realizar esta petición", 403))
         }
-
-        
     }
 })
 
@@ -251,3 +245,195 @@ exports.login = wrapAsync(async(req, res, next) => {
 exports.logout = wrapAsync(async(req,res,next) => {
     res.status(200).json({msg: "Token Eliminado y Sesión Destruida"})
 })
+
+// #endregion
+
+// #region USER X MISSION
+
+/* <=============================== FIND ALL USER MISSIONS ===============================> */
+exports.findAllUserMissions = wrapAsync(async function (req,res,next){
+    const userLogued = req.userLogued
+
+    if(userLogued){
+        await userMissionsModel.findAll(function(err,datosUserMissions){
+            if(err){
+                next(new AppError(err,400))
+            } else{
+                res.status(200).json(datosUserMissions)
+            }
+        })
+    } else {
+        return next(new AppError("No tienes permisos para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== FIND USER MISSION BY ID ===============================> */
+exports.findUserMissionById = wrapAsync(async function (req,res,next){
+    const {id} = req.params
+    const userLogued = req.userLogued
+
+    if(userLogued && userLogued.user_role == 1){
+        await userMissionsModel.findById(id, function(err,datosUserMission){
+            if(err){
+                next(new AppError(err,404))
+            } else{
+                if(!datosUserMission || datosUserMission.length == 0) {
+                    return next(new AppError("Usuario no encontrado", 404))
+                }
+
+                res.status(200).json(datosUserMission)
+            }
+        })
+    } else {
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== FIND USER MISSION BY USER ID ===============================> */
+exports.findUserMissionByUserId = wrapAsync(async function (req,res,next){
+    const {userId} = req.params
+    const userLogued = req.userLogued
+
+    if(userLogued && (userLogued.user_id == userId || userLogued.user_role == 1)){
+        await userMissionsModel.findByUserId(userId, function(err,datosUserMission){
+            if(err){
+                next(new AppError(err,404))
+            } else{
+                if(!datosUserMission || datosUserMission.length == 0) {
+                    return next(new AppError("Misiones no encontradas", 404))
+                }
+
+                res.status(200).json(datosUserMission)
+            }
+        })
+    } else{
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== FIND USER MISSION BY MISSION ID ===============================> */
+exports.findUserMissionByMissionId = wrapAsync(async function (req,res,next){
+    const {missionId} = req.params
+    const userLogued = req.userLogued
+
+    if(userLogued){
+        await userMissionsModel.findByMissionId(missionId, function(err,datosUserMission){
+            if(err){
+                next(new AppError(err,404))
+            } else{
+                if(!datosUserMission || datosUserMission.length == 0) {
+                    return next(new AppError("Misión no encontrada", 404))
+                }
+
+                res.status(200).json(datosUserMission)
+            }
+        })
+    } else{
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== CREATE USER MISSION ===============================> */
+exports.createUserMission = wrapAsync(async function (req,res,next){
+    const {userId, missionId, expiration} = req.body
+    const userLogued = req.userLogued
+
+    if(userLogued && (userLogued.user_role == 1 || userLogued.user_id == userId)){
+        let newUserMission = {}
+
+        newUserMission.userId = userId
+        newUserMission.missionId = missionId
+        newUserMission.expiration = expiration
+        newUserMission.completed = false
+
+        await userMissionsModel.create(newUserMission, function(err,datosUserMissionCreado){
+            if(err){
+                next(new AppError(err, 500))
+            } else{
+                res.status(201).json(datosUserMissionCreado)
+            }
+        })
+    } else{
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== UPDATE USER MISSION ===============================> */
+exports.updateUserMission = wrapAsync(async function (req,res,next){
+    const {id} = req.params
+    const {userId, missionId, expiration, completed} = req.body
+    const userLogued = req.userLogued
+    
+    if(userLogued && userLogued.user_role == 1){
+        await userMissionsModel.findById(id, async function(err, missionFound) {
+            if(err){
+                return next(new AppError(err, 404))
+            } else{
+                if(!missionFound || missionFound.length == 0){
+                    return next(new AppError("Misión no encontrada", 404))
+                }
+            } 
+
+            let updateData = missionFound
+            
+            if(userId){
+                updateData.user_x_mission_userid = userId
+            }
+            
+            if(missionId){
+                updateData.user_x_mission_missionid = missionId
+            }
+
+            if(expiration){
+                updateData.user_x_mission_expiration = expiration
+            }
+
+            if(completed){
+                updateData.user_x_mission_completed = completed
+            }
+
+            await userMissionsModel.updateById(id, updateData, function(err, datosUserMissionActualizada) {
+                if(err){
+                    return next(new AppError(err, 500))
+                } else{
+                    res.status(200).json(datosUserMissionActualizada)
+                }
+            })
+        })
+    } else{
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== COMPLETE MISSION BY ID ===============================> */
+exports.completeMissionById = wrapAsync(async function (req,res,next){
+    const {id} = req.params
+    const userLogued = req.userLogued
+    
+    
+    if(userLogued){
+        await userMissionsModel.updateById
+    } else{
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+
+})
+
+/* <=============================== DELETE USER MISSION ===============================> */
+exports.deleteUserMission = wrapAsync(async function (req,res,next){
+    const {id} = req.params
+    const userLogued = req.userLogued
+
+    if(userLogued && userLogued.user_role == 1){
+        await userMissionsModel.delete(id, function(err, datosUserMissionEliminada){
+            if(err){
+                next(new AppError(err, 500))
+            } else{
+                res.status(200).json(datosUserMissionEliminada)
+            }
+        })
+    } else{
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+})
+// #endregion

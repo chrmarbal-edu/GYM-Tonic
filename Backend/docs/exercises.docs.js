@@ -54,6 +54,8 @@
  *     responses:
  *       201:
  *         description: Ejercicio creado exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Datos inválidos
  *       403:

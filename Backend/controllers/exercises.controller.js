@@ -39,6 +39,59 @@ exports.findExerciseById = wrapAsync(async function (req, res, next) {
     })
 })
 
+/* <=============================== FIND EXERCISE BY TYPE ===============================> */
+exports.findExercisesByType = wrapAsync(async function(req, res, next) {
+    const {type} = req.params
+
+    let typeCode
+    switch (type) {
+        case "cardio":
+            typeCode = 0
+            break
+        case "pectorales":
+            typeCode = 1
+            break
+        case "espalda":
+            typeCode = 2
+            break
+        case "biceps":
+            typeCode = 3
+            break
+        case "triceps":
+            typeCode = 4
+            break
+        case "cuadriceps":
+            typeCode = 5
+            break
+        case "femorales":
+            typeCode = 6
+            break
+        case "hombros":
+            typeCode = 7
+            break
+        case "gemelos":
+            typeCode = 8
+            break
+        case "abdominales":
+            typeCode = 9
+            break
+        case "fullbody":
+            typeCode = 10
+            break
+        default:
+            typeCode = 0
+            break
+    }
+
+    await exercisesModel.findByType(typeCode, function (err, datosExercises) {
+        if(err){
+            next(new AppError(err, 404))
+        } else{
+            res.status(200).json(datosExercises)
+        }
+    })
+})
+
 /* <=============================== CREATE EXERCISE ===============================> */
 exports.createExercise = wrapAsync(async function(req, res, next) {
     const { name, description, type, video, image } = req.body

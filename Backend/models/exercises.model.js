@@ -37,11 +37,27 @@ exercise.findById = async function (id, result) {
         } else {
             result({ err: "No hay datos" }, null)
         }
-
-        
     } catch (err) {
         result(err, null)
         
+    }
+}
+
+/* <=============================== FIND BY TYPE ===============================> */
+exercise.findByType = async (type, result) => {
+    try{
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("type", sql.Int, type)
+            .query("SELECT * FROM Exercises WHERE exercise_type = @type")
+
+        if (response.recordset.length > 0) {
+            result(null, response.recordset)
+        } else {
+            result({ err: "No hay datos" }, null)
+        }
+    } catch (err) {
+        result(err, null)
     }
 }
 

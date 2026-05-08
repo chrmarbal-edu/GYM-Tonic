@@ -16,6 +16,8 @@
  *     responses:
  *       200:
  *         description: Lista de amistades obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Error en la solicitud
  *       403:
@@ -47,6 +49,8 @@
  *     responses:
  *       201:
  *         description: Amistad creada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Datos inválidos
  *       403:
@@ -71,6 +75,8 @@
  *     responses:
  *       200:
  *         description: Lista de amistades obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación
  *       404:
@@ -95,6 +101,8 @@
  *     responses:
  *       200:
  *         description: Amistad obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:
@@ -115,6 +123,8 @@
  *     responses:
  *       200:
  *         description: Amistad eliminada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación
  *       404:

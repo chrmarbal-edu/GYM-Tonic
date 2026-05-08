@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /:
+ * /users:
  *   get:
  *     summary: Obtener todos los usuarios
  *     tags: [Usuarios]
@@ -16,6 +16,8 @@
  *     responses:
  *       200:
  *         description: Lista de usuarios obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Error en la solicitud
  *       403:
@@ -79,7 +81,7 @@
 
 /**
  * @swagger
- * /login:
+ * /users/login:
  *   post:
  *     summary: Iniciar sesión de usuario
  *     tags: [Usuarios]
@@ -113,7 +115,7 @@
 
 /**
  * @swagger
- * /logout:
+ * /users/logout:
  *   get:
  *     summary: Cerrar sesión de usuario
  *     tags: [Usuarios]
@@ -130,7 +132,7 @@
 
 /**
  * @swagger
- * /{id}:
+ * /users/{id}:
  *   get:
  *     summary: Obtener un usuario por ID
  *     tags: [Usuarios]
