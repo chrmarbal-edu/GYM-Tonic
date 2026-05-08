@@ -18,6 +18,7 @@ import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
 
@@ -35,7 +36,6 @@ fun RoutineCatalogScreen(
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
-    val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(routineId) {
@@ -74,8 +74,19 @@ fun RoutineCatalogScreen(
                 RoutineTemplateScreen(
                     exercises = state.routine.exercises,
                     onExerciseClick = onExerciseClick,
-                    favoritesSet = favoritesSet,
-                    onToggleFavorite = exerciseViewModel::onToggleFavorite
+                    isFavorite = exerciseViewModel::isFavorite,
+                    onToggleFavorite = { routineExercise ->
+                        exerciseViewModel.onToggleFavorite(
+                            FavoriteExercisePayload(
+                                id = routineExercise.id,
+                                name = routineExercise.name,
+                                description = routineExercise.reps,
+                                type = 0,
+                                video = null,
+                                image = null
+                            )
+                        )
+                    }
                 )
             }
         }
@@ -96,8 +107,19 @@ fun RoutineCatalogScreen(
                     RoutineTemplateScreen(
                         exercises = fallback.exercises,
                         onExerciseClick = onExerciseClick,
-                        favoritesSet = favoritesSet,
-                        onToggleFavorite = exerciseViewModel::onToggleFavorite
+                        isFavorite = exerciseViewModel::isFavorite,
+                        onToggleFavorite = { routineExercise ->
+                            exerciseViewModel.onToggleFavorite(
+                                FavoriteExercisePayload(
+                                    id = routineExercise.id,
+                                    name = routineExercise.name,
+                                    description = routineExercise.reps,
+                                    type = 0,
+                                    video = null,
+                                    image = null
+                                )
+                            )
+                        }
                     )
                 }
             } else {

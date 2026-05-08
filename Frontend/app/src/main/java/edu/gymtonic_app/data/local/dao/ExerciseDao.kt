@@ -16,14 +16,14 @@ interface ExerciseDao {
     fun getFavoriteExercise(): Flow<List<ExerciseEntity>>
 
     //Obtener favorita por id (suspend)
-    @Query("SELECT * FROM exercises WHERE exercise_id = exercise_id")
-    suspend fun getFavExerciseById(idWord: Int): ExerciseEntity?
+    @Query("SELECT * FROM exercises WHERE exercise_id = :exerciseId")
+    suspend fun getFavExerciseById(exerciseId: Int): ExerciseEntity?
 
     //Insertar (suspend)
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertExercise(word: ExerciseEntity): Long
+    suspend fun insertExercise(exercise: ExerciseEntity): Long
 
     //Borrar (suspend), devuelve el id del elemento eliminado
     @Delete
-    suspend fun deleteExercise(word: ExerciseEntity): Int
+    suspend fun deleteExercise(exercise: ExerciseEntity): Int
 }

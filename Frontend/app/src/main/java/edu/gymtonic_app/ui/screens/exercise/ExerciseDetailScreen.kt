@@ -41,6 +41,7 @@ import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.viewmodel.ExerciseUiState
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
 
 /*
 Esta clase se encarga de mostrar los detalles de un ejercicio.
@@ -63,8 +64,6 @@ fun ExerciseDetailScreen(
     val resolvedViewModel = viewModel ?: viewModel<ExerciseViewModel>(factory = ExerciseViewModelFactory(application))
     // Obtenemos el estado del viewModel
     val uiState by resolvedViewModel.uiState.collectAsState()
-    // Obtenemos el conjunto de favoritos
-    val favoritesSet by resolvedViewModel.favoritesSet.collectAsState()
 
     LaunchedEffect(exerciseId) {
         resolvedViewModel.loadSpecificExercise(exerciseId)
@@ -120,7 +119,7 @@ fun ExerciseDetailScreen(
         is ExerciseUiState.Success -> {
             val exercise = state.exercise // Obtenemos el ejercicio de la UI
             val parsedExerciseId = exercise.id.toIntOrNull() // Parseamos el id del ejercicio
-            val isFavorite = parsedExerciseId?.let { favoritesSet.contains(it) } == true // Comprobamos si es favorito
+            val isFavorite = resolvedViewModel.isFavorite(exercise.id) // Comprobamos si es favorito
 
             // Esto es para que se vea el ejercicio dentro de la pantalla
             TrainingShellScreen(
@@ -171,7 +170,19 @@ fun ExerciseDetailScreen(
                         // Icono de favorito con el color correspondiente
                         IconButton(
                             // llamo al metodo del vm encargado de swichear el favorito
-                            onClick = { resolvedViewModel.onToggleFavorite(exercise.id) },
+                            onClick = {
+                                resolvedViewModel.onToggleFavorite(
+                                    //creo un payload con los datos del ejercicio que quiero swichear
+                                    FavoriteExercisePayload(
+                                                id = exercise.id,
+                                                name = exercise.name,
+                                                description = exercise.instructions.joinToString("\n"),
+                                                type = 0,
+                                                video = null,
+                                                image = null
+                                    )
+                                )
+                            },
                             enabled = parsedExerciseId != null // Solo se puede pulsar si el id es valido
                         ) {
                             Icon(

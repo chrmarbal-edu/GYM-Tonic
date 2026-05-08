@@ -43,8 +43,8 @@ import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 fun RoutineTemplateScreen(
     exercises: List<RoutineExerciseUi>,
     onExerciseClick: (String) -> Unit,
-    favoritesSet: Set<Int>,
-    onToggleFavorite: (String) -> Unit
+    isFavorite: (String) -> Boolean,
+    onToggleFavorite: (RoutineExerciseUi) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -73,9 +73,9 @@ fun RoutineTemplateScreen(
                 val parsedId = exercise.id.toIntOrNull()
                 RoutineExerciseRow(
                     exercise = exercise,
-                    isFavorite = parsedId?.let { favoritesSet.contains(it) } == true,
+                    isFavorite = isFavorite(exercise.id),
                     favoriteEnabled = parsedId != null,
-                    onToggleFavorite = { onToggleFavorite(exercise.id) },
+                    onToggleFavorite = { onToggleFavorite(exercise) },
                     onClick = { onExerciseClick(exercise.id) }
                 )
             }

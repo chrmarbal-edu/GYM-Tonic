@@ -116,6 +116,4 @@ interface ApiService {
     @GET("exercises/{exerciseId}")
     suspend fun getExerciseById(@Path("exerciseId") exerciseId: String): Response<ExerciseDetailDto>
 
-    @GET("all")
-    suspend fun getAllExercises(): Response<List<Word>>
 }
