@@ -19,6 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.RegisterState
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 
@@ -32,6 +33,7 @@ fun RegisterScreen2(
     onBack: () -> Unit = {},
     registerState: RegisterState
 ) {
+    val strings = LocalStrings.current
     val bg = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF1F3F73),
@@ -40,24 +42,20 @@ fun RegisterScreen2(
         )
     )
 
-    // Campos
     var fechaNacimiento by remember { mutableStateOf("") }
     var altura by remember { mutableStateOf("") }
     var peso by remember { mutableStateOf("") }
     var objetivo by remember { mutableStateOf("") }
 
-    // Errores
     var fechaError by remember { mutableStateOf(false) }
     var alturaError by remember { mutableStateOf(false) }
     var pesoError by remember { mutableStateOf(false) }
     var objetivoError by remember { mutableStateOf(false) }
 
-    // Dropdown clásico
-    val objetivos = listOf("Perder peso", "Tonificar", "Ganar masa muscular")
+    val objetivos = listOf(strings.goalLoseWeight, strings.goalToneUp, strings.goalBuildMuscle)
     var dropdownExpanded by remember { mutableStateOf(false) }
 
     fun validateForm(): Boolean {
-        // Fecha debe ser exactamente yyyy-MM-dd
         val fechaRegex = Regex("""\d{4}-\d{2}-\d{2}""")
         fechaError = !fechaNacimiento.matches(fechaRegex)
         alturaError = altura.isBlank()
@@ -73,7 +71,7 @@ fun RegisterScreen2(
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
         Text(
-            text = "Crea tu cuenta",
+            text = strings.createAccount,
             color = Color.White,
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
@@ -99,8 +97,9 @@ fun RegisterScreen2(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Fecha con máscara simple
                 FechaNacimientoField(
+                    label = strings.birthDate,
+                    formatHint = strings.birthDateFormat,
                     fecha = fechaNacimiento,
                     onFechaChange = { fechaNacimiento = it; fechaError = false },
                     isError = fechaError
@@ -109,41 +108,34 @@ fun RegisterScreen2(
                 Spacer(Modifier.height(18.dp))
 
                 UnderlineLabeledField(
-                    label = "Altura (cm)",
+                    label = strings.height,
                     value = altura,
-                    onValueChange = {
-                        altura = it
-                        alturaError = false
-                    },
+                    onValueChange = { altura = it; alturaError = false },
                     placeholder = "185",
                     isError = alturaError,
-                    errorText = "Campo obligatorio"
+                    errorText = strings.requiredField
                 )
 
                 Spacer(Modifier.height(18.dp))
 
                 UnderlineLabeledField(
-                    label = "Peso (kg)",
+                    label = strings.weight,
                     value = peso,
-                    onValueChange = {
-                        peso = it
-                        pesoError = false
-                    },
+                    onValueChange = { peso = it; pesoError = false },
                     placeholder = "79",
                     isError = pesoError,
-                    errorText = "Campo obligatorio"
+                    errorText = strings.requiredField
                 )
 
                 Spacer(Modifier.height(22.dp))
 
-                // Dropdown clásico
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = { dropdownExpanded = true },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text(if (objetivo.isEmpty()) "Selecciona un objetivo" else objetivo)
+                        Text(if (objetivo.isEmpty()) strings.selectGoal else objetivo)
                     }
 
                     DropdownMenu(
@@ -164,7 +156,7 @@ fun RegisterScreen2(
                 }
                 if (objetivoError) {
                     Text(
-                        text = "Campo obligatorio",
+                        text = strings.requiredField,
                         color = Color.Red,
                         fontSize = 11.sp,
                         modifier = Modifier.padding(top = 4.dp)
@@ -176,12 +168,7 @@ fun RegisterScreen2(
                 Button(
                     onClick = {
                         if (validateForm()) {
-                            val objetivoValue = when (objetivo) {
-                                "Perder peso" -> 0
-                                "Tonificar" -> 1
-                                "Ganar masa muscular" -> 2
-                                else -> -1
-                            }
+                            val objetivoValue = objetivos.indexOf(objetivo)
 
                             registerViewModel.register(
                                 username = username,
@@ -195,9 +182,7 @@ fun RegisterScreen2(
                             )
                         }
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(58.dp),
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF3B4EE8),
@@ -205,15 +190,15 @@ fun RegisterScreen2(
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                 ) {
-                    if(registerState is RegisterState.Loading){
+                    if (registerState is RegisterState.Loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
                             color = Color(0xFFFFFFFF)
                         )
-                    }else{
+                    } else {
                         Text(
-                            text = "ENTRAR",
+                            text = strings.signUpButton,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.8.sp
@@ -229,15 +214,16 @@ fun RegisterScreen2(
 
 @Composable
 fun FechaNacimientoField(
+    label: String,
+    formatHint: String,
     fecha: String,
     onFechaChange: (String) -> Unit,
     isError: Boolean
 ) {
     UnderlineLabeledField(
-        label = "Fecha de nacimiento",
+        label = label,
         value = fecha,
         onValueChange = {
-            // Solo números y guiones automáticos
             val digits = it.filter { c -> c.isDigit() }
             var formatted = ""
             for (i in digits.indices) {
@@ -248,7 +234,7 @@ fun FechaNacimientoField(
         },
         placeholder = "yyyy-MM-dd",
         isError = isError,
-        errorText = "Formato: yyyy-MM-dd",
+        errorText = formatHint,
         visualTransformation = VisualTransformation.None,
         keyboardType = KeyboardType.Number
     )

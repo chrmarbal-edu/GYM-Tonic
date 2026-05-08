@@ -19,6 +19,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 
 @Composable
@@ -27,6 +29,7 @@ fun RegisterScreen(
     registerViewModel: RegisterViewModel,
     onBack: () -> Unit = {}
 ) {
+    val strings = LocalStrings.current
     val registerState by registerViewModel.registerState.collectAsState()
 
     var showStep2 by remember { mutableStateOf(false) }
@@ -68,16 +71,21 @@ fun RegisterScreen(
                 !passwordsMatchError
     }
 
-
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(bg)
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
-        // Título arriba
+        LanguageButton(
+            tint = Color.White,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 4.dp)
+        )
+
         Text(
-            text = "Crea tu cuenta",
+            text = strings.createAccount,
             color = Color.White,
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
@@ -86,16 +94,15 @@ fun RegisterScreen(
                 .padding(top = 55.dp)
         )
 
-        // ✅ CARD REAL (Surface con elevación)
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 80.dp) // 🔥 sube el card (ajusta 60..110)
+                .padding(bottom = 80.dp)
                 .fillMaxWidth()
                 .heightIn(min = 520.dp, max = 620.dp),
             shape = RoundedCornerShape(70.dp),
             color = Color(0xFFD9D9D9),
-            shadowElevation = 10.dp // 🔥 esto es la “sombra” de card
+            shadowElevation = 10.dp
         ) {
             Column(
                 modifier = Modifier
@@ -105,48 +112,40 @@ fun RegisterScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 UnderlineLabeledField(
-                    label = "Nombre completo",
+                    label = strings.fullName,
                     value = fullName,
-                    onValueChange = {
-                        fullName = it
-                        fullNameError = false
-                    },
+                    onValueChange = { fullName = it; fullNameError = false },
                     placeholder = "Jhon Andrés",
                     isError = fullNameError,
-                    errorText = "Campo obligatorio"
+                    errorText = strings.requiredField
                 )
-
 
                 Spacer(Modifier.height(18.dp))
 
                 UnderlineLabeledField(
-                    label = "Nombre de usuario",
+                    label = strings.usernameField,
                     value = username,
-                    onValueChange = {
-                        username = it
-                        usernameError = false },
+                    onValueChange = { username = it; usernameError = false },
                     placeholder = "jhonandres_00",
                     isError = usernameError,
-                    errorText = "Campo obligatorio"
+                    errorText = strings.requiredField
                 )
 
                 Spacer(Modifier.height(18.dp))
 
                 UnderlineLabeledField(
-                    label = "Email",
+                    label = strings.email,
                     value = email,
-                    onValueChange = {
-                        email = it
-                                    emailError = false},
+                    onValueChange = { email = it; emailError = false },
                     placeholder = "john@gmail.com",
                     isError = emailError,
-                    errorText = "Campo obligatorio"
+                    errorText = strings.requiredField
                 )
 
                 Spacer(Modifier.height(22.dp))
 
                 UnderlineLabeledField(
-                    label = "Contraseña",
+                    label = strings.password,
                     value = password,
                     onValueChange = {
                         password = it
@@ -155,12 +154,12 @@ fun RegisterScreen(
                     },
                     placeholder = "********",
                     isError = passwordError,
-                    errorText = "Campo obligatorio",
+                    errorText = strings.requiredField,
                     visualTransformation = PasswordVisualTransformation()
                 )
 
                 UnderlineLabeledField(
-                    label = "Confirmar contraseña",
+                    label = strings.confirmPassword,
                     value = confirmPassword,
                     onValueChange = {
                         confirmPassword = it
@@ -169,22 +168,15 @@ fun RegisterScreen(
                     },
                     placeholder = "********",
                     isError = confirmPasswordError || passwordsMatchError,
-                    errorText = if (passwordsMatchError) "Las contraseñas no coinciden" else "Campo obligatorio",
+                    errorText = if (passwordsMatchError) strings.passwordsNoMatch else strings.requiredField,
                     visualTransformation = PasswordVisualTransformation()
                 )
-
 
                 Spacer(Modifier.height(28.dp))
 
                 Button(
-                    onClick = {
-                        if (validateForm()){
-                            showStep2 = true
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(58.dp),
+                    onClick = { if (validateForm()) showStep2 = true },
+                    modifier = Modifier.fillMaxWidth().height(58.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFF3B4EE8),
@@ -193,7 +185,7 @@ fun RegisterScreen(
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                 ) {
                     Text(
-                        text = "SIGUIENTE",
+                        text = strings.nextButton,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.8.sp
@@ -205,7 +197,7 @@ fun RegisterScreen(
         }
     }
 
-    if(showStep2){
+    if (showStep2) {
         RegisterScreen2(
             fullName,
             username,
@@ -217,9 +209,7 @@ fun RegisterScreen(
         )
     }
 }
-/**
- * Campo con etiqueta + TextField subrayado (reutilizable).
- */
+
 @Composable
 fun UnderlineLabeledField(
     label: String,
@@ -275,9 +265,6 @@ fun UnderlineLabeledField(
 }
 
 
-/**
- * TextField con fondo transparente y línea inferior (Material 3).
- */
 @Composable
 fun UnderlineTextField(
     value: String,

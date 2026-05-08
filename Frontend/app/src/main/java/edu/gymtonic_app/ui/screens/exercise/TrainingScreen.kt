@@ -38,10 +38,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.TrainingCategoryUi
 import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 
-//La que muestra la lista de entrenamientos disponibles
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(
@@ -51,12 +51,13 @@ fun TrainingScreen(
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
+    val strings = LocalStrings.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 14.dp)
     ) {
-        // Header con título y botón crear rutina
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -66,9 +67,9 @@ fun TrainingScreen(
         ) {
             Text(
                 text = if (categories.isEmpty()) {
-                    "Explora entrenamientos creados por la comunidad y el equipo"
+                    strings.trainingEmpty
                 } else {
-                    "${categories.size} categorias disponibles para hoy"
+                    strings.trainingCategoriesAvailable(categories.size)
                 },
                 color = Color(0xFF464A57),
                 fontWeight = FontWeight.Medium,
@@ -77,7 +78,6 @@ fun TrainingScreen(
                 modifier = Modifier.weight(1f)
             )
 
-            // Icono "+" para crear rutina
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -100,7 +100,6 @@ fun TrainingScreen(
                 .weight(1f)
                 .fillMaxWidth(),
             isRefreshing = isRefreshing,
-            // El refresh lo dispara la pantalla/contenedor (ViewModel en siguiente paso).
             onRefresh = onRefresh
         ) {
             LazyColumn(
@@ -109,15 +108,16 @@ fun TrainingScreen(
                 content = {
                     if (categories.isEmpty() && !isRefreshing) {
                         item {
-                            EmptyTrainingState()
+                            EmptyTrainingState(strings.trainingNoWorkouts)
                         }
                     } else {
-                        // Render dinamico: las categorias/rutinas vienen del backend via ViewModel.
                         for (category in categories) {
                             item(key = category.id) {
                                 TrainingSection(
                                     title = category.title,
                                     routines = category.routines,
+                                    routinesLabel = strings.trainingRoutines,
+                                    tapToOpen = strings.trainingTapToOpen,
                                     onSelect = onSelect
                                 )
                             }
@@ -133,6 +133,8 @@ fun TrainingScreen(
 private fun TrainingSection(
     title: String,
     routines: List<TrainingRoutineUi>,
+    routinesLabel: (Int) -> String,
+    tapToOpen: String,
     onSelect: (String) -> Unit
 ) {
     Surface(
@@ -157,7 +159,7 @@ private fun TrainingSection(
                 )
 
                 Text(
-                    text = "${routines.size} rutinas",
+                    text = routinesLabel(routines.size),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF5D6270)
@@ -177,6 +179,7 @@ private fun TrainingSection(
                 ) { routine ->
                     TrainingCard(
                         option = routine,
+                        tapToOpen = tapToOpen,
                         onSelect = onSelect,
                         modifier = Modifier.width(158.dp)
                     )
@@ -189,6 +192,7 @@ private fun TrainingSection(
 @Composable
 private fun TrainingCard(
     option: TrainingRoutineUi,
+    tapToOpen: String,
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -240,7 +244,7 @@ private fun TrainingCard(
             )
 
             Text(
-                text = "Toca para abrir",
+                text = tapToOpen,
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFF5D6270),
                 maxLines = 1
@@ -250,7 +254,7 @@ private fun TrainingCard(
 }
 
 @Composable
-private fun EmptyTrainingState() {
+private fun EmptyTrainingState(message: String) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -259,7 +263,7 @@ private fun EmptyTrainingState() {
         color = Color(0xFFE9EBF2)
     ) {
         Text(
-            text = "Aun no hay entrenamientos para mostrar.\nDesliza hacia abajo para recargar.",
+            text = message,
             color = Color(0xFF4E5360),
             fontSize = 13.sp,
             textAlign = TextAlign.Center,

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,8 +31,10 @@ fun AccountScreen(
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
 ) {
+    val strings = LocalStrings.current
+
     TrainingShellScreen(
-        title = "Mi Cuenta",
+        title = strings.accountTitle,
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.PROFILE,
@@ -48,7 +51,7 @@ fun AccountScreen(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             item {
-                AccountSectionCard(title = "Cambiar Contraseña") {
+                AccountSectionCard(title = strings.changePassword) {
                     var currentPassword by remember { mutableStateOf("") }
                     var newPassword by remember { mutableStateOf("") }
                     var confirmPassword by remember { mutableStateOf("") }
@@ -56,7 +59,7 @@ fun AccountScreen(
                     OutlinedTextField(
                         value = currentPassword,
                         onValueChange = { currentPassword = it },
-                        label = { Text("Contraseña actual") },
+                        label = { Text(strings.currentPassword) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -69,7 +72,7 @@ fun AccountScreen(
                     OutlinedTextField(
                         value = newPassword,
                         onValueChange = { newPassword = it },
-                        label = { Text("Nueva contraseña") },
+                        label = { Text(strings.newPassword) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -82,7 +85,7 @@ fun AccountScreen(
                     OutlinedTextField(
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
-                        label = { Text("Confirmar nueva contraseña") },
+                        label = { Text(strings.confirmNewPassword) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -93,7 +96,7 @@ fun AccountScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { /* Lógica para cambiar contraseña */ },
+                        onClick = { },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -101,20 +104,20 @@ fun AccountScreen(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("GUARDAR CAMBIOS", fontWeight = FontWeight.Bold)
+                        Text(strings.saveChanges, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
             item {
-                AccountSectionCard(title = "Cambiar Email") {
+                AccountSectionCard(title = strings.changeEmail) {
                     var newEmail by remember { mutableStateOf("") }
                     var passwordConfirm by remember { mutableStateOf("") }
 
                     OutlinedTextField(
                         value = newEmail,
                         onValueChange = { newEmail = it },
-                        label = { Text("Nuevo email") },
+                        label = { Text(strings.newEmail) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -126,7 +129,7 @@ fun AccountScreen(
                     OutlinedTextField(
                         value = passwordConfirm,
                         onValueChange = { passwordConfirm = it },
-                        label = { Text("Confirmar contraseña") },
+                        label = { Text(strings.confirmPassword) },
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -137,7 +140,7 @@ fun AccountScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { /* Lógica para cambiar email */ },
+                        onClick = { },
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -145,13 +148,13 @@ fun AccountScreen(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("GUARDAR EMAIL", fontWeight = FontWeight.Bold)
+                        Text(strings.saveEmail, fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
             item {
-                AccountSectionCard(title = "Autenticación de Dos Factores") {
+                AccountSectionCard(title = strings.twoFactorAuth) {
                     var twoFaEnabled by remember { mutableStateOf(false) }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -159,7 +162,7 @@ fun AccountScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (twoFaEnabled) "Activada" else "Desactivada",
+                            text = if (twoFaEnabled) strings.twoFaEnabled else strings.twoFaDisabled,
                             fontSize = 15.sp,
                             color = Color(0xFF1D1D1D)
                         )
@@ -175,7 +178,7 @@ fun AccountScreen(
                         )
                     }
                     Text(
-                        text = "Protege tu cuenta con una capa extra de seguridad.",
+                        text = strings.twoFaDescription,
                         fontSize = 12.sp,
                         color = Color(0xFF5D6270),
                         modifier = Modifier.padding(top = 8.dp)
@@ -184,29 +187,37 @@ fun AccountScreen(
             }
 
             item {
-                AccountSectionCard(title = "Cuentas Conectadas") {
+                AccountSectionCard(title = strings.connectedAccounts) {
                     ConnectedAccountRow(
                         iconRes = R.drawable.google_logo,
                         name = "Google",
                         isConnected = true,
-                        onToggleConnect = { /* Lógica para conectar/desconectar Google */ }
+                        connectedLabel = strings.accountConnected,
+                        disconnectedLabel = strings.accountDisconnected,
+                        connectButton = strings.connectButton,
+                        disconnectButton = strings.disconnectButton,
+                        onToggleConnect = { }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     ConnectedAccountRow(
                         iconRes = R.drawable.facebook_logo,
                         name = "Facebook",
                         isConnected = false,
-                        onToggleConnect = { /* Lógica para conectar/desconectar Facebook */ }
+                        connectedLabel = strings.accountConnected,
+                        disconnectedLabel = strings.accountDisconnected,
+                        connectButton = strings.connectButton,
+                        disconnectButton = strings.disconnectButton,
+                        onToggleConnect = { }
                     )
                 }
             }
 
             item {
-                AccountSectionCard(title = "Eliminar Cuenta", color = Color(0xFFFDE9E9)) {
+                AccountSectionCard(title = strings.deleteAccount, color = Color(0xFFFDE9E9)) {
                     var confirmDeletionText by remember { mutableStateOf("") }
 
                     Text(
-                        text = "Esta acción es irreversible y eliminará todos tus datos. Escribe 'ELIMINAR' para confirmar.",
+                        text = strings.deleteAccountWarning,
                         color = Color(0xFFB00020),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
@@ -215,7 +226,7 @@ fun AccountScreen(
                     OutlinedTextField(
                         value = confirmDeletionText,
                         onValueChange = { confirmDeletionText = it },
-                        label = { Text("Escribe ELIMINAR") },
+                        label = { Text(strings.typeDeleteConfirmLabel) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -225,8 +236,8 @@ fun AccountScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
-                        onClick = { /* Lógica para eliminar cuenta */ },
-                        enabled = confirmDeletionText == "ELIMINAR",
+                        onClick = { },
+                        enabled = confirmDeletionText == strings.typeDeleteConfirmWord,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -234,7 +245,7 @@ fun AccountScreen(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("ELIMINAR CUENTA", fontWeight = FontWeight.Bold)
+                        Text(strings.deleteAccountButton, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -271,6 +282,10 @@ private fun ConnectedAccountRow(
     iconRes: Int,
     name: String,
     isConnected: Boolean,
+    connectedLabel: String,
+    disconnectedLabel: String,
+    connectButton: String,
+    disconnectButton: String,
     onToggleConnect: () -> Unit
 ) {
     Surface(
@@ -300,7 +315,7 @@ private fun ConnectedAccountRow(
                         color = Color(0xFF1F2330)
                     )
                     Text(
-                        text = if (isConnected) "Conectada" else "Desconectada",
+                        text = if (isConnected) connectedLabel else disconnectedLabel,
                         fontSize = 11.sp,
                         color = if (isConnected) Color(0xFF388E3C) else Color(0xFFD32F2F)
                     )
@@ -315,7 +330,7 @@ private fun ConnectedAccountRow(
                 shape = RoundedCornerShape(8.dp),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                Text(if (isConnected) "Desconectar" else "Conectar", fontSize = 11.sp)
+                Text(if (isConnected) disconnectButton else connectButton, fontSize = 11.sp)
             }
         }
     }

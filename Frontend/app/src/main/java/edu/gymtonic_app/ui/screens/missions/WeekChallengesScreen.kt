@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.CalendarDayUi
 import edu.gymtonic_app.ui.viewmodel.CalendarDayUiStatus
 import edu.gymtonic_app.ui.viewmodel.WeeklyGoalUi
@@ -52,10 +54,11 @@ fun WeekChallengesScreen(
     onShowMoreCalendar: () -> Unit,
     goals: List<WeeklyGoalUi> = emptyList(),
     calendarDays: List<CalendarDayUi> = emptyList(),
-    achievedLabel: String = "0/0 Logrados",
+    achievedLabel: String = "0/0",
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
+    val strings = LocalStrings.current
     val bg = Brush.verticalGradient(
         listOf(
             Color(0xFF1F3F73),
@@ -81,14 +84,17 @@ fun WeekChallengesScreen(
                     .fillMaxSize()
                     .padding(top = 25.dp)
             ) {
-                HeaderRow(onBack = onBack)
+                HeaderRow(
+                    title = strings.weekTitle,
+                    onBack = onBack,
+                    backLabel = strings.back
+                )
 
                 PullToRefreshBox(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 14.dp),
                     isRefreshing = isRefreshing,
-                    // El refresh recarga el contenido principal semanal desde el contenedor/ViewModel.
                     onRefresh = onRefresh
                 ) {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -101,7 +107,7 @@ fun WeekChallengesScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Objetivos semanales",
+                                    text = strings.weeklyGoals,
                                     color = Color(0xFF2D2D2D),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
@@ -128,13 +134,13 @@ fun WeekChallengesScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Mi Calendario",
+                                    text = strings.myCalendar,
                                     color = Color(0xFF2D2D2D),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
                                 )
                                 Text(
-                                    text = "Mostrar mas",
+                                    text = strings.showMore,
                                     color = Color(0xFF3A42B9),
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 13.sp,
@@ -166,7 +172,7 @@ fun WeekChallengesScreen(
 }
 
 @Composable
-private fun HeaderRow(onBack: () -> Unit) {
+private fun HeaderRow(title: String, onBack: () -> Unit, backLabel: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -177,13 +183,13 @@ private fun HeaderRow(onBack: () -> Unit) {
         IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = "Volver",
+                contentDescription = backLabel,
                 tint = Color(0xFF2D2D2D)
             )
         }
 
         Text(
-            text = "Semana",
+            text = title,
             color = Color(0xFF1D1D1D),
             fontWeight = FontWeight.ExtraBold,
             fontSize = 26.sp,
@@ -191,7 +197,7 @@ private fun HeaderRow(onBack: () -> Unit) {
             modifier = Modifier.weight(1f)
         )
 
-        Spacer(modifier = Modifier.size(40.dp))
+        LanguageButton(tint = Color(0xFF2D2D2D))
     }
 }
 
@@ -296,4 +302,3 @@ private fun CalendarCard(days: List<CalendarDayUi>) {
         }
     }
 }
-

@@ -17,12 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 
-/**
- * Pantalla de crear rutina.
- * Permite al usuario definir el nombre, descripción y añadir ejercicios a una nueva rutina.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRoutineScreen(
@@ -33,12 +30,13 @@ fun CreateRoutineScreen(
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {}
 ) {
+    val strings = LocalStrings.current
     var routineName by remember { mutableStateOf("") }
     var routineDescription by remember { mutableStateOf("") }
     val exercises = remember { mutableStateListOf<String>() }
 
     TrainingShellScreen(
-        title = "Crear Rutina",
+        title = strings.createRoutineTitle,
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.TRAINING,
@@ -59,18 +57,18 @@ fun CreateRoutineScreen(
             ) {
                 item {
                     Text(
-                        text = "Información básica",
+                        text = strings.basicInfo,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1D1D1D)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     OutlinedTextField(
                         value = routineName,
                         onValueChange = { routineName = it },
-                        label = { Text("Nombre de la rutina") },
+                        label = { Text(strings.routineName) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -78,13 +76,13 @@ fun CreateRoutineScreen(
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     OutlinedTextField(
                         value = routineDescription,
                         onValueChange = { routineDescription = it },
-                        label = { Text("Descripción (opcional)") },
+                        label = { Text(strings.routineDescription) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         minLines = 2,
@@ -102,20 +100,20 @@ fun CreateRoutineScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Ejercicios",
+                            text = strings.exercisesSection,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1D1D1D)
                         )
-                        
+
                         IconButton(
-                            onClick = { exercises.add("Nuevo Ejercicio ${exercises.size + 1}") },
+                            onClick = { exercises.add(strings.newExercise(exercises.size + 1)) },
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = Color(0xFF8B8EEA),
                                 contentColor = Color.White
                             )
                         ) {
-                            Icon(Icons.Default.Add, contentDescription = "Añadir ejercicio")
+                            Icon(Icons.Default.Add, contentDescription = strings.addExercise)
                         }
                     }
                 }
@@ -128,7 +126,7 @@ fun CreateRoutineScreen(
                             color = Color(0xFFE9EBF2).copy(alpha = 0.5f)
                         ) {
                             Text(
-                                text = "No has añadido ejercicios todavía",
+                                text = strings.noExercisesAdded,
                                 modifier = Modifier.padding(24.dp),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                                 color = Color(0xFF5D6270),
@@ -141,6 +139,8 @@ fun CreateRoutineScreen(
                 items(exercises) { exercise ->
                     ExerciseItemRow(
                         name = exercise,
+                        customizeLabel = strings.customizeSetsReps,
+                        deleteLabel = strings.deleteExercise,
                         onDelete = { exercises.remove(exercise) }
                     )
                 }
@@ -159,7 +159,7 @@ fun CreateRoutineScreen(
                 )
             ) {
                 Text(
-                    text = "GUARDAR RUTINA",
+                    text = strings.saveRoutine,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -170,7 +170,12 @@ fun CreateRoutineScreen(
 }
 
 @Composable
-fun ExerciseItemRow(name: String, onDelete: () -> Unit) {
+fun ExerciseItemRow(
+    name: String,
+    customizeLabel: String,
+    deleteLabel: String,
+    onDelete: () -> Unit
+) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
@@ -192,20 +197,19 @@ fun ExerciseItemRow(name: String, onDelete: () -> Unit) {
                     color = Color(0xFF1F2330)
                 )
                 Text(
-                    text = "Personaliza tus series y reps",
+                    text = customizeLabel,
                     fontSize = 11.sp,
                     color = Color(0xFF5D6270)
                 )
             }
-            
+
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
+                    contentDescription = deleteLabel,
                     tint = Color(0xFFE57373)
                 )
             }
         }
     }
 }
-

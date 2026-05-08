@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
@@ -33,6 +34,7 @@ fun RoutineCatalogScreen(
     onOpenProfile: () -> Unit = {},
     viewModel: RoutineCatalogViewModel = viewModel()
 ) {
+    val strings = LocalStrings.current
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
@@ -45,7 +47,7 @@ fun RoutineCatalogScreen(
     when (val state = uiState) {
         is RoutineCatalogUiState.Loading -> {
             TrainingShellScreen(
-                title = "Cargando rutina...",
+                title = strings.routineLoading,
                 onBack = onBack,
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
@@ -124,7 +126,7 @@ fun RoutineCatalogScreen(
                 }
             } else {
                 TrainingShellScreen(
-                    title = "Entrenamientos",
+                    title = strings.routineWorkoutsTitle,
                     onBack = onBack,
                     showBottomBar = true,
                     selectedBottomItem = BottomNavItem.TRAINING,

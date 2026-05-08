@@ -30,13 +30,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.gymtonic_app.R
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
 @Composable
@@ -46,13 +45,15 @@ fun RoutineTemplateScreen(
     isFavorite: (String) -> Boolean,
     onToggleFavorite: (RoutineExerciseUi) -> Unit
 ) {
+    val strings = LocalStrings.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 14.dp)
     ) {
         Text(
-            text = stringResource(R.string.ejercicios_disponibles, exercises.size),
+            text = strings.exercisesAvailable(exercises.size),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF464A57),
@@ -75,6 +76,9 @@ fun RoutineTemplateScreen(
                     exercise = exercise,
                     isFavorite = isFavorite(exercise.id),
                     favoriteEnabled = parsedId != null,
+                    removeFavoriteLabel = strings.removeFavorite,
+                    markFavoriteLabel = strings.markFavorite,
+                    setsAndRepsLabel = strings.setsAndReps,
                     onToggleFavorite = { onToggleFavorite(exercise) },
                     onClick = { onExerciseClick(exercise.id) }
                 )
@@ -88,6 +92,9 @@ private fun RoutineExerciseRow(
     exercise: RoutineExerciseUi,
     isFavorite: Boolean,
     favoriteEnabled: Boolean,
+    removeFavoriteLabel: String,
+    markFavoriteLabel: String,
+    setsAndRepsLabel: String,
     onToggleFavorite: () -> Unit,
     onClick: () -> Unit
 ) {
@@ -125,7 +132,7 @@ private fun RoutineExerciseRow(
                 )
 
                 Text(
-                    text = stringResource(R.string.series_y_repeticiones),
+                    text = setsAndRepsLabel,
                     fontSize = 11.sp,
                     color = Color(0xFF5D6270)
                 )
@@ -137,7 +144,7 @@ private fun RoutineExerciseRow(
             ) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorite) "Quitar favorito" else "Marcar favorito",
+                    contentDescription = if (isFavorite) removeFavoriteLabel else markFavoriteLabel,
                     tint = if (favoriteEnabled) Color(0xFFE53935) else Color(0xFF9EA3AF)
                 )
             }

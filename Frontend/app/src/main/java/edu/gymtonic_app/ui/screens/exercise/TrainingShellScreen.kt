@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.i18n.LocalStrings
 
 @Composable
 fun TrainingShellScreen(
@@ -103,6 +105,7 @@ private fun TrainingShellHeader(
     onBack: () -> Unit,
     showBack: Boolean
 ) {
+    val strings = LocalStrings.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -116,7 +119,7 @@ private fun TrainingShellHeader(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                    contentDescription = "Volver",
+                    contentDescription = strings.back,
                     tint = Color(0xFF2D2D2D)
                 )
             }
@@ -133,7 +136,6 @@ private fun TrainingShellHeader(
             modifier = Modifier.weight(1f)
         )
 
-        Spacer(modifier = Modifier.size(40.dp))
+        LanguageButton(tint = Color(0xFF2D2D2D))
     }
 }
-

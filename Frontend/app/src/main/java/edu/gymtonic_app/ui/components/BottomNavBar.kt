@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.ui.i18n.LocalStrings
 
 enum class BottomNavItem {
     HOME,
@@ -45,6 +46,7 @@ fun BottomNavBar(
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit
 ) {
+    val strings = LocalStrings.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -60,10 +62,10 @@ fun BottomNavBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomItem("Inicio", Icons.Outlined.Home, selectedItem == BottomNavItem.HOME, onOpenHome)
-            BottomItem("Entrenamiento", Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, onOpenTraining)
-            BottomItem("Desafios", Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, onOpenChallenges)
-            BottomItem("Perfil", Icons.Outlined.AccountCircle, selectedItem == BottomNavItem.PROFILE, onOpenProfile)
+            BottomItem(strings.navHome, Icons.Outlined.Home, selectedItem == BottomNavItem.HOME, onOpenHome)
+            BottomItem(strings.navTraining, Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, onOpenTraining)
+            BottomItem(strings.navChallenges, Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, onOpenChallenges)
+            BottomItem(strings.navProfile, Icons.Outlined.AccountCircle, selectedItem == BottomNavItem.PROFILE, onOpenProfile)
         }
     }
 }
@@ -102,4 +104,3 @@ private fun BottomItem(
         )
     }
 }
-
