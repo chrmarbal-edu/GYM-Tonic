@@ -4,8 +4,10 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.local.GymTonicDatabase
+import edu.gymtonic_app.data.local.datasource.local.exercise.ExerciseLocalDataSource
+import edu.gymtonic_app.data.remote.datasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.data.repository.ExerciseRepository
-import edu.gymtonic_app.data.repository.FavoritesRepository
 import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,11 +33,13 @@ sealed class ExerciseUiState {
 }
 //endregion
 
-class ExerciseViewModel(
-    application: Application,
-    private val exerciseRepository: ExerciseRepository = ExerciseRepository(),
-    private val favoritesRepository: FavoritesRepository = FavoritesRepository(application)
-) : AndroidViewModel(application) {
+class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
+
+    //region Declarar Acceso a Datos
+    private val exerciseRepository: ExerciseRepository
+    private val exerciseRemoteDataSource : ExerciseRemoteDataSource
+    private val exerciseLocalDataSource : ExerciseLocalDataSource
+    //endregion
 
     // region flow para almacenar el estado del UI
     private val _uiState = MutableStateFlow<ExerciseUiState>(ExerciseUiState.Idle)
@@ -48,20 +52,22 @@ class ExerciseViewModel(
     //endregion
 
     init {
-        viewModelScope.launch {
-            // Escuchamos los cambios en el conjunto de favoritos
-            favoritesRepository.observeFavoriteIds().collect { favoriteIds ->
-                // Actualizamos el conjunto de favoritos con los nuevos valores
-                _favoritesSet.value = favoriteIds
-            }
+        //Inicializamos el repositorio
+        val database = GymTonicDatabase.getInstance(application)
+        val dao = database.exerciseDao()
 
-        }
+        exerciseRemoteDataSource = ExerciseRemoteDataSource()
+        exerciseLocalDataSource = ExerciseLocalDataSource(dao)
+        exerciseRepository = ExerciseRepository(exerciseRemoteDataSource, exerciseLocalDataSource)
+
+        //Cargamos los datos de los ejercicios
+
     }
 
     //region Metodos
 
-    //Funcion para cargar el ejercicio
-    fun loadExercise(exerciseId: String) {
+    //Funcion para cargar el ejercicio especifico
+    fun loadSpecificExercise(exerciseId: String) {
         viewModelScope.launch {
             // marcamos el estado de la ui a cargando
             _uiState.value = ExerciseUiState.Loading
@@ -88,7 +94,14 @@ class ExerciseViewModel(
                 }
         }
     }
-
+    
+    //Función para cargar todos los favoritos de room
+    fun loadAllFavoritesFromRoom() {
+        viewModelScope.launch {
+            exerciseRepository.getFavExercises()
+        }
+    }
+    
     //Funcion para saber si un ejercicio es favorito
     fun isFavorite(exerciseId: String): Boolean {
         //Primero declaramos el id del ejercicio ya que puede ser null
@@ -96,6 +109,7 @@ class ExerciseViewModel(
         //Luego comprobamos si el id esta en el conjunto de favoritos
         return _favoritesSet.value.contains(parsedId)
     }
+    
 
     // Metodo para alternar favorito
     fun onToggleFavorite(exerciseId: String) {
@@ -116,107 +130,13 @@ class ExerciseViewModel(
         // Actualizamos el estado de la ui
         _favoritesSet.value = optimistic
 
-        // Llamamos al repositorio para alternar favorito
+        //EN LA BD SE GUARDA EL EJERCICIO, LE ENTRA POR PARAMETRO UN EXERCISE
+        //Actualizamos la base de datos
         viewModelScope.launch {
-            runCatching {
-                favoritesRepository.toggleFavorite(parsedId)
-            }.onFailure { error ->
-                Log.e(TAG, "Error al alternar favorito para exerciseId=$exerciseId", error)
-                _favoritesSet.value = previous
-            }
+            exerciseRepository.updateFavWord(parsedId)
         }
     }
-    //endregion
-
-    /*
-    //region Carga de datos
-    fun fetchWords() { //(carga remota + marcado de favoritas del repository)
-        viewModelScope.launch { // ejecuta mi corrutina
-
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                errorMessage = null
-            ) // Da el valor de true a la variable del estado de carga
-
-            try {
-                //rellenado de la lista
-                val listWords = repository.getAllWords(_uiState.value.sortAscending)
-                _words.value = listWords ?: emptyList()
-
-            } catch (e: Exception) {    //Cualquier error es escrito en la pantralla
-                _uiState.value = _uiState.value.copy(errorMessage = "ERROR: ${e.message}")
-
-            } finally { // si o si pone le modo de carga a falso
-                _uiState.value = _uiState.value.copy(isLoading = false)
-            }
-        }
-    }
-
-    fun fetchFavouritesWords() {
-        viewModelScope.launch {
-            try {
-                //1-Obtenemos la lista de fav del room ordenada segun sort
-                val flujoDeFavoritas: Flow<List<Word>> =
-                    repository.getFavWords(_uiState.value.sortAscending)
-
-                //2-De la lista que recibimos que es "Flow", .collect es el escucha que obtiene los datos de la bd si estos cambian
-                flujoDeFavoritas.collect { listaDeFavoritasRecibida ->
-
-                    //2.1-Limpiamos el Flow
-                    val listaLimpiaDeFavoritas: List<Word> =
-                        listaDeFavoritasRecibida.map { palabra ->
-                            //Aseguramos que cada palabra recibida tenga a true el isfavourite
-                            palabra.copy(isFavorite = true)
-                        }
-                    //2.2-cargamos nuestra lista con la lista limpia
-                    _favWords.value = listaLimpiaDeFavoritas
-
-                    //3 Set con todos los ID de las palabras favoritas
-                    val conjuntoDeIdsFavoritas: Set<Int> =
-                        listaDeFavoritasRecibida.map { palabra -> palabra.idWord }.toSet()
-
-                    //4 Marcar las favoritas
-                    val listaPrincipalActual: List<Word> =
-                        _words.value // Obtenemos la lista actual de todas las palabras.
-
-                    val listaMerge =
-                        listaPrincipalActual.map { palabra ->
-                            // Para cada palabra, comprobamos si su ID está en nuestro conjunto de IDs favoritas.
-                            val esFavorita: Boolean =
-                                conjuntoDeIdsFavoritas.contains(palabra.idWord)
-
-                            // Creamos una copia de la palabra, actualizando su estado de "favorita".
-                            palabra.copy(isFavorite = esFavorita)
-                        }
-
-                    // 5-actualizamos la lista principal con la versión ya sincronizada.
-                    _words.value = listaMerge
-
-                }
-            } catch (e: Exception) {    //Cualquier error es escrito en la pantralla
-                _uiState.value = _uiState.value.copy(errorMessage = "ERROR: ${e.message}")
-
-            } finally { // si o si pone le modo de carga a falso
-                _uiState.value = _uiState.value.copy(isLoading = false)            }
-
-        }
-    }
-
-    //Marca o desmarca favorito
-    fun toggleFavWord(word: Word) {
-        viewModelScope.launch {
-            repository.updateFavWord(word) //cambia el fav a la palabra recibida
-        }
-    }
-    */
-
-
-
-
-
-
-
-
+    
     // Este companion object es para poder usar el TAG en el Log
     companion object {
         private const val TAG = "ExerciseViewModel"

@@ -67,7 +67,7 @@ fun ExerciseDetailScreen(
     val favoritesSet by resolvedViewModel.favoritesSet.collectAsState()
 
     LaunchedEffect(exerciseId) {
-        resolvedViewModel.loadExercise(exerciseId)
+        resolvedViewModel.loadSpecificExercise(exerciseId)
     }
 
     //Según el estado del state, se muestra u otro contenido
