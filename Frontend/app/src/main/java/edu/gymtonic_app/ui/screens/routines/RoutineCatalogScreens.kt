@@ -39,7 +39,7 @@ fun RoutineCatalogScreen(
     val application = context.applicationContext as Application
     val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
     val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.catalogUiState.collectAsState()
 
     LaunchedEffect(routineId) {
         viewModel.loadRoutine(routineId)

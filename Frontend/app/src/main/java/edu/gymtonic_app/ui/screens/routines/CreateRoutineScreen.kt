@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,13 +22,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -58,7 +60,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun CreateRoutineScreen(
     onBack: () -> Unit,
-    favoriteExercises: List<ExerciseEntity>,
     onRoutineCreated: () -> Unit = {},
     onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
@@ -69,22 +70,22 @@ fun CreateRoutineScreen(
     val strings = LocalStrings.current
     val context = LocalContext.current
     val application = context.applicationContext as Application
-    val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
-    val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
+
+    val exerciseViewModel: ExerciseViewModel =
+        viewModel(factory = ExerciseViewModelFactory(application))
+
+    val favoriteExercises by exerciseViewModel.favoriteExercises.collectAsState()
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(favoriteExercises) {
         selectedExerciseIds.retainAll(favoriteExercises.map { it.exercise_id }.toSet())
-    }
-
-    val selectableExercises = favoriteExercises.filter { exercise ->
-        favoritesSet.contains(exercise.exercise_id)
     }
 
     fun toggleSelection(exerciseId: Int) {
@@ -97,10 +98,12 @@ fun CreateRoutineScreen(
 
     fun saveRoutine() {
         val trimmedName = routineName.trim()
+
         if (trimmedName.isBlank()) {
             errorMessage = "El nombre de la rutina no puede estar vacío"
             return
         }
+
         if (selectedExerciseIds.isEmpty()) {
             errorMessage = "Debes seleccionar al menos un ejercicio"
             return
@@ -109,7 +112,7 @@ fun CreateRoutineScreen(
         isSaving = true
         errorMessage = null
 
-        val imageKey = selectableExercises
+        val imageKey = favoriteExercises
             .firstOrNull { selectedExerciseIds.contains(it.exercise_id) }
             ?.exercise_image
 
@@ -161,7 +164,7 @@ fun CreateRoutineScreen(
                         color = Color(0xFF1D1D1D)
                     )
 
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = routineName,
@@ -190,14 +193,14 @@ fun CreateRoutineScreen(
                         )
 
                         Text(
-                            text = "${selectedExerciseIds.size}/${selectableExercises.size}",
+                            text = "${selectedExerciseIds.size}/${favoriteExercises.size}",
                             fontSize = 12.sp,
                             color = Color(0xFF5D6270)
                         )
                     }
                 }
 
-                if (selectableExercises.isEmpty()) {
+                if (favoriteExercises.isEmpty()) {
                     item {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
@@ -213,7 +216,7 @@ fun CreateRoutineScreen(
                     }
                 } else {
                     items(
-                        items = selectableExercises,
+                        items = favoriteExercises,
                         key = { it.exercise_id }
                     ) { exercise ->
                         FavoriteExerciseRow(
@@ -305,9 +308,8 @@ private fun FavoriteExerciseRow(
                     contentDescription = null,
                     tint = if (selected) Color(0xFF3B4EE8) else Color(0xFF9EA3AF)
                 )
-                Text(
-                    text = if (selected) "Añadido" else "Añadir"
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = if (selected) "Añadido" else "Añadir")
             }
         }
     }
