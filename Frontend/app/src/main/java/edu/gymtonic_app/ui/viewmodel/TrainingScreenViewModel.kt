@@ -3,6 +3,11 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.local.GymTonicDatabase
+import edu.gymtonic_app.data.local.datasource.local.routine.RoutineLocalDataSource
+import edu.gymtonic_app.data.local.localModel.RoutineEntity
+import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.repository.RoutineRepository
 import edu.gymtonic_app.data.repository.TrainingRepository
 import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.delay
@@ -31,12 +36,27 @@ data class TrainingUiState(
 )
 
 class TrainingScreenViewModel(application: Application) : AndroidViewModel(application) {
-    val trainingRepository: TrainingRepository = TrainingRepository()
+    private val trainingRepository: TrainingRepository
+    private val routineRepository: RoutineRepository
 
     private val _uiState = MutableStateFlow(TrainingUiState())
     val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
 
+    private val _remoteCategories = MutableStateFlow<List<TrainingCategoryUi>>(emptyList())
+    private val _userRoutineCategory = MutableStateFlow<TrainingCategoryUi?>(null)
+
     init {
+        trainingRepository = TrainingRepository()
+
+        val database = GymTonicDatabase.getInstance(application)
+        val routineDao = database.routineDao()
+        val routineLocalDataSource = RoutineLocalDataSource(routineDao)
+        routineRepository = RoutineRepository(
+            routineRemoteDataSource = RoutineRemoteDataSource(),
+            routineLocalDataSource = routineLocalDataSource
+        )
+
+        observeUserRoutines()
         loadCategories()
     }
 
@@ -52,25 +72,22 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             trainingRepository.getTrainingCategories()
                 .onSuccess { remoteCategories ->
-                    _uiState.update {
-                        it.copy(
-                            categories = remoteCategories.map { category ->
-                                TrainingCategoryUi(
-                                    id = category.id,
-                                    title = category.title,
-                                    routines = category.routines.map { routine ->
-                                        TrainingRoutineUi(
-                                            id = routine.id,
-                                            title = routine.title,
-                                            imageRes = ImageResourceMapper.fromKey(routine.imageKey)
-                                        )
-                                    }
+                    val mappedRemoteCategories = remoteCategories.map { category ->
+                        TrainingCategoryUi(
+                            id = category.id,
+                            title = category.title,
+                            routines = category.routines.map { routine ->
+                                TrainingRoutineUi(
+                                    id = routine.id,
+                                    title = routine.title,
+                                    imageRes = ImageResourceMapper.fromKey(routine.imageKey)
                                 )
-                            },
-                            isRefreshing = false,
-                            errorMessage = null
+                            }
                         )
                     }
+
+                    _remoteCategories.value = mappedRemoteCategories
+                    rebuildCategories()
                 }
                 .onFailure { error ->
                     _uiState.update {
@@ -80,6 +97,46 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                         )
                     }
                 }
+        }
+    }
+
+    private fun observeUserRoutines() {
+        viewModelScope.launch {
+            routineRepository.getUserCreatedRoutines().collect { routineEntities ->
+                _userRoutineCategory.value = mapUserRoutinesToCategory(routineEntities)
+                rebuildCategories()
+            }
+        }
+    }
+
+    private fun mapUserRoutinesToCategory(routines: List<RoutineEntity>): TrainingCategoryUi? {
+        if (routines.isEmpty()) return null
+
+        return TrainingCategoryUi(
+            id = "my_routines",
+            title = "Mis rutinas",
+            routines = routines.map { routine ->
+                TrainingRoutineUi(
+                    id = routine.routine_id.toString(),
+                    title = routine.routine_name,
+                    imageRes = ImageResourceMapper.fromKey(routine.imageKey)
+                )
+            }
+        )
+    }
+
+    private fun rebuildCategories() {
+        val finalCategories = buildList {
+            _userRoutineCategory.value?.let { add(it) }
+            addAll(_remoteCategories.value)
+        }
+
+        _uiState.update {
+            it.copy(
+                categories = finalCategories,
+                isRefreshing = false,
+                errorMessage = null
+            )
         }
     }
 }
