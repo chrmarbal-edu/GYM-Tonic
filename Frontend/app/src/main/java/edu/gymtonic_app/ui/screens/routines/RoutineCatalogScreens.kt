@@ -38,6 +38,7 @@ fun RoutineCatalogScreen(
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
+    val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(routineId) {
@@ -76,7 +77,7 @@ fun RoutineCatalogScreen(
                 RoutineTemplateScreen(
                     exercises = state.routine.exercises,
                     onExerciseClick = onExerciseClick,
-                    isFavorite = exerciseViewModel::isFavorite,
+                    favoritesSet = favoritesSet,
                     onToggleFavorite = { routineExercise ->
                         exerciseViewModel.onToggleFavorite(
                             FavoriteExercisePayload(
@@ -109,7 +110,7 @@ fun RoutineCatalogScreen(
                     RoutineTemplateScreen(
                         exercises = fallback.exercises,
                         onExerciseClick = onExerciseClick,
-                        isFavorite = exerciseViewModel::isFavorite,
+                        favoritesSet = favoritesSet,
                         onToggleFavorite = { routineExercise ->
                             exerciseViewModel.onToggleFavorite(
                                 FavoriteExercisePayload(

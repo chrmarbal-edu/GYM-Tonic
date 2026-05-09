@@ -58,6 +58,7 @@ fun ExerciseDetailScreen(
     val application = context.applicationContext as Application
     val resolvedViewModel = viewModel ?: viewModel<ExerciseViewModel>(factory = ExerciseViewModelFactory(application))
     val uiState by resolvedViewModel.uiState.collectAsState()
+    val favoritesSet by resolvedViewModel.favoritesSet.collectAsState()
 
     LaunchedEffect(exerciseId) {
         resolvedViewModel.loadSpecificExercise(exerciseId)
@@ -107,7 +108,7 @@ fun ExerciseDetailScreen(
         is ExerciseUiState.Success -> {
             val exercise = state.exercise
             val parsedExerciseId = exercise.id.toIntOrNull()
-            val isFavorite = resolvedViewModel.isFavorite(exercise.id)
+            val isFavorite = parsedExerciseId?.let { favoritesSet.contains(it) } == true
 
             TrainingShellScreen(
                 title = strings.exerciseTitle,
@@ -170,9 +171,15 @@ fun ExerciseDetailScreen(
                             enabled = parsedExerciseId != null
                         ) {
                             Icon(
-                                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = if (isFavorite) strings.removeFavorite else strings.markFavorite,
-                                tint = if (parsedExerciseId != null) Color(0xFFE53935) else Color(0xFF9EA3AF)
+                                imageVector =
+                                    if (isFavorite) Icons.Filled.Favorite
+                                    else Icons.Outlined.FavoriteBorder,
+                                contentDescription =
+                                    if (isFavorite) strings.removeFavorite
+                                    else strings.markFavorite,
+                                tint =
+                                    if (parsedExerciseId != null) Color(0xFFE53935)
+                                    else Color(0xFF9EA3AF)
                             )
                         }
                     }

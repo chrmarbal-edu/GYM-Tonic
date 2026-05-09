@@ -42,7 +42,7 @@ import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 fun RoutineTemplateScreen(
     exercises: List<RoutineExerciseUi>,
     onExerciseClick: (String) -> Unit,
-    isFavorite: (String) -> Boolean,
+    favoritesSet: Set<Int>,
     onToggleFavorite: (RoutineExerciseUi) -> Unit
 ) {
     val strings = LocalStrings.current
@@ -74,7 +74,7 @@ fun RoutineTemplateScreen(
                 val parsedId = exercise.id.toIntOrNull()
                 RoutineExerciseRow(
                     exercise = exercise,
-                    isFavorite = isFavorite(exercise.id),
+                    isFavorite = parsedId?.let { favoritesSet.contains(it) } == true,
                     favoriteEnabled = parsedId != null,
                     removeFavoriteLabel = strings.removeFavorite,
                     markFavoriteLabel = strings.markFavorite,
@@ -143,9 +143,15 @@ private fun RoutineExerciseRow(
                 enabled = favoriteEnabled
             ) {
                 Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorite) removeFavoriteLabel else markFavoriteLabel,
-                    tint = if (favoriteEnabled) Color(0xFFE53935) else Color(0xFF9EA3AF)
+                    imageVector =
+                        if (isFavorite) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
+                    contentDescription =
+                        if (isFavorite) removeFavoriteLabel
+                        else markFavoriteLabel,
+                    tint =
+                        if (favoriteEnabled) Color(0xFFE53935)
+                        else Color(0xFF9EA3AF)
                 )
             }
 
