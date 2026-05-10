@@ -55,7 +55,7 @@ exports.findGroupByIdCSR = wrapAsync(async function (req,res,next){
             } 
 
             if(!datosGroups || datosGroups.length == 0) {
-                return next(new AppError("Usuario no encontrado", 404))
+                return next(new AppError("Grupo no encontrado", 404))
             }
 
             res.status(200).json(datosGroups)
@@ -101,7 +101,7 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
             if(err){
                 console.log("ERROR UPDATE BY ID SSR");
 
-                next(err, 500)
+                next(new AppError(err, 500))
             } else{
                 res.status(200).json(datosGrupoActualizado);
             }

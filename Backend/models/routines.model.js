@@ -201,8 +201,7 @@ routine.create = async (newRoutine, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("id", sql.Int, id)
-        request.input("name", sql.VarChar, newRoutine.routine_name)
+        request.input("name", sql.NVarChar, newRoutine.routine_name)
 
         const sqlQuery = `
             INSERT INTO Routines (
@@ -212,6 +211,10 @@ routine.create = async (newRoutine, result) => {
                 @name
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response)
+
     } catch (err) {
         result(err, null)
         
