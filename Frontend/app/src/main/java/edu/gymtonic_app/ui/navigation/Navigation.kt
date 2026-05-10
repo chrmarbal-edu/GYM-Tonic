@@ -12,8 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,18 +21,19 @@ import androidx.navigation.navArgument
 import edu.gymtonic_app.data.remote.model.auth.SessionManager
 import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
 import edu.gymtonic_app.ui.components.BottomNavItem
-import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
-import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
+import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
+import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
+import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
-import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
-import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
-import edu.gymtonic_app.ui.screens.profile.ProfileScreen
-import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
-import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.screens.profile.AccountScreen
+import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.profile.SettingsScreen
+import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
+import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
@@ -43,12 +44,13 @@ import edu.gymtonic_app.ui.viewmodel.WeekChallengesViewModel
 @Suppress("UNUSED_PARAMETER")
 fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {
 
+    val strings = LocalStrings.current
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context.sessionDataStore) }
 
     val loginViewModel: LoginViewModel = viewModel()
     val registerViewModel: RegisterViewModel = viewModel()
-    val homeViewModel : HomeViewModel = viewModel()
+    val homeViewModel: HomeViewModel = viewModel()
     val trainingViewModel: TrainingScreenViewModel = viewModel()
     val weekChallengesViewModel: WeekChallengesViewModel = viewModel()
 
@@ -87,7 +89,6 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         else -> Routes.WELCOME
     }
 
-    // Splash mientras carga DataStore
     if (startRoute == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -156,6 +157,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         }
 
         composable(Routes.WEEK) {
+            val week = weekUiState.value
             WeekChallengesScreen(
                 onBack = { navController.popBackStack() },
                 onOpenHome = {
@@ -168,17 +170,17 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenChallenges = { },
                 onOpenProfile = onOpenProfileGlobal,
                 onShowMoreCalendar = { },
-                goals = weekUiState.value.goals,
-                calendarDays = weekUiState.value.calendarDays,
-                achievedLabel = weekUiState.value.achievedLabel,
-                isRefreshing = weekUiState.value.isRefreshing,
+                goals = week.goals,
+                calendarDays = week.calendarDays,
+                achievedLabel = "${week.achievedCount}/${week.totalCount} ${strings.achieved}",
+                isRefreshing = week.isRefreshing,
                 onRefresh = { weekChallengesViewModel.refreshWeekGoals() }
             )
         }
 
         composable(Routes.TRAINING) {
             TrainingShellScreen(
-                title = "Entrenamientos",
+                title = strings.trainingTitle,
                 onBack = { navController.popBackStack() },
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
@@ -188,7 +190,6 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal
             ) {
                 TrainingScreen(
-                    // Cada card envía el routineId (backend) y se construye una ruta dinámica a screens/routines.
                     onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
@@ -201,10 +202,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.CREATE_ROUTINE) {
             CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
-                onSave = { 
-                    // Por ahora solo volvemos atrás al guardar
-                    navController.popBackStack() 
-                },
+                onRoutineCreated = { navController.popBackStack() },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
@@ -220,20 +218,6 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
             RoutineCatalogScreen(
                 routineId = routineId,
-                onBack = { navController.popBackStack() },
-                onExerciseClick = { exerciseId ->
-                    navController.navigate(Routes.exercise(exerciseId))
-                },
-                onOpenHome = onOpenHomeGlobal,
-                onOpenTraining = onOpenTrainingGlobal,
-                onOpenChallenges = onOpenChallengesGlobal,
-                onOpenProfile = onOpenProfileGlobal
-            )
-        }
-
-        composable(Routes.EXERCISES) {
-            RoutineCatalogScreen(
-                routineId = "fullbody",
                 onBack = { navController.popBackStack() },
                 onExerciseClick = { exerciseId ->
                     navController.navigate(Routes.exercise(exerciseId))

@@ -2,6 +2,26 @@
 const exercisesModel = require("../models/exercises.model")
 const AppError = require("../utils/AppError")
 
+const durationByExerciseType = (exerciseType) => {
+    if (exerciseType === 1) {
+        return 20
+    }
+
+    if (exerciseType === 2) {
+        return 30
+    }
+
+    return 15
+}
+
+const toImageKey = (image = "") => {
+    if (!image || typeof image !== "string") {
+        return ""
+    }
+
+    return image.replace(/\.[^/.]+$/, "")
+}
+
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
     return function (req, res, next) {
@@ -28,14 +48,75 @@ exports.findExerciseById = wrapAsync(async function (req, res, next) {
 
     await exercisesModel.findById(id, function(err, datosExercise){
         if(err){
-            next(new AppError(err, 404))
+            return next(new AppError(err, 404))
         }
 
-        if(!datosExercise || datosExercise.length == 0){
+        if(!datosExercise || (Array.isArray(datosExercise) && datosExercise.length == 0)){
             return next(new AppError("Ejercicio no encontrado", 404))
         }
 
-        res.status(200).json(datosExercise)
+        const exerciseDetail = {
+            id: String(datosExercise.exercise_id),
+            name: datosExercise.exercise_name,
+            duration_seconds: durationByExerciseType(datosExercise.exercise_type),
+            image_key: toImageKey(datosExercise.exercise_image),
+            instructions: datosExercise.exercise_description ? [datosExercise.exercise_description] : []
+        }
+
+        return res.status(200).json(exerciseDetail)
+    })
+})
+
+/* <=============================== FIND EXERCISE BY TYPE ===============================> */
+exports.findExercisesByType = wrapAsync(async function(req, res, next) {
+    const {type} = req.params
+
+    let typeCode
+    switch (type) {
+        case "cardio":
+            typeCode = 0
+            break
+        case "pectorales":
+            typeCode = 1
+            break
+        case "espalda":
+            typeCode = 2
+            break
+        case "biceps":
+            typeCode = 3
+            break
+        case "triceps":
+            typeCode = 4
+            break
+        case "cuadriceps":
+            typeCode = 5
+            break
+        case "femorales":
+            typeCode = 6
+            break
+        case "hombros":
+            typeCode = 7
+            break
+        case "gemelos":
+            typeCode = 8
+            break
+        case "abdominales":
+            typeCode = 9
+            break
+        case "fullbody":
+            typeCode = 10
+            break
+        default:
+            typeCode = 0
+            break
+    }
+
+    await exercisesModel.findByType(typeCode, function (err, datosExercises) {
+        if(err){
+            next(new AppError(err, 404))
+        } else{
+            res.status(200).json(datosExercises)
+        }
     })
 })
 

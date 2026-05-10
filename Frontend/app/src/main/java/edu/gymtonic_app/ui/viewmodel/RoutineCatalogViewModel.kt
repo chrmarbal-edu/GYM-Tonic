@@ -3,26 +3,39 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.R
+import edu.gymtonic_app.data.local.GymTonicDatabase
+import edu.gymtonic_app.data.local.datasource.local.routine.RoutineLocalDataSource
+import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerciseLocalDataSource
+import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.repository.RoutineExerciseRepository
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailData
+import edu.gymtonic_app.domain.model.routine.RoutineDetail
+import edu.gymtonic_app.ui.mapper.ImageResourceMapper
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-//modelo de UI para un ejercicio (nombre, reps, imagen local).
 data class RoutineExerciseUi(
     val id: String,
     val name: String,
     val reps: String,
     val imageRes: Int
 )
-//modelo de UI para el detalle de una rutina (id, titulo, lista de ejercicios).
+
 data class RoutineDetailUi(
     val id: String,
     val title: String,
     val exercises: List<RoutineExerciseUi>
+)
+
+data class UserRoutineUi(
+    val id: Int,
+    val name: String,
+    val imageKey: String? = null
 )
 
 sealed class RoutineCatalogUiState {
@@ -34,29 +47,55 @@ sealed class RoutineCatalogUiState {
     ) : RoutineCatalogUiState()
 }
 
-//hardcodeado en memoria, usado como mock mientras no llega la integración real.
+sealed class UserRoutinesUiState {
+    object Loading : UserRoutinesUiState()
+    data class Success(val routines: List<UserRoutineUi>) : UserRoutinesUiState()
+    data class Error(val message: String) : UserRoutinesUiState()
+}
+
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val routineRepository = RoutineRepository()
-    private val _uiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
-    val uiState: StateFlow<RoutineCatalogUiState> = _uiState.asStateFlow()
+    private lateinit var routineRepository: RoutineRepository
+    private lateinit var routineExerciseRepository: RoutineExerciseRepository
+
+    private val _catalogUiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
+    val catalogUiState: StateFlow<RoutineCatalogUiState> = _catalogUiState.asStateFlow()
+
+    private val _userRoutinesState = MutableStateFlow<UserRoutinesUiState>(UserRoutinesUiState.Loading)
+    val userRoutinesState: StateFlow<UserRoutinesUiState> = _userRoutinesState.asStateFlow()
 
     init {
-        loadRoutine("fullbody")
+        val database = GymTonicDatabase.getInstance(application)
+
+        val routineDao = database.routineDao()
+        val routineExerciseDao = database.routineExerciseDao()
+
+        val routineRemoteDataSource = RoutineRemoteDataSource()
+        val routineLocalDataSource = RoutineLocalDataSource(routineDao)
+        val routineExerciseLocalDataSource = RoutineExerciseLocalDataSource(routineExerciseDao)
+
+        routineRepository = RoutineRepository(routineRemoteDataSource, routineLocalDataSource)
+        routineExerciseRepository = RoutineExerciseRepository(routineExerciseLocalDataSource)
+
+        observeUserCreatedRoutines()
     }
 
-    // Carga remote-first para el detalle de rutina y deja fallback local en caso de error.
     fun loadRoutine(routineId: String) {
+        if (routineId.isBlank()) {
+            _catalogUiState.value = RoutineCatalogUiState.Error(message = "Rutina no valida")
+            return
+        }
+
         viewModelScope.launch {
-            _uiState.value = RoutineCatalogUiState.Loading
+            _catalogUiState.value = RoutineCatalogUiState.Loading
 
             routineRepository.getRoutineByIdFromApi(routineId)
                 .onSuccess { routineData ->
-                    _uiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(routineData))
+                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(routineData))
                 }
                 .onFailure { error ->
                     val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(routineId))
-                    _uiState.value = RoutineCatalogUiState.Error(
+                    _catalogUiState.value = RoutineCatalogUiState.Error(
                         message = error.message ?: "No se pudo cargar la rutina",
                         fallbackRoutine = fallback
                     )
@@ -64,20 +103,19 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    // Carga remote-first para catálogo completo de rutinas; útil para próximas pantallas.
     fun loadRoutines() {
         viewModelScope.launch {
-            _uiState.value = RoutineCatalogUiState.Loading
+            _catalogUiState.value = RoutineCatalogUiState.Loading
 
             routineRepository.getRoutinesFromApi()
                 .onSuccess { routinesData ->
                     val firstRoutineData = routinesData.firstOrNull()
-                        ?: routineRepository.getRoutineFromMock("fullbody")
-                    _uiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(firstRoutineData))
+                        ?: routineRepository.getRoutineFromMock("")
+                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(firstRoutineData))
                 }
                 .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock("fullbody"))
-                    _uiState.value = RoutineCatalogUiState.Error(
+                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(""))
+                    _catalogUiState.value = RoutineCatalogUiState.Error(
                         message = error.message ?: "No se pudo cargar el catalogo",
                         fallbackRoutine = fallback
                     )
@@ -85,7 +123,93 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    private fun mapRoutineDataToUi(data: RoutineDetailData): RoutineDetailUi {
+    fun createUserRoutineWithExercises(
+        routineName: String,
+        exerciseIds: List<Int>,
+        imageKey: String? = null,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        if (routineName.isBlank()) {
+            onError("El nombre de la rutina no puede estar vacío")
+            return
+        }
+
+        if (exerciseIds.isEmpty()) {
+            onError("Debes añadir al menos un ejercicio")
+            return
+        }
+
+        viewModelScope.launch {
+            routineRepository.createUserRoutine(routineName, imageKey)
+                .onSuccess { routineId ->
+                    routineExerciseRepository
+                        .addMultipleExercisesToRoutine(routineId.toInt(), exerciseIds)
+                        .onSuccess {
+                            onSuccess()
+                        }
+                        .onFailure { relationError ->
+                            routineRepository.deleteUserRoutine(routineId.toInt())
+                            onError(relationError.message ?: "No se pudieron vincular los ejercicios")
+                        }
+                }
+                .onFailure { error ->
+                    onError(error.message ?: "No se pudo crear la rutina")
+                }
+        }
+    }
+
+    fun deleteUserRoutine(
+        routineId: Int,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            routineExerciseRepository.deleteAllExercisesForRoutine(routineId)
+                .onSuccess {
+                    routineRepository.deleteUserRoutine(routineId)
+                        .onSuccess {
+                            onSuccess()
+                        }
+                        .onFailure { error ->
+                            onError(error.message ?: "No se pudo borrar la rutina")
+                        }
+                }
+                .onFailure { error ->
+                    onError(error.message ?: "No se pudieron borrar los ejercicios de la rutina")
+                }
+        }
+    }
+
+    fun getExercisesForUserRoutine(routineId: Int): Flow<List<ExerciseEntity>> {
+        return routineExerciseRepository.getExercisesForRoutine(routineId)
+    }
+
+    fun removeExerciseFromRoutine(routineId: Int, exerciseId: Int) {
+        viewModelScope.launch {
+            routineExerciseRepository.removeExerciseFromRoutine(routineId, exerciseId)
+        }
+    }
+
+    private fun observeUserCreatedRoutines() {
+        viewModelScope.launch {
+            routineRepository.getUserCreatedRoutines()
+                .map { routineEntities ->
+                    routineEntities.map { entity ->
+                        UserRoutineUi(
+                            id = entity.routine_id,
+                            name = entity.routine_name,
+                            imageKey = entity.imageKey
+                        )
+                    }
+                }
+                .collect { routines ->
+                    _userRoutinesState.value = UserRoutinesUiState.Success(routines)
+                }
+        }
+    }
+
+    private fun mapRoutineDataToUi(data: RoutineDetail): RoutineDetailUi {
         return RoutineDetailUi(
             id = data.id,
             title = data.title,
@@ -94,45 +218,9 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                     id = exercise.id,
                     name = exercise.name,
                     reps = exercise.reps,
-                    imageRes = imageResFromKey(exercise.imageKey)
+                    imageRes = ImageResourceMapper.fromKey(exercise.imageKey)
                 )
             }
         )
     }
-
-    private fun imageResFromKey(imageKey: String?): Int {
-        return when (imageKey) {
-            "espalda" -> R.drawable.espalda
-            "fullbody" -> R.drawable.fullbody
-            "pushup" -> R.drawable.pushup
-            "estiramientos" -> R.drawable.estiramientos
-            "brazo" -> R.drawable.brazo
-            "pierna" -> R.drawable.pierna
-            "estocadas" -> R.drawable.estocadas
-            "pressbanca" -> R.drawable.pressbanca
-            "pullover" -> R.drawable.pullover
-            "remo" -> R.drawable.remo
-            "sentadilla" -> R.drawable.sentadilla
-            "pesomuerto" -> R.drawable.pesomuerto
-            else -> R.drawable.fullbody
-        }
-    }
-
-    /**
-     * Futuro endpoint: lista de rutinas completas desde API.
-     * Se deja comentado hasta que exista endpoint dedicado y DTO de detalle.
-     *
-     * suspend fun fetchRoutinesFromApi(): Result<List<RoutineDetailUi>> {
-     *     return routineRepository.getRoutinesFromApi()
-     * }
-     */
-
-    /**
-     * Futuro endpoint: detalle de rutina por id desde API.
-     * Se deja comentado para no afectar el flujo actual hardcodeado.
-     *
-     * suspend fun fetchRoutineByIdFromApi(routineId: String): Result<RoutineDetailUi> {
-     *     return routineRepository.getRoutineByIdFromApi(routineId)
-     * }
-     */
 }

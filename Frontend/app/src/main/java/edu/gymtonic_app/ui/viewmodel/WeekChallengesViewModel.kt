@@ -32,7 +32,8 @@ data class CalendarDayUi(
 data class WeekChallengesUiState(
 	val goals: List<WeeklyGoalUi> = emptyList(),
 	val calendarDays: List<CalendarDayUi> = emptyList(),
-	val achievedLabel: String = "0/0 Logrados",
+	val achievedCount: Int = 0,
+	val totalCount: Int = 0,
 	val isRefreshing: Boolean = false,
 	val errorMessage: String? = null
 )
@@ -86,7 +87,8 @@ class WeekChallengesViewModel(application: Application) : AndroidViewModel(appli
 						it.copy(
 							goals = mappedGoals,
 							calendarDays = normalizeCalendar(mappedCalendar),
-							achievedLabel = "$achievedCount/${mappedGoals.size} Logrados",
+							achievedCount = achievedCount,
+							totalCount = mappedGoals.size,
 							isRefreshing = false,
 							errorMessage = null
 						)
@@ -113,4 +115,3 @@ class WeekChallengesViewModel(application: Application) : AndroidViewModel(appli
 		return sortedDays + padding
 	}
 }
-

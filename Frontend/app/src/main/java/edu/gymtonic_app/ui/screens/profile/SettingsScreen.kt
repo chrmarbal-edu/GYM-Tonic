@@ -15,6 +15,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.i18n.AppLanguage
+import edu.gymtonic_app.ui.i18n.LanguageManager
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,8 +29,11 @@ fun SettingsScreen(
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
 ) {
+    val strings = LocalStrings.current
+    val currentLanguage by LanguageManager.language.collectAsState()
+
     TrainingShellScreen(
-        title = "Ajustes",
+        title = strings.settingsTitle,
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.PROFILE,
@@ -44,25 +50,25 @@ fun SettingsScreen(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             item {
-                AccountSectionCard(title = "Notificaciones") {
+                AccountSectionCard(title = strings.settingsNotifications) {
                     var routineCompletionNotifs by remember { mutableStateOf(true) }
                     var workoutReminderNotifs by remember { mutableStateOf(false) }
                     var newChallengeNotifs by remember { mutableStateOf(true) }
 
                     SettingsToggleRow(
-                        label = "Rutinas completadas",
+                        label = strings.settingsCompletedRoutines,
                         checked = routineCompletionNotifs,
                         onCheckedChange = { routineCompletionNotifs = it }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     SettingsToggleRow(
-                        label = "Recordatorios de entrenamiento",
+                        label = strings.settingsWorkoutReminders,
                         checked = workoutReminderNotifs,
                         onCheckedChange = { workoutReminderNotifs = it }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     SettingsToggleRow(
-                        label = "Nuevos retos disponibles",
+                        label = strings.settingsNewChallenges,
                         checked = newChallengeNotifs,
                         onCheckedChange = { newChallengeNotifs = it }
                     )
@@ -70,54 +76,61 @@ fun SettingsScreen(
             }
 
             item {
-                AccountSectionCard(title = "Apariencia") {
-                    var selectedTheme by remember { mutableStateOf("Sistema") }
-                    val themeOptions = listOf("Sistema", "Claro", "Oscuro")
+                AccountSectionCard(title = strings.settingsAppearance) {
+                    var selectedTheme by remember { mutableStateOf(strings.settingsThemeSystem) }
+                    val themeOptions = listOf(
+                        strings.settingsThemeSystem,
+                        strings.settingsThemeLight,
+                        strings.settingsThemeDark
+                    )
 
                     SettingsOptionRow(
-                        label = "Tema",
+                        label = strings.settingsTheme,
                         currentValue = selectedTheme,
                         options = themeOptions,
+                        selectOption = strings.settingsSelectOption,
                         onOptionSelected = { selectedTheme = it }
                     )
                 }
             }
 
             item {
-                AccountSectionCard(title = "Unidades de Medida") {
+                AccountSectionCard(title = strings.settingsUnits) {
                     var weightUnit by remember { mutableStateOf("kg") }
                     val weightOptions = listOf("kg", "lbs")
 
                     SettingsOptionRow(
-                        label = "Peso",
+                        label = strings.settingsWeight,
                         currentValue = weightUnit,
                         options = weightOptions,
+                        selectOption = strings.settingsSelectOption,
                         onOptionSelected = { weightUnit = it }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     var distanceUnit by remember { mutableStateOf("km") }
-                    val distanceOptions = listOf("km", "millas")
+                    val distanceOptions = listOf("km", strings.settingsMiles)
                     SettingsOptionRow(
-                        label = "Distancia",
+                        label = strings.settingsDistance,
                         currentValue = distanceUnit,
                         options = distanceOptions,
+                        selectOption = strings.settingsSelectOption,
                         onOptionSelected = { distanceUnit = it }
                     )
                 }
             }
 
             item {
-                AccountSectionCard(title = "Sincronización de Datos") {
+                AccountSectionCard(title = strings.settingsDataSync) {
                     var googleFitConnected by remember { mutableStateOf(false) }
                     SettingsToggleRow(
-                        label = "Conectar con Google Fit",
+                        label = strings.settingsGoogleFit,
                         checked = googleFitConnected,
                         onCheckedChange = { googleFitConnected = it }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     var appleHealthConnected by remember { mutableStateOf(false) }
                     SettingsToggleRow(
-                        label = "Conectar con Apple Health",
+                        label = strings.settingsAppleHealth,
                         checked = appleHealthConnected,
                         onCheckedChange = { appleHealthConnected = it }
                     )
@@ -125,40 +138,54 @@ fun SettingsScreen(
             }
 
             item {
-                AccountSectionCard(title = "Idioma") {
-                    var selectedLanguage by remember { mutableStateOf("Español") }
-                    val languageOptions = listOf("Español", "Inglés", "Francés")
+                AccountSectionCard(title = strings.settingsLanguage) {
+                    val selectedLanguage = if (currentLanguage == AppLanguage.SPANISH)
+                        strings.settingsLanguageSpanish
+                    else
+                        strings.settingsLanguageEnglish
+
+                    val languageOptions = listOf(
+                        strings.settingsLanguageSpanish,
+                        strings.settingsLanguageEnglish
+                    )
 
                     SettingsOptionRow(
-                        label = "Idioma de la app",
+                        label = strings.settingsAppLanguage,
                         currentValue = selectedLanguage,
                         options = languageOptions,
-                        onOptionSelected = { selectedLanguage = it }
+                        selectOption = strings.settingsSelectOption,
+                        onOptionSelected = { selected ->
+                            val newLang = if (selected == strings.settingsLanguageEnglish)
+                                AppLanguage.ENGLISH
+                            else
+                                AppLanguage.SPANISH
+                            LanguageManager.setLanguage(newLang)
+                        }
                     )
                 }
             }
 
             item {
-                AccountSectionCard(title = "Acerca de") {
+                AccountSectionCard(title = strings.settingsAbout) {
                     Text(
-                        text = "Versión: 1.0.0",
+                        text = strings.settingsVersion,
                         fontSize = 14.sp,
                         color = Color(0xFF1D1D1D),
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Términos de Servicio",
+                        text = strings.settingsTerms,
                         fontSize = 14.sp,
                         color = Color(0xFF3B4EE8),
-                        modifier = Modifier.clickable { /* Abrir términos */ }
+                        modifier = Modifier.clickable { }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Política de Privacidad",
+                        text = strings.settingsPrivacy,
                         fontSize = 14.sp,
                         color = Color(0xFF3B4EE8),
-                        modifier = Modifier.clickable { /* Abrir política */ }
+                        modifier = Modifier.clickable { }
                     )
                 }
             }
@@ -197,6 +224,7 @@ fun SettingsOptionRow(
     label: String,
     currentValue: String,
     options: List<String>,
+    selectOption: String,
     onOptionSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -221,7 +249,7 @@ fun SettingsOptionRow(
                 color = Color(0xFF5D6270),
                 modifier = Modifier.padding(end = 4.dp)
             )
-            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = "Seleccionar opción")
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = selectOption)
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }

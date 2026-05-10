@@ -20,8 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-// -------------------- DATA MODEL --------------------
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.i18n.LocalStrings
 
 data class HomeAction(
     val title: String,
@@ -30,11 +30,9 @@ data class HomeAction(
     val onClick: () -> Unit
 )
 
-// -------------------- MAIN SCREEN --------------------
-
 @Composable
 fun MainViewScreen(
-    onLogout : () -> Unit,
+    onLogout: () -> Unit,
     onOpenTraining: () -> Unit,
     onCreateRoutine: () -> Unit,
     onOpenTechnogym: () -> Unit,
@@ -44,7 +42,7 @@ fun MainViewScreen(
     onInviteFriend: () -> Unit,
     onOpenMissions: () -> Unit
 ) {
-
+    val strings = LocalStrings.current
     val bg = Brush.verticalGradient(
         listOf(
             Color(0xFF1F3F73),
@@ -54,16 +52,14 @@ fun MainViewScreen(
     )
 
     val actions = listOf(
-        HomeAction("Entrenamientos Predefinidos", Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
-        HomeAction("Crear Rutinas", Icons.Outlined.FitnessCenter, onClick = onCreateRoutine),
-        HomeAction("Technogym App", Icons.Outlined.Devices, onClick = onOpenTechnogym),
-
-        HomeAction("Descuentos", Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
-        HomeAction("Desafios", Icons.Outlined.EventAvailable, onClick = onOpenMissions),
-
-        HomeAction("Encontrar gimnasio", Icons.Outlined.LocationOn, onClick = onOpenFindGym),
-        HomeAction("Mi espacio cliente", Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
-        HomeAction("Chat", Icons.Outlined.GroupAdd, onClick = onInviteFriend),
+        HomeAction(strings.homePresetWorkouts, Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
+        HomeAction(strings.homeCreateRoutines, Icons.Outlined.FitnessCenter, onClick = onCreateRoutine),
+        HomeAction(strings.homeTechnogym, Icons.Outlined.Devices, onClick = onOpenTechnogym),
+        HomeAction(strings.homeDiscounts, Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
+        HomeAction(strings.homeChallenges, Icons.Outlined.EventAvailable, onClick = onOpenMissions),
+        HomeAction(strings.homeFindGym, Icons.Outlined.LocationOn, onClick = onOpenFindGym),
+        HomeAction(strings.homeClientArea, Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
+        HomeAction(strings.homeChat, Icons.Outlined.GroupAdd, onClick = onInviteFriend),
     )
 
     Column(
@@ -72,15 +68,11 @@ fun MainViewScreen(
             .background(bg)
             .padding(start = 18.dp, end = 18.dp, bottom = 18.dp, top = 50.dp)
     ) {
-
-        // ---------------- HEADER ----------------
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
             Column {
                 Text(
                     text = "GYMTONIC",
@@ -88,31 +80,28 @@ fun MainViewScreen(
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
-
                 Text(
-                    text = "DESAFÍATE · SUPÉRATE",
+                    text = strings.homeSlogan,
                     color = Color.White.copy(alpha = 0.85f),
                     fontSize = 12.sp,
                     letterSpacing = 2.sp
                 )
             }
 
-            // 🔥 LOGOUT BUTTON
-            IconButton(
-                onClick = { onLogout() }
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Logout,
-                    contentDescription = "Logout",
-                    tint = Color.White,
-                    modifier = Modifier.size(30.dp)
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LanguageButton(tint = Color.White)
+                IconButton(onClick = { onLogout() }) {
+                    Icon(
+                        imageVector = Icons.Outlined.Logout,
+                        contentDescription = strings.profileSignOut,
+                        tint = Color.White,
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
             }
         }
 
         Spacer(Modifier.height(35.dp))
-
-        // ---------------- GRID ----------------
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
@@ -127,15 +116,12 @@ fun MainViewScreen(
     }
 }
 
-// ---------------- TILE COMPONENT ----------------
-
 @Composable
 private fun HomeTile(action: HomeAction) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable { action.onClick() }
     ) {
-
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier

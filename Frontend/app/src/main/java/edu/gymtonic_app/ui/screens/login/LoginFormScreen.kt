@@ -32,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.register.UnderlineTextField
 import edu.gymtonic_app.ui.viewmodel.LoginState
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
@@ -44,6 +46,7 @@ fun LoginFormScreen(
     onRegister: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
+    val strings = LocalStrings.current
     val loginState by loginViewModel.loginState.collectAsState()
 
     var username by remember { mutableStateOf("") }
@@ -63,7 +66,13 @@ fun LoginFormScreen(
             )
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
-        // Panel gris
+        LanguageButton(
+            tint = Color.White,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 4.dp)
+        )
+
         Surface(
             modifier = Modifier
                 .padding(12.dp)
@@ -80,9 +89,7 @@ fun LoginFormScreen(
                     .padding(horizontal = 36.dp, vertical = 46.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // Email
-                Text(text = "Username", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = strings.usernameLabel, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = username,
@@ -92,8 +99,7 @@ fun LoginFormScreen(
 
                 Spacer(Modifier.height(26.dp))
 
-                // Contraseña
-                Text(text = "Contraseña", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = strings.password, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = password,
@@ -109,12 +115,11 @@ fun LoginFormScreen(
                     modifier = Modifier.align(Alignment.End),
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text("¿Has olvidado la contraseña?", fontSize = 11.sp)
+                    Text(strings.forgotPassword, fontSize = 11.sp)
                 }
 
                 Spacer(Modifier.height(18.dp))
 
-                // Botón ENTRAR
                 OutlinedButton(
                     onClick = { loginViewModel.login(username, password) },
                     modifier = Modifier.width(140.dp).height(38.dp),
@@ -127,19 +132,17 @@ fun LoginFormScreen(
                             color = Color(0xFF3B4EE8)
                         )
                     } else {
-                        Text("ENTRAR", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(strings.enterButton, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
                 Spacer(Modifier.weight(1f))
 
-                // Texto final
-                Text("¿No tienes cuenta?", fontSize = 11.sp)
+                Text(strings.noAccount, fontSize = 11.sp)
                 TextButton(onClick = onRegister) {
-                    Text("¡Regístrate!", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(strings.signUpLink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
 
-                // Mostrar errores si los hay
                 if (loginState is LoginState.Error) {
                     Text(
                         text = (loginState as LoginState.Error).message,
@@ -149,7 +152,6 @@ fun LoginFormScreen(
                     )
                 }
 
-                // Navegar si login fue correcto
                 if (loginState is LoginState.Success) {
                     LaunchedEffect(Unit) {
                         onLoginSuccess()

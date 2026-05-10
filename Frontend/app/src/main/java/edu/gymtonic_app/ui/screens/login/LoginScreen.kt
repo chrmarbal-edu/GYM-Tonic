@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.i18n.LocalStrings
 
 @Composable
 fun GymTonicLoginScreen(
@@ -23,12 +25,12 @@ fun GymTonicLoginScreen(
     onGoogle: () -> Unit,
     onFacebook: () -> Unit,
 ) {
-    // Colores del fondo similares a la captura
+    val strings = LocalStrings.current
     val bg = Brush.verticalGradient(
         colors = listOf(
-            Color(0xFF1F3F73), // azul arriba
-            Color(0xFF3A2F7A), // morado medio
-            Color(0xFF2A3344)  // oscuro abajo
+            Color(0xFF1F3F73),
+            Color(0xFF3A2F7A),
+            Color(0xFF2A3344)
         )
     )
 
@@ -38,13 +40,19 @@ fun GymTonicLoginScreen(
             .background(bg)
             .padding(horizontal = 28.dp)
     ) {
+        LanguageButton(
+            tint = Color.White,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp)
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 110.dp, bottom = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Título
             Text(
                 text = "🏋️ GYMTONIC 🏋️",
                 color = Color.White,
@@ -55,7 +63,6 @@ fun GymTonicLoginScreen(
 
             Spacer(Modifier.height(80.dp))
 
-            // el boton de entrar azul con borde blanco
             Button(
                 onClick = onLogin,
                 modifier = Modifier
@@ -63,18 +70,16 @@ fun GymTonicLoginScreen(
                     .height(70.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B4EE8), // azul botón
+                    containerColor = Color(0xFF3B4EE8),
                     contentColor = Color.White
                 ),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = Brush.linearGradient
-                        (listOf(Color(0xFFA8B2FF),
-                        Color(0xFFA8B2FF)))
+                    brush = Brush.linearGradient(listOf(Color(0xFFA8B2FF), Color(0xFFA8B2FF)))
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
                 Text(
-                    "ENTRAR",
+                    strings.loginButton,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
@@ -83,7 +88,6 @@ fun GymTonicLoginScreen(
 
             Spacer(Modifier.height(22.dp))
 
-            // boton blanco de registrarse
             Button(
                 onClick = onRegister,
                 modifier = Modifier
@@ -97,7 +101,7 @@ fun GymTonicLoginScreen(
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
                 Text(
-                    "Registrarse",
+                    strings.registerButton,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -106,7 +110,7 @@ fun GymTonicLoginScreen(
             Spacer(Modifier.height(40.dp))
 
             Text(
-                text = "Continúa con",
+                text = strings.continueWith,
                 color = Color.White.copy(alpha = 0.9f),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold

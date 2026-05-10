@@ -77,7 +77,7 @@ fRequest.update = async function (id, status, result) {
         const sqlQuery = `
             UPDATE Frequest 
             SET frequest_status = @status 
-            WHERE id_frequest = @id
+            WHERE frequest_id = @id
         `
 
         const response = await request.query(sqlQuery)

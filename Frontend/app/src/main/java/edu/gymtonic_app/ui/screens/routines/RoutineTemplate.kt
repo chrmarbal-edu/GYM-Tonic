@@ -16,6 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,27 +30,30 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.gymtonic_app.R
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
 @Composable
 fun RoutineTemplateScreen(
     exercises: List<RoutineExerciseUi>,
-    onExerciseClick: (String) -> Unit
+    onExerciseClick: (String) -> Unit,
+    favoritesSet: Set<Int>,
+    onToggleFavorite: (RoutineExerciseUi) -> Unit
 ) {
+    val strings = LocalStrings.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 14.dp)
     ) {
         Text(
-            text = stringResource(R.string.ejercicios_disponibles, exercises.size),
+            text = strings.exercisesAvailable(exercises.size),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = Color(0xFF464A57),
@@ -63,8 +71,15 @@ fun RoutineTemplateScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             items(exercises) { exercise ->
+                val parsedId = exercise.id.toIntOrNull()
                 RoutineExerciseRow(
                     exercise = exercise,
+                    isFavorite = parsedId?.let { favoritesSet.contains(it) } == true,
+                    favoriteEnabled = parsedId != null,
+                    removeFavoriteLabel = strings.removeFavorite,
+                    markFavoriteLabel = strings.markFavorite,
+                    setsAndRepsLabel = strings.setsAndReps,
+                    onToggleFavorite = { onToggleFavorite(exercise) },
                     onClick = { onExerciseClick(exercise.id) }
                 )
             }
@@ -75,6 +90,12 @@ fun RoutineTemplateScreen(
 @Composable
 private fun RoutineExerciseRow(
     exercise: RoutineExerciseUi,
+    isFavorite: Boolean,
+    favoriteEnabled: Boolean,
+    removeFavoriteLabel: String,
+    markFavoriteLabel: String,
+    setsAndRepsLabel: String,
+    onToggleFavorite: () -> Unit,
     onClick: () -> Unit
 ) {
     Surface(
@@ -111,9 +132,26 @@ private fun RoutineExerciseRow(
                 )
 
                 Text(
-                    text = stringResource(R.string.series_y_repeticiones),
+                    text = setsAndRepsLabel,
                     fontSize = 11.sp,
                     color = Color(0xFF5D6270)
+                )
+            }
+
+            IconButton(
+                onClick = onToggleFavorite,
+                enabled = favoriteEnabled
+            ) {
+                Icon(
+                    imageVector =
+                        if (isFavorite) Icons.Filled.Favorite
+                        else Icons.Outlined.FavoriteBorder,
+                    contentDescription =
+                        if (isFavorite) removeFavoriteLabel
+                        else markFavoriteLabel,
+                    tint =
+                        if (favoriteEnabled) Color(0xFFE53935)
+                        else Color(0xFF9EA3AF)
                 )
             }
 
@@ -132,4 +170,3 @@ private fun RoutineExerciseRow(
         }
     }
 }
-

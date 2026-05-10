@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.viewmodel.ProfileGroupUi
 import edu.gymtonic_app.ui.viewmodel.ProfileRoutineUi
@@ -69,6 +70,7 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
+    val strings = LocalStrings.current
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = androidx.compose.material3.DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -78,13 +80,13 @@ fun ProfileScreen(
         drawerContent = {
             ModalDrawerSheet {
                 Text(
-                    text = "Configuracion",
+                    text = strings.profileDrawerTitle,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp)
                 )
                 DrawerActionRow(
-                    label = "Cuenta",
+                    label = strings.profileAccount,
                     icon = Icons.Outlined.AccountCircle,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -92,7 +94,7 @@ fun ProfileScreen(
                     }
                 )
                 DrawerActionRow(
-                    label = "Ajustes",
+                    label = strings.profileAdjustes,
                     icon = Icons.Outlined.Settings,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -100,7 +102,7 @@ fun ProfileScreen(
                     }
                 )
                 DrawerActionRow(
-                    label = "Cerrar sesion",
+                    label = strings.profileSignOut,
                     icon = Icons.AutoMirrored.Outlined.Logout,
                     onClick = {
                         scope.launch { drawerState.close() }
@@ -111,7 +113,7 @@ fun ProfileScreen(
         }
     ) {
         TrainingShellScreen(
-            title = "Perfil",
+            title = strings.profileTitle,
             onBack = onBack,
             showBack = false,
             showBottomBar = true,
@@ -169,6 +171,8 @@ private fun ProfileContent(
     onOpenRoutine: (String) -> Unit,
     onOpenDrawer: () -> Unit
 ) {
+    val strings = LocalStrings.current
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -184,7 +188,7 @@ private fun ProfileContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Hola, $username",
+                    text = strings.profileGreeting(username),
                     color = Color(0xFF1D1D1D),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
@@ -192,7 +196,7 @@ private fun ProfileContent(
                 IconButton(onClick = onOpenDrawer) {
                     Icon(
                         imageVector = Icons.Outlined.AccountCircle,
-                        contentDescription = "Abrir configuracion",
+                        contentDescription = strings.profileOpenSettings,
                         tint = Color(0xFF2A2A2A),
                         modifier = Modifier.size(34.dp)
                     )
@@ -201,7 +205,7 @@ private fun ProfileContent(
         }
 
         item {
-            SectionCard(title = "Racha semanal", actionText = "Ver semana", onActionClick = onOpenWeek) {
+            SectionCard(title = strings.weeklyStreak, actionText = strings.viewWeek, onActionClick = onOpenWeek) {
                 Text(
                     text = streakLabel,
                     fontSize = 15.sp,
@@ -213,17 +217,17 @@ private fun ProfileContent(
         }
 
         item {
-            SectionCard(title = "Ultimas rutinas") {
+            SectionCard(title = strings.recentRoutines) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (routines.isEmpty()) {
                         Text(
-                            text = "Sin rutinas recientes",
+                            text = strings.noRecentRoutines,
                             color = Color(0xFF505567),
                             fontSize = 13.sp
                         )
                     } else {
                         routines.forEach { routine ->
-                            RoutineRow(routine = routine, onClick = { onOpenRoutine(routine.id) })
+                            RoutineRow(routine = routine, openLabel = strings.openLabel, onClick = { onOpenRoutine(routine.id) })
                         }
                     }
                 }
@@ -231,11 +235,11 @@ private fun ProfileContent(
         }
 
         item {
-            SectionCard(title = "Mis grupos") {
+            SectionCard(title = strings.myGroups) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (groups.isEmpty()) {
                         Text(
-                            text = "Aun no perteneces a grupos",
+                            text = strings.noGroups,
                             color = Color(0xFF505567),
                             fontSize = 13.sp
                         )
@@ -297,6 +301,7 @@ private fun SectionCard(
 @Composable
 private fun RoutineRow(
     routine: ProfileRoutineUi,
+    openLabel: String,
     onClick: () -> Unit
 ) {
     Surface(
@@ -329,7 +334,7 @@ private fun RoutineRow(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "Abrir",
+                text = openLabel,
                 fontSize = 11.sp,
                 color = Color(0xFF4A4F60),
                 modifier = Modifier.padding(start = 8.dp)
@@ -391,5 +396,3 @@ private fun DrawerActionRow(
         Text(text = label, fontSize = 15.sp)
     }
 }
-
-

@@ -1,44 +1,141 @@
 package edu.gymtonic_app.ui.screens.routines
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import android.app.Application
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
+import kotlinx.coroutines.launch
 
-/**
- * Pantalla de crear rutina.
- * Permite al usuario definir el nombre, descripción y añadir ejercicios a una nueva rutina.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRoutineScreen(
     onBack: () -> Unit,
-    onSave: () -> Unit,
+    onRoutineCreated: () -> Unit = {},
     onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
-    onOpenProfile: () -> Unit = {}
+    onOpenProfile: () -> Unit = {},
+    routineViewModel: RoutineCatalogViewModel = viewModel()
 ) {
-    var routineName by remember { mutableStateOf("") }
-    var routineDescription by remember { mutableStateOf("") }
-    val exercises = remember { mutableStateListOf<String>() }
+    val strings = LocalStrings.current
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+
+    val exerciseViewModel: ExerciseViewModel =
+        viewModel(factory = ExerciseViewModelFactory(application))
+
+    val favoriteExercises by exerciseViewModel.favoriteExercises.collectAsState()
+
+    var routineName by rememberSaveable { mutableStateOf("") }
+    var isSaving by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val selectedExerciseIds = remember { mutableStateListOf<Int>() }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(favoriteExercises) {
+        selectedExerciseIds.retainAll(favoriteExercises.map { it.exercise_id }.toSet())
+    }
+
+    fun toggleSelection(exerciseId: Int) {
+        if (selectedExerciseIds.contains(exerciseId)) {
+            selectedExerciseIds.remove(exerciseId)
+        } else {
+            selectedExerciseIds.add(exerciseId)
+        }
+    }
+
+    fun saveRoutine() {
+        val trimmedName = routineName.trim()
+
+        if (trimmedName.isBlank()) {
+            errorMessage = "El nombre de la rutina no puede estar vacío"
+            return
+        }
+
+        if (selectedExerciseIds.isEmpty()) {
+            errorMessage = "Debes seleccionar al menos un ejercicio"
+            return
+        }
+
+        isSaving = true
+        errorMessage = null
+
+        val imageKey = favoriteExercises
+            .firstOrNull { selectedExerciseIds.contains(it.exercise_id) }
+            ?.exercise_image
+
+        routineViewModel.createUserRoutineWithExercises(
+            routineName = trimmedName,
+            exerciseIds = selectedExerciseIds.toList(),
+            imageKey = imageKey,
+            onSuccess = {
+                isSaving = false
+                onRoutineCreated()
+            },
+            onError = { message ->
+                isSaving = false
+                errorMessage = message
+                scope.launch {
+                    snackbarHostState.showSnackbar(message)
+                }
+            }
+        )
+    }
 
     TrainingShellScreen(
-        title = "Crear Rutina",
+        title = strings.createRoutineTitle,
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.TRAINING,
@@ -52,42 +149,29 @@ fun CreateRoutineScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
+            SnackbarHost(hostState = snackbarHostState)
+
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
             ) {
                 item {
                     Text(
-                        text = "Información básica",
+                        text = strings.basicInfo,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1D1D1D)
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     OutlinedTextField(
                         value = routineName,
                         onValueChange = { routineName = it },
-                        label = { Text("Nombre de la rutina") },
+                        label = { Text(strings.routineName) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
-                            unfocusedBorderColor = Color(0xFFC4C4C4)
-                        )
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    OutlinedTextField(
-                        value = routineDescription,
-                        onValueChange = { routineDescription = it },
-                        label = { Text("Descripción (opcional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        minLines = 2,
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF3B4EE8),
                             unfocusedBorderColor = Color(0xFFC4C4C4)
@@ -98,114 +182,135 @@ fun CreateRoutineScreen(
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Ejercicios",
+                            text = "Ejercicios favoritos",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1D1D1D)
+                            color = Color(0xFF1D1D1D),
+                            modifier = Modifier.weight(1f)
                         )
-                        
-                        IconButton(
-                            onClick = { exercises.add("Nuevo Ejercicio ${exercises.size + 1}") },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color(0xFF8B8EEA),
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = "Añadir ejercicio")
-                        }
+
+                        Text(
+                            text = "${selectedExerciseIds.size}/${favoriteExercises.size}",
+                            fontSize = 12.sp,
+                            color = Color(0xFF5D6270)
+                        )
                     }
                 }
 
-                if (exercises.isEmpty()) {
+                if (favoriteExercises.isEmpty()) {
                     item {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
-                            color = Color(0xFFE9EBF2).copy(alpha = 0.5f)
+                            color = Color(0xFFE9EBF2)
                         ) {
                             Text(
-                                text = "No has añadido ejercicios todavía",
-                                modifier = Modifier.padding(24.dp),
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                color = Color(0xFF5D6270),
-                                fontSize = 14.sp
+                                text = "No tienes ejercicios favoritos guardados todavía",
+                                modifier = Modifier.padding(20.dp),
+                                color = Color(0xFF4E5360)
                             )
                         }
                     }
+                } else {
+                    items(
+                        items = favoriteExercises,
+                        key = { it.exercise_id }
+                    ) { exercise ->
+                        FavoriteExerciseRow(
+                            exercise = exercise,
+                            selected = selectedExerciseIds.contains(exercise.exercise_id),
+                            onToggle = { toggleSelection(exercise.exercise_id) }
+                        )
+                    }
                 }
 
-                items(exercises) { exercise ->
-                    ExerciseItemRow(
-                        name = exercise,
-                        onDelete = { exercises.remove(exercise) }
-                    )
+                if (errorMessage != null) {
+                    item {
+                        Text(
+                            text = errorMessage.orEmpty(),
+                            color = Color(0xFFD32F2F),
+                            fontSize = 13.sp
+                        )
+                    }
                 }
             }
 
             Button(
-                onClick = onSave,
+                onClick = { saveRoutine() },
+                enabled = !isSaving && routineName.isNotBlank() && selectedExerciseIds.isNotEmpty(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+                    .padding(bottom = 16.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF3B4EE8),
-                    contentColor = Color.White
+                    contentColor = Color.White,
+                    disabledContainerColor = Color(0xFFB7BCEB),
+                    disabledContentColor = Color.White
                 )
             ) {
-                Text(
-                    text = "GUARDAR RUTINA",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.height(20.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White
+                    )
+                } else {
+                    Text(
+                        text = strings.saveRoutine,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun ExerciseItemRow(name: String, onDelete: () -> Unit) {
-    Surface(
+private fun FavoriteExerciseRow(
+    exercise: ExerciseEntity,
+    selected: Boolean,
+    onToggle: () -> Unit
+) {
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFE9EBF2),
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(14.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = name,
+                    text = exercise.exercise_name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     color = Color(0xFF1F2330)
                 )
                 Text(
-                    text = "Personaliza tus series y reps",
+                    text = exercise.exercise_description,
                     fontSize = 11.sp,
                     color = Color(0xFF5D6270)
                 )
             }
-            
-            IconButton(onClick = onDelete) {
+
+            TextButton(onClick = onToggle) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = Color(0xFFE57373)
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = if (selected) Color(0xFF3B4EE8) else Color(0xFF9EA3AF)
                 )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = if (selected) "Añadido" else "Añadir")
             }
         }
     }
 }
-

@@ -16,6 +16,8 @@
  *     responses:
  *       200:
  *         description: Lista de grupos obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Error en la solicitud
  *       403:
@@ -47,6 +49,8 @@
  *     responses:
  *       200:
  *         description: Grupo creado exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       500:
@@ -71,6 +75,8 @@
  *     responses:
  *       200:
  *         description: Grupo obtenido exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No estás registrado
  *       404:
@@ -101,6 +107,8 @@
  *     responses:
  *       200:
  *         description: Grupo actualizado exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:
@@ -123,6 +131,8 @@
  *     responses:
  *       200:
  *         description: Grupo eliminado correctamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:

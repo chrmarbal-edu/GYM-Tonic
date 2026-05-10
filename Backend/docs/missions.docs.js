@@ -16,6 +16,8 @@
  *     responses:
  *       200:
  *         description: Lista de misiones obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Error en la solicitud
  *       403:
@@ -59,6 +61,8 @@
  *     responses:
  *       200:
  *         description: Misión creada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       500:
@@ -83,6 +87,8 @@
  *     responses:
  *       200:
  *         description: Misión obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No estás registrado
  *       404:
@@ -122,6 +128,8 @@
  *     responses:
  *       200:
  *         description: Misión actualizada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:
@@ -144,6 +152,8 @@
  *     responses:
  *       200:
  *         description: Misión eliminada correctamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:

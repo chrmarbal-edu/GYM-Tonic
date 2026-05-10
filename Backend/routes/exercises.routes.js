@@ -11,6 +11,9 @@ const upload = multer({storage: storage})
 // FIND ALL EXERCISES
 router.get("/", jwtMW.authenticate, exercisesController.findAllExercises)
 
+// FIND EXERCISES BY TYPE
+router.get("/:type", jwtMW.authenticate, exercisesController.findExercisesByType)
+
 // CREATE EXERCISE
 router.post("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, exercisesController.createExercise)
 

@@ -7,7 +7,7 @@
 
 /**
  * @swagger
- * /:
+ * /friendRequests:
  *   get:
  *     summary: Obtener todas las solicitudes de amistad
  *     tags: [Solicitudes de Amistad]
@@ -16,6 +16,8 @@
  *     responses:
  *       200:
  *         description: Lista de solicitudes de amistad obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Error en la solicitud
  *       403:
@@ -47,6 +49,8 @@
  *     responses:
  *       201:
  *         description: Solicitud de amistad creada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       400:
  *         description: Datos inválidos
  *       403:
@@ -55,7 +59,7 @@
 
 /**
  * @swagger
- * /accept/{id}:
+ * /friendRequests/accept/{id}:
  *   patch:
  *     summary: Aceptar una solicitud de amistad
  *     tags: [Solicitudes de Amistad]
@@ -71,6 +75,8 @@
  *     responses:
  *       200:
  *         description: Solicitud de amistad aceptada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación
  *       404:
@@ -79,7 +85,7 @@
 
 /**
  * @swagger
- * /reject/{id}:
+ * /friendRequests/reject/{id}:
  *   patch:
  *     summary: Rechazar una solicitud de amistad
  *     tags: [Solicitudes de Amistad]
@@ -95,6 +101,8 @@
  *     responses:
  *       200:
  *         description: Solicitud de amistad rechazada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación
  *       404:
@@ -103,7 +111,7 @@
 
 /**
  * @swagger
- * /{id}:
+ * /friendRequests/{id}:
  *   get:
  *     summary: Obtener una solicitud de amistad por ID
  *     tags: [Solicitudes de Amistad]
@@ -119,6 +127,8 @@
  *     responses:
  *       200:
  *         description: Solicitud de amistad obtenida exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:
@@ -139,6 +149,8 @@
  *     responses:
  *       200:
  *         description: Solicitud de amistad eliminada exitosamente
+ *       401:
+ *         description: Token inválido o faltante
  *       403:
  *         description: No autorizado para realizar esta operación (solo admins)
  *       404:
