@@ -70,7 +70,7 @@ exports.findGroupByIdCSR = wrapAsync(async function (req,res,next){
 // Actualizamos el grupo.
 exports.updateGroupCSR = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    let { name } = req.body
+    let { name, description, image, points, creator_id } = req.body
 
     console.log("id", id);
 
@@ -84,15 +84,16 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
 
             next(new AppError(err, 500))
         }else{     
-            completeGroup = objetoDatos[0]
+            completeGroup = objetoDatos
         }
 
-        let updateGroup = {}           
-        updateGroup = {            
-            name: name
+        let updateGroup = {            
+            group_name: name || completeGroup.group_name,
+            group_description: description || completeGroup.group_description,
+            group_image: image || completeGroup.group_image,
+            group_points: points !== undefined ? points : completeGroup.group_points,
+            group_creator_id: creator_id || completeGroup.group_creator_id
         }
-
-        completeGroup.name = updateGroup.name
 
         
         // Realizamos la redirección en la promesa de la actualización.
@@ -111,16 +112,18 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
 // #region CREATEGROUP - CSR
 /* <=============================== 7. CREATEGROUP ===============================> */
 exports.createGroupCSR = wrapAsync(async function (req, res, next) {
-    const { name } = req.body
+    const { name, description, image, points, creator_id } = req.body
     
-        let newGroup = {}
-
-        newGroup = {
-            name: name
+        let newGroup = {
+            group_name: name,
+            group_description: description,
+            group_image: image,
+            group_points: points || 0,
+            group_creator_id: creator_id
         }
 
         // Realizamos la redirección en la promesa de la creación.
-        await groupmodelModel.create(newGroup,function(err,datosGrupoCreado){
+        await groupmodel.create(newGroup,function(err,datosGrupoCreado){
             if(err){
                 console.log(err)
                 console.log(datosGrupoCreado)
@@ -139,7 +142,7 @@ exports.createGroupCSR = wrapAsync(async function (req, res, next) {
 /* <=============================== 8. DELETEGROUP ===============================> */
 exports.deleteGroupCSR = wrapAsync(async function (req, res, next) {
     const { id } = req.params;
-        await groupmodelModel.findById(id, async function (err, objetoDatos) {
+        await groupmodel.findById(id, async function (err, objetoDatos) {
             if (err) {
                 return next(new AppError("Grupo no encontrado", 404));
             }
@@ -149,7 +152,7 @@ exports.deleteGroupCSR = wrapAsync(async function (req, res, next) {
             }
 
             /* <================== PARTE 2 ==================> */
-            await groupmodelModel.delete(id, function (err, datosGrupoEliminado) {
+            await groupmodel.delete(id, function (err, datosGrupoEliminado) {
                 if (err) {
                     return next(new AppError("Error al eliminar el grupo", 500));
                 }else {

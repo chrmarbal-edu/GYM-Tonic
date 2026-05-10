@@ -6,6 +6,10 @@ const sql = require("mssql")
 let group = function(group){
     this.group_id = group.group_id // AUTO INCREMENTAL
     this.group_name = group.group_name
+    this.group_description = group.group_description
+    this.group_image = group.group_image
+    this.group_points = group.group_points
+    this.group_creator_id = group.group_creator_id
 }
 
 /* <=============================== FIND ALL ===============================> */
@@ -48,11 +52,19 @@ group.updateById = async (id, updateGroup, result) => {
 
         const request = pool.request()
         request.input("id", sql.Int, id)
-        request.input("name", sql.VarChar, updateGroup.group_name)
+        request.input("name", sql.NVarChar, updateGroup.group_name)
+        request.input("description", sql.NVarChar, updateGroup.group_description)
+        request.input("image", sql.NVarChar, updateGroup.group_image)
+        request.input("points", sql.Int, updateGroup.group_points)
+        request.input("creator_id", sql.Int, updateGroup.group_creator_id)
 
         const sqlQuery = `
             UPDATE Groups SET
-                group_name = @name
+                group_name = @name,
+                group_description = @description,
+                group_image = @image,
+                group_points = @points,
+                group_creator_id = @creator_id
             WHERE group_id = @id
         `
 
@@ -71,17 +83,25 @@ group.create = async (newGroup, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("id", sql.Int, id)
-        request.input("name", sql.VarChar, newGroup.group_name)
+        request.input("name", sql.NVarChar, newGroup.group_name)
+        request.input("description", sql.NVarChar, newGroup.group_description)
+        request.input("image", sql.NVarChar, newGroup.group_image)
+        request.input("points", sql.Int, newGroup.group_points)
+        request.input("creator_id", sql.Int, newGroup.group_creator_id)
 
         const sqlQuery = `
             INSERT INTO Groups (
-                group_name
+                group_name, group_description, group_image, group_points, group_creator_id
             )
+            OUTPUT INSERTED.*
             VALUES (
-                @name
+                @name, @description, @image, @points, @creator_id
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response.recordset[0])
+
     } catch (err) {
         result(err, null)
         
