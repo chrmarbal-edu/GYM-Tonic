@@ -26,6 +26,7 @@ import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
 @Composable
 fun RoutineCatalogScreen(
     routineId: String,
+    isLocal: Boolean = false,
     onBack: () -> Unit,
     onExerciseClick: (String) -> Unit,
     onOpenHome: () -> Unit = {},
@@ -41,8 +42,8 @@ fun RoutineCatalogScreen(
     val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
     val uiState by viewModel.catalogUiState.collectAsState()
 
-    LaunchedEffect(routineId) {
-        viewModel.loadRoutine(routineId)
+    LaunchedEffect(routineId, isLocal) {
+        viewModel.loadRoutine(routineId, isLocal)
     }
 
     when (val state = uiState) {

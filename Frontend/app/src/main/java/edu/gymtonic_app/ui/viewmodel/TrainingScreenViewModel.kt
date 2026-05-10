@@ -20,7 +20,8 @@ import kotlinx.coroutines.launch
 data class TrainingRoutineUi(
     val id: String,
     val title: String,
-    val imageRes: Int
+    val imageRes: Int,
+    val isLocal: Boolean
 )
 
 data class TrainingCategoryUi(
@@ -80,7 +81,8 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                                 TrainingRoutineUi(
                                     id = routine.id,
                                     title = routine.title,
-                                    imageRes = ImageResourceMapper.fromKey(routine.imageKey)
+                                    imageRes = ImageResourceMapper.fromKey(routine.imageKey),
+                                    isLocal = false
                                 )
                             }
                         )
@@ -119,7 +121,8 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                 TrainingRoutineUi(
                     id = routine.routine_id.toString(),
                     title = routine.routine_name,
-                    imageRes = ImageResourceMapper.fromKey(routine.imageKey)
+                    imageRes = ImageResourceMapper.fromKey(routine.imageKey),
+                    isLocal = true
                 )
             }
         )
