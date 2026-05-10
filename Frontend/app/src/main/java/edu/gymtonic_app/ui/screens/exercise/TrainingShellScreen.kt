@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +43,7 @@ fun TrainingShellScreen(
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    onDeleteClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val bg = Brush.verticalGradient(
@@ -72,7 +74,8 @@ fun TrainingShellScreen(
                 TrainingShellHeader(
                     title = title,
                     onBack = onBack,
-                    showBack = showBack
+                    showBack = showBack,
+                    onDeleteClick = onDeleteClick
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -103,7 +106,8 @@ fun TrainingShellScreen(
 private fun TrainingShellHeader(
     title: String,
     onBack: () -> Unit,
-    showBack: Boolean
+    showBack: Boolean,
+    onDeleteClick: (() -> Unit)?
 ) {
     val strings = LocalStrings.current
     Row(
@@ -136,6 +140,21 @@ private fun TrainingShellHeader(
             modifier = Modifier.weight(1f)
         )
 
-        LanguageButton(tint = Color(0xFF2D2D2D))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onDeleteClick != null) {
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = strings.deleteRoutine,
+                        tint = Color(0xFFB3261E)
+                    )
+                }
+            }
+
+            LanguageButton(tint = Color(0xFF2D2D2D))
+        }
     }
 }

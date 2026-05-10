@@ -21,6 +21,11 @@ import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
 import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
+import android.widget.Toast
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
 
 @Composable
@@ -41,11 +46,56 @@ fun RoutineCatalogScreen(
     val exerciseViewModel: ExerciseViewModel = viewModel(factory = ExerciseViewModelFactory(application))
     val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
     val uiState by viewModel.catalogUiState.collectAsState()
+    val showDeleteDialog = remember { mutableStateOf(false) }
+    val localRoutineId = routineId.toIntOrNull()
+    val canDeleteRoutine = isLocal && localRoutineId != null
 
+    //Carga de rutina al iniciar la pantalla, dependiendo si es local o remota
     LaunchedEffect(routineId, isLocal) {
         viewModel.loadRoutine(routineId, isLocal)
     }
 
+    //Abrir alert dialog para confirmar eliminación de rutina local
+    if (showDeleteDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog.value = false },
+            title = { Text(strings.deleteRoutineTitle) },
+            text = { Text(strings.deleteRoutineMessage) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val id = localRoutineId ?: return@TextButton
+                        viewModel.deleteUserRoutine(
+                            routineId = id,
+                            onSuccess = {
+                                showDeleteDialog.value = false
+                                Toast.makeText(
+                                    context,
+                                    strings.routineDeleted,
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                onBack()
+                            },
+                            onError = {
+                                showDeleteDialog.value = false
+                            }
+                        )
+                    }
+                ) {
+                    Text(strings.deleteRoutineConfirm)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog.value = false }
+                ) {
+                    Text(strings.deleteRoutineCancel)
+                }
+            }
+        )
+    }
+
+    // Renderizado basado en el estado de carga de la rutina
     when (val state = uiState) {
         is RoutineCatalogUiState.Loading -> {
             TrainingShellScreen(
@@ -56,7 +106,12 @@ fun RoutineCatalogScreen(
                 onOpenHome = onOpenHome,
                 onOpenTraining = onOpenTraining,
                 onOpenChallenges = onOpenChallenges,
-                onOpenProfile = onOpenProfile
+                onOpenProfile = onOpenProfile,
+                onDeleteClick = if (canDeleteRoutine) {
+                    { showDeleteDialog.value = true }
+                } else {
+                    null
+                }
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -73,7 +128,12 @@ fun RoutineCatalogScreen(
                 onOpenHome = onOpenHome,
                 onOpenTraining = onOpenTraining,
                 onOpenChallenges = onOpenChallenges,
-                onOpenProfile = onOpenProfile
+                onOpenProfile = onOpenProfile,
+                onDeleteClick = if (canDeleteRoutine) {
+                    { showDeleteDialog.value = true }
+                } else {
+                    null
+                }
             ) {
                 RoutineTemplateScreen(
                     exercises = state.routine.exercises,
@@ -106,7 +166,12 @@ fun RoutineCatalogScreen(
                     onOpenHome = onOpenHome,
                     onOpenTraining = onOpenTraining,
                     onOpenChallenges = onOpenChallenges,
-                    onOpenProfile = onOpenProfile
+                    onOpenProfile = onOpenProfile,
+                    onDeleteClick = if (canDeleteRoutine) {
+                        { showDeleteDialog.value = true }
+                    } else {
+                        null
+                    }
                 ) {
                     RoutineTemplateScreen(
                         exercises = fallback.exercises,
@@ -135,7 +200,12 @@ fun RoutineCatalogScreen(
                     onOpenHome = onOpenHome,
                     onOpenTraining = onOpenTraining,
                     onOpenChallenges = onOpenChallenges,
-                    onOpenProfile = onOpenProfile
+                    onOpenProfile = onOpenProfile,
+                    onDeleteClick = if (canDeleteRoutine) {
+                        { showDeleteDialog.value = true }
+                    } else {
+                        null
+                    }
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = state.message, textAlign = TextAlign.Center)

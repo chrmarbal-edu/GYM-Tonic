@@ -163,6 +163,14 @@ data class AppStrings(
     val myCalendar: String,
     val showMore: String,
     val achieved: String,
+
+    // Routine deletion
+    val deleteRoutine: String,
+    val deleteRoutineTitle: String,
+    val deleteRoutineMessage: String,
+    val deleteRoutineConfirm: String,
+    val deleteRoutineCancel: String,
+    val routineDeleted: String,
 )
 
 val SpanishStrings = AppStrings(
@@ -314,6 +322,13 @@ val SpanishStrings = AppStrings(
     myCalendar = "Mi Calendario",
     showMore = "Mostrar mas",
     achieved = "Logrados",
+
+    deleteRoutine = "Eliminar rutina",
+    deleteRoutineTitle = "Eliminar rutina",
+    deleteRoutineMessage = "Se eliminará la rutina y su relación con los ejercicios. Los ejercicios no se borrarán.",
+    deleteRoutineConfirm = "Eliminar",
+    deleteRoutineCancel = "Cancelar",
+    routineDeleted = "Rutina eliminada",
 )
 
 val EnglishStrings = AppStrings(
@@ -465,4 +480,11 @@ val EnglishStrings = AppStrings(
     myCalendar = "My Calendar",
     showMore = "Show more",
     achieved = "Achieved",
+
+    deleteRoutine = "Delete routine",
+    deleteRoutineTitle = "Delete routine",
+    deleteRoutineMessage = "The routine and its links to exercises will be removed. The exercises will not be deleted.",
+    deleteRoutineConfirm = "Delete",
+    deleteRoutineCancel = "Cancel",
+    routineDeleted = "Routine deleted",
 )

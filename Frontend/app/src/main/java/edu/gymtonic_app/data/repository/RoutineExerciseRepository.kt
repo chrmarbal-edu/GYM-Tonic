@@ -4,6 +4,7 @@ import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerc
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
+//de la tabla relacion routine-exercise
 class RoutineExerciseRepository(
     private val routineExerciseLocalDataSource: RoutineExerciseLocalDataSource
 ) {
