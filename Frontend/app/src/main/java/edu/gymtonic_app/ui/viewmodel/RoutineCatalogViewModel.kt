@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -80,7 +81,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
         observeUserCreatedRoutines()
     }
 
-    fun loadRoutine(routineId: String) {
+    fun loadRoutine(routineId: String, isLocal: Boolean = false) {
         if (routineId.isBlank()) {
             _catalogUiState.value = RoutineCatalogUiState.Error(message = "Rutina no valida")
             return
@@ -88,6 +89,49 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
 
         viewModelScope.launch {
             _catalogUiState.value = RoutineCatalogUiState.Loading
+
+            if (isLocal) {
+                val localId = routineId.toIntOrNull()
+                if (localId == null) {
+                    _catalogUiState.value = RoutineCatalogUiState.Error(
+                        message = "ID de rutina local invalido"
+                    )
+                    return@launch
+                }
+
+                routineRepository.getUserRoutineWithExercises(localId)
+                    .onSuccess { routineEntity ->
+                        if (routineEntity != null) {
+                            try {
+                                val exercises = routineExerciseRepository
+                                    .getExercisesForRoutine(localId)
+                                    .first()
+
+                                _catalogUiState.value = RoutineCatalogUiState.Success(
+                                    mapLocalRoutineToUi(routineEntity, exercises)
+                                )
+                                return@launch
+                            } catch (e: Exception) {
+                                _catalogUiState.value = RoutineCatalogUiState.Error(
+                                    message = e.message ?: "No se pudieron cargar los ejercicios de la rutina local"
+                                )
+                                return@launch
+                            }
+                        } else {
+                            _catalogUiState.value = RoutineCatalogUiState.Error(
+                                message = "Rutina local no encontrada"
+                            )
+                            return@launch
+                        }
+                    }
+                    .onFailure { error ->
+                        _catalogUiState.value = RoutineCatalogUiState.Error(
+                            message = error.message ?: "No se pudo cargar la rutina local"
+                        )
+                    }
+
+                return@launch
+            }
 
             routineRepository.getRoutineByIdFromApi(routineId)
                 .onSuccess { routineData ->
@@ -207,6 +251,24 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                     _userRoutinesState.value = UserRoutinesUiState.Success(routines)
                 }
         }
+    }
+
+    private fun mapLocalRoutineToUi(
+        routineEntity: edu.gymtonic_app.data.local.localModel.RoutineEntity,
+        exercises: List<ExerciseEntity>
+    ): RoutineDetailUi {
+        return RoutineDetailUi(
+            id = routineEntity.routine_id.toString(),
+            title = routineEntity.routine_name,
+            exercises = exercises.map { exercise ->
+                RoutineExerciseUi(
+                    id = exercise.exercise_id.toString(),
+                    name = exercise.exercise_name,
+                    reps = "",
+                    imageRes = ImageResourceMapper.fromKey(exercise.exercise_image)
+                )
+            }
+        )
     }
 
     private fun mapRoutineDataToUi(data: RoutineDetail): RoutineDetailUi {

@@ -190,7 +190,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal
             ) {
                 TrainingScreen(
-                    onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
+                    onSelect = { routineId, isLocal ->
+                        navController.navigate(Routes.routine(routineId, isLocal)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
                     isRefreshing = trainingUiState.value.isRefreshing,
@@ -212,12 +213,20 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
         composable(
             route = Routes.ROUTINE_DETAIL,
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("routineId") { type = NavType.StringType },
+                navArgument("local") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getString("routineId").orEmpty()
+            val isLocal = backStackEntry.arguments?.getBoolean("local") ?: false
 
             RoutineCatalogScreen(
                 routineId = routineId,
+                isLocal = isLocal,
                 onBack = { navController.popBackStack() },
                 onExerciseClick = { exerciseId ->
                     navController.navigate(Routes.exercise(exerciseId))
@@ -255,7 +264,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal,
                 onOpenWeek = { navController.navigate(Routes.WEEK) },
                 onOpenRoutine = { routineId ->
-                    navController.navigate(Routes.routine(routineId))
+                    navController.navigate(Routes.routine(routineId, isLocal = false))
                 },
                 onLogout = {
                     homeViewModel.logout(
