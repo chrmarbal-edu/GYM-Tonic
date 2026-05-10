@@ -157,5 +157,23 @@ user.findByUsername = async function (usernameParam, result) {
     }
 }
 
+/* <=============================== FIND BY EMAIL ===============================> */
+user.findByEmail = async function (emailParam, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("email", sql.NVarChar, emailParam)
+            .query("SELECT * FROM Users WHERE user_email = @email")
+
+        if (response.recordset.length > 0) {
+            result(null, response.recordset)
+        } else {
+            result(null, null)
+        }
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <======- EXPORTAMOS EL MODELO -======> */
 module.exports = user
