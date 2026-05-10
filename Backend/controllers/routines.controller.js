@@ -242,24 +242,19 @@ exports.updateRoutineCSR = wrapAsync(async function (req,res, next) {
     await routinesmodel.findById(id, async function(err,objetoDatos){
         if(err){
             console.log("ERROR UPDATE ROUTINE SSR");
-
             next(new AppError(err, 500))
         }else{     
-            completeRoutine = objetoDatos[0]
+            completeRoutine = objetoDatos
         }
 
-        let updateRoutine = {}           
-        updateRoutine = {            
-            name: name
+        let updateRoutine = {            
+            routine_name: name || completeRoutine.routine_name
         }
 
-        completeRoutine.name = updateRoutine.name
-        
-        // Realizamos la redirecciÃ³n en la promesa de la actualizaciÃ³n.
+        // La actualización DEBE estar dentro del callback de findById
         await routinesmodel.updateById(id, updateRoutine, function(err, datosRutinaActualizada){
             if(err){
                 console.log("ERROR UPDATE BY ID SSR");
-
                 next(new AppError(err, 500))
             } else{
                 res.status(200).json(datosRutinaActualizada);
@@ -318,4 +313,3 @@ exports.deleteRoutineCSR = wrapAsync(async function (req, res, next) {
             });
         });
 });
-
