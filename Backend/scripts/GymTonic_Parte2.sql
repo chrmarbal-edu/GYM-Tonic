@@ -56,9 +56,14 @@ CREATE TABLE dbo.Missions (
 GO
 
 CREATE TABLE dbo.Groups (
-    group_id   INT IDENTITY(1,1) NOT NULL,
-    group_name NVARCHAR(255)     NOT NULL,
-    CONSTRAINT PK_Groups PRIMARY KEY (group_id)
+    group_id          INT IDENTITY(1,1) NOT NULL,
+    group_name        NVARCHAR(255)     NOT NULL,
+    group_description NVARCHAR(MAX)      NULL,
+    group_image       NVARCHAR(500)     NULL,
+    group_points      INT               DEFAULT 0 NOT NULL,
+    group_creator_id  INT               NOT NULL,
+    CONSTRAINT PK_Groups PRIMARY KEY (group_id),
+    CONSTRAINT FK_Groups_Creator FOREIGN KEY (group_creator_id) REFERENCES dbo.Users(user_id)
 );
 GO
 
@@ -228,12 +233,12 @@ VALUES
 GO
 
 -- Grupos
-INSERT INTO dbo.Groups (group_name)
+INSERT INTO dbo.Groups (group_name, group_description, group_image, group_points, group_creator_id)
 VALUES
-    ('Equipo Alpha'),
-    ('Reto Verano 2025'),
-    ('Maratonianos'),
-    ('Powerlifters');
+    ('Equipo Alpha', 'Grupo para los mejores atletas del gimnasio.', 'alpha.jpg', 1500, 2),
+    ('Reto Verano 2025', 'Ponte en forma para el próximo verano con nosotros.', 'summer.jpg', 800, 5),
+    ('Maratonianos', 'Corredores de fondo buscando mejorar sus tiempos.', 'marathon.jpg', 2200, 3),
+    ('Powerlifters', 'Entrenamiento enfocado en fuerza pura y competición.', 'power.jpg', 1900, 4);
 GO
 
 -- Usuarios en grupos (range: 0=miembro 1=moderador 2=líder)
