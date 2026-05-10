@@ -64,6 +64,25 @@ exports.findRoutineByIdCSR = wrapAsync(async function (req,res,next){
     }
 })
 
+// #region FIND-NAME - CSR
+/* <=============================== FINDROUTINEBYNAME ===============================> */
+exports.findRoutineByNameCSR = wrapAsync(async function (req,res,next){
+    const { name } = req.query
+    const userLogued = req.userLogued;
+
+    if(!userLogued){
+        return next(new AppError("No estás registrado!", 403))
+    }
+
+    await routinesmodel.findByName(name, function(err, datosRoutines){
+        if(err){
+            return next(new AppError(err, 400))
+        } 
+
+        res.status(200).json(datosRoutines)
+    })
+})
+
 // #region UPDATE - CSR
 /* <=============================== 5. UPDATEROUTINE ===============================> */
 // Actualizamos la rutina.

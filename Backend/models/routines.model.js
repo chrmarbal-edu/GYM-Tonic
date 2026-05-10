@@ -40,6 +40,20 @@ routine.findById = async function (id, result) {
     }
 }
 
+/* <=============================== FIND BY NAME ===============================> */
+routine.findByName = async function (name, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("name", sql.VarChar, `%${name}%`)
+            .query("SELECT * FROM Routines WHERE routine_name LIKE @name")
+
+        result(null, response.recordset)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <=============================== UPDATE BY ID ===============================> */
 routine.updateById = async (id, updateRoutine, result) => {
     try {

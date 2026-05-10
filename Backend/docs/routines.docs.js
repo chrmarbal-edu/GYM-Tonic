@@ -24,6 +24,32 @@
 
 /**
  * @swagger
+ * /routines/search:
+ *   get:
+ *     summary: Buscar rutinas por nombre
+ *     tags: [Rutinas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         required: true
+ *         description: Nombre o parte del nombre de la rutina
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de rutinas que coinciden con el nombre
+ *       403:
+ *         description: No estás registrado
+ *       400:
+ *         description: Error en la solicitud
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
  * /routine/{id}:
  *   get:
  *     summary: Obtener una rutina por ID
