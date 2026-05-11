@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -98,13 +98,16 @@ fun CreateRoutineScreen(
 
     fun saveRoutine() {
         val trimmedName = routineName.trim()
+        val selectedExercises = favoriteExercises.filter { exercise ->
+            selectedExerciseIds.contains(exercise.exercise_id)
+        }
 
         if (trimmedName.isBlank()) {
             errorMessage = "El nombre de la rutina no puede estar vacío"
             return
         }
 
-        if (selectedExerciseIds.isEmpty()) {
+        if (selectedExercises.isEmpty()) {
             errorMessage = "Debes seleccionar al menos un ejercicio"
             return
         }
@@ -112,13 +115,11 @@ fun CreateRoutineScreen(
         isSaving = true
         errorMessage = null
 
-        val imageKey = favoriteExercises
-            .firstOrNull { selectedExerciseIds.contains(it.exercise_id) }
-            ?.exercise_image
+        val imageKey = selectedExercises.firstOrNull()?.exercise_image
 
         routineViewModel.createUserRoutineWithExercises(
             routineName = trimmedName,
-            exerciseIds = selectedExerciseIds.toList(),
+            exercises = selectedExercises,
             imageKey = imageKey,
             onSuccess = {
                 isSaving = false

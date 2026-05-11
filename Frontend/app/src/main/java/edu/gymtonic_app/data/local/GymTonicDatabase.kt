@@ -23,7 +23,7 @@ import edu.gymtonic_app.data.local.localModel.UserRoutineEntity
         ExerciseEntity::class,
         RoutineEntity::class,
         MissionEntity::class,
-        GroupEntity::class,          // ahora es "grupos"
+        GroupEntity::class,
         RoutineExerciseEntity::class,
         UserRoutineEntity::class,
         GroupUserEntity::class,
@@ -31,7 +31,7 @@ import edu.gymtonic_app.data.local.localModel.UserRoutineEntity
         FrequestEntity::class,
         UserMissionEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class GymTonicDatabase : RoomDatabase() {

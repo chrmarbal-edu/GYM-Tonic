@@ -12,13 +12,13 @@ import androidx.room.PrimaryKey
             entity = RoutineEntity::class,
             parentColumns = ["routine_id"],
             childColumns = ["routine_x_exercise_routineid"],
-            onDelete = ForeignKey.CASCADE  // Si borro rutina, se borran ejercicios
+            onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
             entity = ExerciseEntity::class,
             parentColumns = ["exercise_id"],
             childColumns = ["routine_x_exercise_exerciseid"],
-            onDelete = ForeignKey.CASCADE  // Si borro ejercicio, se borra relación
+            onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
@@ -29,7 +29,7 @@ import androidx.room.PrimaryKey
 data class RoutineExerciseEntity(
     @PrimaryKey(autoGenerate = true)
     val routine_x_exercise_id: Int = 0,
-
     val routine_x_exercise_routineid: Int,
-    val routine_x_exercise_exerciseid: Int
+    val routine_x_exercise_exerciseid: Int,
+    val routine_x_exercise_reps: String
 )
