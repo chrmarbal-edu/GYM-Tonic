@@ -17,9 +17,17 @@ Este documento detalla el significado de los valores numéricos utilizados en di
 ## 2. Ejercicios (`Exercises`)
 
 ### `exercise_type`
-- **0**: Fuerza (Ejercicios con pesas, máquinas o calistenia).
-- **1**: Cardio (Actividades aeróbicas de alta/media intensidad).
-- **2**: Flexibilidad / Movilidad (Estiramientos, yoga o recuperación).
+- **0** : **CARDIO**
+- **1** : **PECTORALES**
+- **2** : **ESPALDA**
+- **3** : **BICEPS / MUÑECAS**
+- **4** : **TRICEPS**
+- **5** : **CUADRICEPS**
+- **6** : **FEMORALES / ISQUIOS**
+- **7** : **HOMBROS**
+- **8** : **GEMELOS**
+- **9** : **ABDOMINALES**
+- **10** : **FULL BODY**
 
 ## 3. Amistad y Solicitudes (`Frequest`)
 

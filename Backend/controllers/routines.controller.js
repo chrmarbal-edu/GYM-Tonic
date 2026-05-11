@@ -173,24 +173,6 @@ exports.findRoutineByIdCSR = wrapAsync(async function (req,res,next){
     }
 })
 
-<<<<<<< HEAD
-// #region FIND-NAME - CSR
-/* <=============================== FINDROUTINEBYNAME ===============================> */
-exports.findRoutineByNameCSR = wrapAsync(async function (req,res,next){
-    const { name } = req.query
-    const userLogued = req.userLogued;
-
-    if(!userLogued){
-        return next(new AppError("No estás registrado!", 403))
-    }
-
-    await routinesmodel.findByName(name, function(err, datosRoutines){
-        if(err){
-            return next(new AppError(err, 400))
-        } 
-
-        res.status(200).json(datosRoutines)
-=======
 // #region FIND-ID-WITH-EXERCISES - CSR
 /* <=============================== 3.1 FINDROUTINEWITHEXERCISESBYID ===============================> */
 exports.findRoutineWithExercisesByIdCSR = wrapAsync(async function (req,res,next){
@@ -241,7 +223,6 @@ exports.findRoutineByNameCSR = wrapAsync(async function (req,res,next){
         }
 
         return res.status(200).json(datosRoutine)
->>>>>>> 4631d3413f8338b172941d2bb1c5d785a1dd42fc
     })
 })
 
