@@ -46,7 +46,7 @@ import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(
-    onSelect: (String) -> Unit,
+    onSelect: (String, Boolean) -> Unit,
     onCreateRoutine: () -> Unit = {},
     categories: List<TrainingCategoryUi> = emptyList(),
     isRefreshing: Boolean = false,
@@ -137,7 +137,7 @@ private fun TrainingSection(
     routines: List<TrainingRoutineUi>,
     routinesLabel: (Int) -> String,
     tapToOpen: String,
-    onSelect: (String) -> Unit
+    onSelect: (String, Boolean) -> Unit
 ) {
     val colors = LocalColors.current
     Surface(
@@ -196,7 +196,7 @@ private fun TrainingSection(
 private fun TrainingCard(
     option: TrainingRoutineUi,
     tapToOpen: String,
-    onSelect: (String) -> Unit,
+    onSelect: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val colors = LocalColors.current
@@ -208,7 +208,7 @@ private fun TrainingCard(
     ) {
         Column(
             modifier = Modifier
-                .clickable { onSelect(option.id) }
+                .clickable { onSelect(option.id, option.isLocal) }
                 .padding(8.dp)
         ) {
             Box(

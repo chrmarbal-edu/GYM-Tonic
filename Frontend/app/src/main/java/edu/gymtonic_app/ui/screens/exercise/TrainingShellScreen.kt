@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,7 @@ fun TrainingShellScreen(
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    onDeleteClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val colors = LocalColors.current
@@ -68,7 +71,8 @@ fun TrainingShellScreen(
                 TrainingShellHeader(
                     title = title,
                     onBack = onBack,
-                    showBack = showBack
+                    showBack = showBack,
+                    onDeleteClick = onDeleteClick
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -99,7 +103,8 @@ fun TrainingShellScreen(
 private fun TrainingShellHeader(
     title: String,
     onBack: () -> Unit,
-    showBack: Boolean
+    showBack: Boolean,
+    onDeleteClick: (() -> Unit)?
 ) {
     val strings = LocalStrings.current
     val colors = LocalColors.current
@@ -134,6 +139,18 @@ private fun TrainingShellHeader(
         )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onDeleteClick != null) {
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = strings.deleteRoutine,
+                        tint = Color(0xFFB3261E)
+                    )
+                }
+            }
             ThemeButton(tint = colors.fieldIndicator)
             LanguageButton(tint = colors.fieldIndicator)
         }

@@ -12,8 +12,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,18 +22,18 @@ import edu.gymtonic_app.data.remote.model.auth.SessionManager
 import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
-import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
-import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
+import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
+import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
+import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
-import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
-import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
-import edu.gymtonic_app.ui.screens.profile.ProfileScreen
-import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
-import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.screens.profile.AccountScreen
+import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.profile.SettingsScreen
+import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
+import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
@@ -190,7 +190,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal
             ) {
                 TrainingScreen(
-                    onSelect = { routineId -> navController.navigate(Routes.routine(routineId)) },
+                    onSelect = { routineId, isLocal ->
+                        navController.navigate(Routes.routine(routineId, isLocal)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
                     isRefreshing = trainingUiState.value.isRefreshing,
@@ -202,7 +203,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.CREATE_ROUTINE) {
             CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
-                onSave = { navController.popBackStack() },
+                onRoutineCreated = { navController.popBackStack() },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
@@ -212,12 +213,20 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
         composable(
             route = Routes.ROUTINE_DETAIL,
-            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("routineId") { type = NavType.StringType },
+                navArgument("local") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getString("routineId").orEmpty()
+            val isLocal = backStackEntry.arguments?.getBoolean("local") ?: false
 
             RoutineCatalogScreen(
                 routineId = routineId,
+                isLocal = isLocal,
                 onBack = { navController.popBackStack() },
                 onExerciseClick = { exerciseId ->
                     navController.navigate(Routes.exercise(exerciseId))
@@ -255,7 +264,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal,
                 onOpenWeek = { navController.navigate(Routes.WEEK) },
                 onOpenRoutine = { routineId ->
-                    navController.navigate(Routes.routine(routineId))
+                    navController.navigate(Routes.routine(routineId, isLocal = false))
                 },
                 onLogout = {
                     homeViewModel.logout(
