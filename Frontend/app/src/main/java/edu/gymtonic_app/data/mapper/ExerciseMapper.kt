@@ -1,9 +1,9 @@
 package edu.gymtonic_app.data.mapper
 
-import edu.gymtonic_app.data.remote.model.exercise.ExerciseDetailDto
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.domain.model.exercise.ExerciseDetail
 
-fun ExerciseDetailDto.toDomain(fallbackExerciseId: String = "exercise"): ExerciseDetail {
+fun ExerciseDto.toDomain(fallbackExerciseId: String = "exercise"): ExerciseDetail {
     val resolvedId = id ?: exerciseId ?: fallbackExerciseId
     val resolvedName = name ?: exerciseName ?: "EJERCICIO"
     val resolvedDuration = durationSeconds ?: durationByType(exerciseType)

@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model.social
+package edu.gymtonic_app.data.remote.remoteModel.social
 
 data class FriendDto(
     val id: Int,

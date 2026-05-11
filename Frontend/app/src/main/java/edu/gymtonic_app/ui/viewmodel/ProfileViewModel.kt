@@ -3,8 +3,8 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.remote.model.auth.SessionManager
-import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.repository.GroupRepository
 import edu.gymtonic_app.data.repository.TrainingRepository
 import edu.gymtonic_app.data.repository.WeekRepository

@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.datasource.GroupRemoteDataSource
-import edu.gymtonic_app.data.remote.model.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 
 data class GroupSummaryData(
 	val id: Int,

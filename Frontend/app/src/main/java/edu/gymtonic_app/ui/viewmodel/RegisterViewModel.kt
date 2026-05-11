@@ -7,10 +7,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.repository.AuthRepository
-import edu.gymtonic_app.data.remote.model.auth.SessionManager
-import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
-import edu.gymtonic_app.data.remote.model.user.RegisterRequest
-import edu.gymtonic_app.data.remote.model.user.RegisterResponse
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
+import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
+import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

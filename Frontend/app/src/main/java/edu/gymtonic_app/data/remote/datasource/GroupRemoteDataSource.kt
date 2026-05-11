@@ -1,6 +1,6 @@
 package edu.gymtonic_app.data.remote.datasource
 
-import edu.gymtonic_app.data.remote.model.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 
 class GroupRemoteDataSource {
     fun getUserGroups(userId: Int?): List<GroupDto> {

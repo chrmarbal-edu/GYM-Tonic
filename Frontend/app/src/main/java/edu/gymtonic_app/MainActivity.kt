@@ -11,8 +11,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.navigation.compose.rememberNavController
-import edu.gymtonic_app.data.remote.model.auth.SessionManager
-import edu.gymtonic_app.data.remote.model.auth.sessionDataStore
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.services.RetrofitClient
 import edu.gymtonic_app.ui.i18n.AppLanguage
 import edu.gymtonic_app.ui.i18n.EnglishStrings

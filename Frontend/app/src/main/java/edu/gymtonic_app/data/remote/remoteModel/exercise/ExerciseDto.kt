@@ -1,8 +1,8 @@
-package edu.gymtonic_app.data.remote.model.exercise
+package edu.gymtonic_app.data.remote.remoteModel.exercise
 
 import com.google.gson.annotations.SerializedName
 
-data class ExerciseDetailDto(
+data class ExerciseDto(
     @SerializedName("id")
     val id: String? = null,
     @SerializedName("exercise_id")
