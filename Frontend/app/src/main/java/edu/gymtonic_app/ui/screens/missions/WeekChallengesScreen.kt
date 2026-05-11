@@ -38,7 +38,9 @@ import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.CalendarDayUi
 import edu.gymtonic_app.ui.viewmodel.CalendarDayUiStatus
 import edu.gymtonic_app.ui.viewmodel.WeeklyGoalUi
@@ -59,13 +61,8 @@ fun WeekChallengesScreen(
     onRefresh: () -> Unit = {}
 ) {
     val strings = LocalStrings.current
-    val bg = Brush.verticalGradient(
-        listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val colors = LocalColors.current
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     Box(
         modifier = Modifier
@@ -76,7 +73,7 @@ fun WeekChallengesScreen(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(34.dp),
-            color = Color(0xFFD9D9D9),
+            color = colors.surfaceMain,
             shadowElevation = 10.dp
         ) {
             Column(
@@ -108,13 +105,13 @@ fun WeekChallengesScreen(
                             ) {
                                 Text(
                                     text = strings.weeklyGoals,
-                                    color = Color(0xFF2D2D2D),
+                                    color = colors.textPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
                                 )
                                 Text(
                                     text = achievedLabel,
-                                    color = Color(0xFF2D2D2D),
+                                    color = colors.textPrimary,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 11.sp
                                 )
@@ -135,13 +132,13 @@ fun WeekChallengesScreen(
                             ) {
                                 Text(
                                     text = strings.myCalendar,
-                                    color = Color(0xFF2D2D2D),
+                                    color = colors.textPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
                                 )
                                 Text(
                                     text = strings.showMore,
-                                    color = Color(0xFF3A42B9),
+                                    color = colors.accentDark,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 13.sp,
                                     modifier = Modifier
@@ -173,6 +170,7 @@ fun WeekChallengesScreen(
 
 @Composable
 private fun HeaderRow(title: String, onBack: () -> Unit, backLabel: String) {
+    val colors = LocalColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,29 +182,33 @@ private fun HeaderRow(title: String, onBack: () -> Unit, backLabel: String) {
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                 contentDescription = backLabel,
-                tint = Color(0xFF2D2D2D)
+                tint = colors.fieldIndicator
             )
         }
 
         Text(
             text = title,
-            color = Color(0xFF1D1D1D),
+            color = colors.textPrimary,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 26.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
 
-        LanguageButton(tint = Color(0xFF2D2D2D))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ThemeButton(tint = colors.fieldIndicator)
+            LanguageButton(tint = colors.fieldIndicator)
+        }
     }
 }
 
 @Composable
 private fun GoalCard(goal: WeeklyGoalUi) {
+    val colors = LocalColors.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFF8B8EEA),
+        color = colors.surfaceAccent,
         shadowElevation = 4.dp
     ) {
         Row(
@@ -226,13 +228,13 @@ private fun GoalCard(goal: WeeklyGoalUi) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = goal.title,
-                    color = Color(0xFF1D1D1D),
+                    color = colors.textOnAccent,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = goal.progressLabel,
-                    color = Color(0xFF1D1D1D),
+                    color = colors.textOnAccent,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(top = 1.dp, bottom = 4.dp)
@@ -250,7 +252,7 @@ private fun GoalCard(goal: WeeklyGoalUi) {
 
             Text(
                 text = goal.pointsLabel,
-                color = Color(0xFF1D1D1D),
+                color = colors.textOnAccent,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp
             )
@@ -260,16 +262,17 @@ private fun GoalCard(goal: WeeklyGoalUi) {
 
 @Composable
 private fun CalendarCard(days: List<CalendarDayUi>) {
+    val colors = LocalColors.current
     val doneColor = Color(0xFF22FF19)
     val missedColor = Color(0xFFFF1A1A)
-    val pendingColor = Color(0xFFD0D3DB)
+    val pendingColor = if (colors.isDark) Color(0xFF3A3D5A) else Color(0xFFD0D3DB)
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 12.dp),
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFF8186EA)
+        color = colors.surfaceAccent
     ) {
         Column(
             modifier = Modifier

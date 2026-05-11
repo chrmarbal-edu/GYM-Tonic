@@ -19,6 +19,9 @@ import edu.gymtonic_app.ui.i18n.AppLanguage
 import edu.gymtonic_app.ui.i18n.LanguageManager
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.theme.AppTheme
+import edu.gymtonic_app.ui.theme.LocalColors
+import edu.gymtonic_app.ui.theme.ThemeManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +33,9 @@ fun SettingsScreen(
     onOpenProfile: () -> Unit,
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     val currentLanguage by LanguageManager.language.collectAsState()
+    val currentTheme by ThemeManager.theme.collectAsState()
 
     TrainingShellScreen(
         title = strings.settingsTitle,
@@ -77,9 +82,12 @@ fun SettingsScreen(
 
             item {
                 AccountSectionCard(title = strings.settingsAppearance) {
-                    var selectedTheme by remember { mutableStateOf(strings.settingsThemeSystem) }
+                    val selectedTheme = if (currentTheme == AppTheme.DARK)
+                        strings.settingsThemeDark
+                    else
+                        strings.settingsThemeLight
+
                     val themeOptions = listOf(
-                        strings.settingsThemeSystem,
                         strings.settingsThemeLight,
                         strings.settingsThemeDark
                     )
@@ -89,7 +97,12 @@ fun SettingsScreen(
                         currentValue = selectedTheme,
                         options = themeOptions,
                         selectOption = strings.settingsSelectOption,
-                        onOptionSelected = { selectedTheme = it }
+                        onOptionSelected = { selected ->
+                            if (selected == strings.settingsThemeDark)
+                                ThemeManager.setTheme(AppTheme.DARK)
+                            else
+                                ThemeManager.setTheme(AppTheme.LIGHT)
+                        }
                     )
                 }
             }
@@ -167,24 +180,25 @@ fun SettingsScreen(
 
             item {
                 AccountSectionCard(title = strings.settingsAbout) {
+                    val colors2 = LocalColors.current
                     Text(
                         text = strings.settingsVersion,
                         fontSize = 14.sp,
-                        color = Color(0xFF1D1D1D),
+                        color = colors2.textOnAccent,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = strings.settingsTerms,
                         fontSize = 14.sp,
-                        color = Color(0xFF3B4EE8),
+                        color = colors2.accent,
                         modifier = Modifier.clickable { }
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = strings.settingsPrivacy,
                         fontSize = 14.sp,
-                        color = Color(0xFF3B4EE8),
+                        color = colors2.accent,
                         modifier = Modifier.clickable { }
                     )
                 }
@@ -195,6 +209,7 @@ fun SettingsScreen(
 
 @Composable
 fun SettingsToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val colors = LocalColors.current
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,15 +218,15 @@ fun SettingsToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean
         Text(
             text = label,
             fontSize = 15.sp,
-            color = Color(0xFF1D1D1D)
+            color = colors.textOnAccent
         )
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color(0xFF3B4EE8),
+                checkedThumbColor = colors.accent,
                 uncheckedThumbColor = Color(0xFFC4C4C4),
-                checkedTrackColor = Color(0xFFA8B2FF),
+                checkedTrackColor = colors.accent.copy(alpha = 0.4f),
                 uncheckedTrackColor = Color(0xFFE0E0E0)
             )
         )
@@ -227,6 +242,7 @@ fun SettingsOptionRow(
     selectOption: String,
     onOptionSelected: (String) -> Unit
 ) {
+    val colors = LocalColors.current
     var expanded by remember { mutableStateOf(false) }
 
     Row(
@@ -240,16 +256,20 @@ fun SettingsOptionRow(
         Text(
             text = label,
             fontSize = 15.sp,
-            color = Color(0xFF1D1D1D)
+            color = colors.textOnAccent
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = currentValue,
                 fontSize = 15.sp,
-                color = Color(0xFF5D6270),
+                color = colors.textOnAccent.copy(alpha = 0.7f),
                 modifier = Modifier.padding(end = 4.dp)
             )
-            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = selectOption)
+            Icon(
+                Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = selectOption,
+                tint = colors.textOnAccent
+            )
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }

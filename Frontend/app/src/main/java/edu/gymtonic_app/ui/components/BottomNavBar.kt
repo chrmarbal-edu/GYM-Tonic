@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 
 enum class BottomNavItem {
     HOME,
@@ -47,12 +48,13 @@ fun BottomNavBar(
     onOpenProfile: () -> Unit
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
         shape = RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp),
-        color = Color(0xFFF3F4F8),
+        color = colors.surfaceBottomNav,
         shadowElevation = 10.dp
     ) {
         Row(
@@ -62,10 +64,10 @@ fun BottomNavBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomItem(strings.navHome, Icons.Outlined.Home, selectedItem == BottomNavItem.HOME, onOpenHome)
-            BottomItem(strings.navTraining, Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, onOpenTraining)
-            BottomItem(strings.navChallenges, Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, onOpenChallenges)
-            BottomItem(strings.navProfile, Icons.Outlined.AccountCircle, selectedItem == BottomNavItem.PROFILE, onOpenProfile)
+            BottomItem(strings.navHome, Icons.Outlined.Home, selectedItem == BottomNavItem.HOME, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenHome)
+            BottomItem(strings.navTraining, Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenTraining)
+            BottomItem(strings.navChallenges, Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenChallenges)
+            BottomItem(strings.navProfile, Icons.Outlined.AccountCircle, selectedItem == BottomNavItem.PROFILE, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenProfile)
         }
     }
 }
@@ -75,10 +77,13 @@ private fun BottomItem(
     label: String,
     icon: ImageVector,
     selected: Boolean,
+    selectedTint: Color,
+    unselectedTint: Color,
+    selectedContainer: Color,
     onClick: () -> Unit
 ) {
-    val containerColor = if (selected) Color(0xFF757BDF) else Color.Transparent
-    val tint = if (selected) Color(0xFF111111) else Color(0xFF4A4A4A)
+    val containerColor = if (selected) selectedContainer else Color.Transparent
+    val tint = if (selected) selectedTint else unselectedTint
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

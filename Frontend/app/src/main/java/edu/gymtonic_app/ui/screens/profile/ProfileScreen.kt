@@ -49,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.ProfileGroupUi
 import edu.gymtonic_app.ui.viewmodel.ProfileRoutineUi
 import edu.gymtonic_app.ui.viewmodel.ProfileUiState
@@ -131,6 +132,7 @@ fun ProfileScreen(
                 }
 
                 is ProfileUiState.Error -> {
+                    val colors = LocalColors.current
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -140,7 +142,7 @@ fun ProfileScreen(
                         Text(
                             text = state.message,
                             textAlign = TextAlign.Center,
-                            color = Color(0xFF303030)
+                            color = colors.textPrimary
                         )
                     }
                 }
@@ -172,6 +174,7 @@ private fun ProfileContent(
     onOpenDrawer: () -> Unit
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
 
     LazyColumn(
         modifier = Modifier
@@ -189,7 +192,7 @@ private fun ProfileContent(
             ) {
                 Text(
                     text = strings.profileGreeting(username),
-                    color = Color(0xFF1D1D1D),
+                    color = colors.textPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -197,7 +200,7 @@ private fun ProfileContent(
                     Icon(
                         imageVector = Icons.Outlined.AccountCircle,
                         contentDescription = strings.profileOpenSettings,
-                        tint = Color(0xFF2A2A2A),
+                        tint = colors.fieldIndicator,
                         modifier = Modifier.size(34.dp)
                     )
                 }
@@ -210,7 +213,7 @@ private fun ProfileContent(
                     text = streakLabel,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2D2D2D),
+                    color = colors.textOnAccent,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -222,7 +225,7 @@ private fun ProfileContent(
                     if (routines.isEmpty()) {
                         Text(
                             text = strings.noRecentRoutines,
-                            color = Color(0xFF505567),
+                            color = colors.textSecondary,
                             fontSize = 13.sp
                         )
                     } else {
@@ -240,7 +243,7 @@ private fun ProfileContent(
                     if (groups.isEmpty()) {
                         Text(
                             text = strings.noGroups,
-                            color = Color(0xFF505567),
+                            color = colors.textSecondary,
                             fontSize = 13.sp
                         )
                     } else {
@@ -265,9 +268,10 @@ private fun SectionCard(
     onActionClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
+    val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFF8B8EEA),
+        color = colors.surfaceAccent,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -278,14 +282,14 @@ private fun SectionCard(
             ) {
                 Text(
                     text = title,
-                    color = Color(0xFF1D1D1D),
+                    color = colors.textOnAccent,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
                 if (actionText != null && onActionClick != null) {
                     Text(
                         text = actionText,
-                        color = Color(0xFF1D1D1D),
+                        color = colors.textOnAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.clickable { onActionClick() }
@@ -304,9 +308,10 @@ private fun RoutineRow(
     openLabel: String,
     onClick: () -> Unit
 ) {
+    val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFE9EBF2),
+        color = colors.surfaceCard,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
@@ -326,7 +331,7 @@ private fun RoutineRow(
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = routine.title,
-                color = Color(0xFF1F2330),
+                color = colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
                 maxLines = 1,
@@ -336,7 +341,7 @@ private fun RoutineRow(
             Text(
                 text = openLabel,
                 fontSize = 11.sp,
-                color = Color(0xFF4A4F60),
+                color = colors.textSecondary,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -345,9 +350,10 @@ private fun RoutineRow(
 
 @Composable
 private fun GroupRow(group: ProfileGroupUi) {
+    val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFE9EBF2),
+        color = colors.surfaceCard,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -358,19 +364,19 @@ private fun GroupRow(group: ProfileGroupUi) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF757BDF))
+                    .background(colors.surfaceAccent)
             )
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = group.name,
-                    color = Color(0xFF1F2330),
+                    color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
                 Text(
                     text = group.membersLabel,
-                    color = Color(0xFF5A6072),
+                    color = colors.textSecondary,
                     fontSize = 11.sp
                 )
             }

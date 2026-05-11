@@ -16,7 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 
 @Composable
 fun GymTonicLoginScreen(
@@ -26,13 +28,8 @@ fun GymTonicLoginScreen(
     onFacebook: () -> Unit,
 ) {
     val strings = LocalStrings.current
-    val bg = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val colors = LocalColors.current
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     Box(
         modifier = Modifier
@@ -40,12 +37,15 @@ fun GymTonicLoginScreen(
             .background(bg)
             .padding(horizontal = 28.dp)
     ) {
-        LanguageButton(
-            tint = Color.White,
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 16.dp)
-        )
+                .padding(top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ThemeButton(tint = Color.White)
+            LanguageButton(tint = Color.White)
+        }
 
         Column(
             modifier = Modifier
@@ -70,7 +70,7 @@ fun GymTonicLoginScreen(
                     .height(70.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B4EE8),
+                    containerColor = colors.accent,
                     contentColor = Color.White
                 ),
                 border = ButtonDefaults.outlinedButtonBorder.copy(
@@ -96,7 +96,7 @@ fun GymTonicLoginScreen(
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
-                    contentColor = Color(0xFF3B4EE8)
+                    contentColor = colors.accent
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {

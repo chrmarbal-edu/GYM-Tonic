@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.ExerciseUiState
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
@@ -54,6 +55,7 @@ fun ExerciseDetailScreen(
     viewModel: ExerciseViewModel? = null
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val resolvedViewModel = viewModel ?: viewModel<ExerciseViewModel>(factory = ExerciseViewModelFactory(application))
@@ -96,7 +98,7 @@ fun ExerciseDetailScreen(
             ) {
                 Text(
                     text = state.message,
-                    color = Color(0xFF1D1D1D),
+                    color = colors.textPrimary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -127,7 +129,7 @@ fun ExerciseDetailScreen(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = Color(0xFFE9EBF2),
+                        color = colors.surfaceCard,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Image(
@@ -151,7 +153,7 @@ fun ExerciseDetailScreen(
                             text = exercise.name,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF1D1D1D),
+                            color = colors.textPrimary,
                             modifier = Modifier.weight(1f)
                         )
 
@@ -187,7 +189,7 @@ fun ExerciseDetailScreen(
                     Text(
                         text = strings.seconds(exercise.durationSeconds),
                         fontSize = 16.sp,
-                        color = Color(0xFF2C3ED6),
+                        color = colors.accentDark,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 2.dp)
                     )
@@ -198,7 +200,7 @@ fun ExerciseDetailScreen(
                         Text(
                             text = "${index + 1}. $instruction",
                             fontSize = 14.sp,
-                            color = Color(0xFF323846),
+                            color = colors.textPrimary,
                             modifier = Modifier.padding(vertical = 3.dp)
                         )
                     }
