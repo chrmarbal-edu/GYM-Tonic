@@ -92,17 +92,6 @@ routine.findById = async function (id, result) {
     }
 }
 
-<<<<<<< HEAD
-/* <=============================== FIND BY NAME ===============================> */
-routine.findByName = async function (name, result) {
-    try {
-        const pool = await sql.connect(dbConn)
-        const response = await pool.request()
-            .input("name", sql.VarChar, `%${name}%`)
-            .query("SELECT * FROM Routines WHERE routine_name LIKE @name")
-
-        result(null, response.recordset)
-=======
 /* <=============================== FIND ROUTINE WITH EXERCISES BY ID ===============================> */
 routine.findByIdWithExercises = async function (id, result) {
     try {
@@ -177,7 +166,6 @@ routine.findByNameOrSlug = async function (nameOrSlug, result) {
             result({ err: "No hay datos" }, null)
         }
 
->>>>>>> 4631d3413f8338b172941d2bb1c5d785a1dd42fc
     } catch (err) {
         result(err, null)
     }
