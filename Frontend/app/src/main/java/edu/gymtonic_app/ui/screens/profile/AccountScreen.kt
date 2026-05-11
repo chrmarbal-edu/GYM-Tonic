@@ -5,8 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +19,7 @@ import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.theme.LocalColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +31,7 @@ fun AccountScreen(
     onOpenProfile: () -> Unit,
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
 
     TrainingShellScreen(
         title = strings.accountTitle,
@@ -64,7 +64,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -77,7 +77,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -90,7 +90,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -100,7 +100,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B4EE8),
+                            containerColor = colors.accent,
                             contentColor = Color.White
                         )
                     ) {
@@ -121,7 +121,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -134,7 +134,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -144,7 +144,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B4EE8),
+                            containerColor = colors.accent,
                             contentColor = Color.White
                         )
                     ) {
@@ -156,6 +156,7 @@ fun AccountScreen(
             item {
                 AccountSectionCard(title = strings.twoFactorAuth) {
                     var twoFaEnabled by remember { mutableStateOf(false) }
+                    val colors2 = LocalColors.current
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -164,15 +165,15 @@ fun AccountScreen(
                         Text(
                             text = if (twoFaEnabled) strings.twoFaEnabled else strings.twoFaDisabled,
                             fontSize = 15.sp,
-                            color = Color(0xFF1D1D1D)
+                            color = colors2.textOnAccent
                         )
                         Switch(
                             checked = twoFaEnabled,
                             onCheckedChange = { twoFaEnabled = it },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color(0xFF3B4EE8),
+                                checkedThumbColor = colors2.accent,
                                 uncheckedThumbColor = Color(0xFFC4C4C4),
-                                checkedTrackColor = Color(0xFFA8B2FF),
+                                checkedTrackColor = colors2.accent.copy(alpha = 0.4f),
                                 uncheckedTrackColor = Color(0xFFE0E0E0)
                             )
                         )
@@ -180,7 +181,7 @@ fun AccountScreen(
                     Text(
                         text = strings.twoFaDescription,
                         fontSize = 12.sp,
-                        color = Color(0xFF5D6270),
+                        color = colors2.textOnAccent.copy(alpha = 0.7f),
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -213,8 +214,9 @@ fun AccountScreen(
             }
 
             item {
-                AccountSectionCard(title = strings.deleteAccount, color = Color(0xFFFDE9E9)) {
+                AccountSectionCard(title = strings.deleteAccount, isDanger = true) {
                     var confirmDeletionText by remember { mutableStateOf("") }
+                    val colors2 = LocalColors.current
 
                     Text(
                         text = strings.deleteAccountWarning,
@@ -256,18 +258,20 @@ fun AccountScreen(
 @Composable
 fun AccountSectionCard(
     title: String,
-    color: Color = Color(0xFF8B8EEA),
+    isDanger: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val colors = LocalColors.current
+    val cardColor = if (isDanger) colors.surfaceDanger else colors.surfaceAccent
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = color,
+        color = cardColor,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = title,
-                color = Color(0xFF1D1D1D),
+                color = colors.textOnAccent,
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -288,9 +292,10 @@ private fun ConnectedAccountRow(
     disconnectButton: String,
     onToggleConnect: () -> Unit
 ) {
+    val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFE9EBF2),
+        color = colors.surfaceCard,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -312,7 +317,7 @@ private fun ConnectedAccountRow(
                         text = name,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
-                        color = Color(0xFF1F2330)
+                        color = colors.textPrimary
                     )
                     Text(
                         text = if (isConnected) connectedLabel else disconnectedLabel,
@@ -324,7 +329,7 @@ private fun ConnectedAccountRow(
             Button(
                 onClick = onToggleConnect,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isConnected) Color(0xFFD32F2F) else Color(0xFF3B4EE8),
+                    containerColor = if (isConnected) Color(0xFFD32F2F) else colors.accent,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(8.dp),

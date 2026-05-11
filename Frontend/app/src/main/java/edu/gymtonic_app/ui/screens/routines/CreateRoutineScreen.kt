@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.theme.LocalColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +32,7 @@ fun CreateRoutineScreen(
     onOpenProfile: () -> Unit = {}
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     var routineName by remember { mutableStateOf("") }
     var routineDescription by remember { mutableStateOf("") }
     val exercises = remember { mutableStateListOf<String>() }
@@ -60,7 +62,7 @@ fun CreateRoutineScreen(
                         text = strings.basicInfo,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1D1D1D)
+                        color = colors.textPrimary
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -72,7 +74,7 @@ fun CreateRoutineScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -87,7 +89,7 @@ fun CreateRoutineScreen(
                         shape = RoundedCornerShape(12.dp),
                         minLines = 2,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -103,14 +105,14 @@ fun CreateRoutineScreen(
                             text = strings.exercisesSection,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1D1D1D)
+                            color = colors.textPrimary
                         )
 
                         IconButton(
                             onClick = { exercises.add(strings.newExercise(exercises.size + 1)) },
                             colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color(0xFF8B8EEA),
-                                contentColor = Color.White
+                                containerColor = colors.surfaceAccent,
+                                contentColor = colors.textOnAccent
                             )
                         ) {
                             Icon(Icons.Default.Add, contentDescription = strings.addExercise)
@@ -123,13 +125,13 @@ fun CreateRoutineScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
-                            color = Color(0xFFE9EBF2).copy(alpha = 0.5f)
+                            color = colors.surfaceCard.copy(alpha = 0.5f)
                         ) {
                             Text(
                                 text = strings.noExercisesAdded,
                                 modifier = Modifier.padding(24.dp),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                color = Color(0xFF5D6270),
+                                color = colors.textSecondary,
                                 fontSize = 14.sp
                             )
                         }
@@ -154,7 +156,7 @@ fun CreateRoutineScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B4EE8),
+                    containerColor = colors.accent,
                     contentColor = Color.White
                 )
             ) {
@@ -176,10 +178,11 @@ fun ExerciseItemRow(
     deleteLabel: String,
     onDelete: () -> Unit
 ) {
+    val colors = LocalColors.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFE9EBF2),
+        color = colors.surfaceCard,
         shadowElevation = 2.dp
     ) {
         Row(
@@ -194,12 +197,12 @@ fun ExerciseItemRow(
                     text = name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = Color(0xFF1F2330)
+                    color = colors.textPrimary
                 )
                 Text(
                     text = customizeLabel,
                     fontSize = 11.sp,
-                    color = Color(0xFF5D6270)
+                    color = colors.textSecondary
                 )
             }
 

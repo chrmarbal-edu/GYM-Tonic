@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -29,7 +28,9 @@ import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 
 @Composable
 fun TrainingShellScreen(
@@ -44,13 +45,8 @@ fun TrainingShellScreen(
     onOpenProfile: () -> Unit = {},
     content: @Composable () -> Unit
 ) {
-    val bg = Brush.verticalGradient(
-        listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val colors = LocalColors.current
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     Box(
         modifier = Modifier
@@ -61,7 +57,7 @@ fun TrainingShellScreen(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(34.dp),
-            color = Color(0xFFD9D9D9),
+            color = colors.surfaceMain,
             shadowElevation = 10.dp
         ) {
             Column(
@@ -106,6 +102,7 @@ private fun TrainingShellHeader(
     showBack: Boolean
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,7 +117,7 @@ private fun TrainingShellHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                     contentDescription = strings.back,
-                    tint = Color(0xFF2D2D2D)
+                    tint = colors.fieldIndicator
                 )
             }
         } else {
@@ -129,13 +126,16 @@ private fun TrainingShellHeader(
 
         Text(
             text = title,
-            color = Color(0xFF1D1D1D),
+            color = colors.textPrimary,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 26.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
 
-        LanguageButton(tint = Color(0xFF2D2D2D))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ThemeButton(tint = colors.fieldIndicator)
+            LanguageButton(tint = colors.fieldIndicator)
+        }
     }
 }

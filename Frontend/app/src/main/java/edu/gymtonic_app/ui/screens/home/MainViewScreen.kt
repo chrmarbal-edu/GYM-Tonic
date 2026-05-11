@@ -21,7 +21,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 
 data class HomeAction(
     val title: String,
@@ -43,13 +45,8 @@ fun MainViewScreen(
     onOpenMissions: () -> Unit
 ) {
     val strings = LocalStrings.current
-    val bg = Brush.verticalGradient(
-        listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val colors = LocalColors.current
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     val actions = listOf(
         HomeAction(strings.homePresetWorkouts, Icons.Outlined.FitnessCenter, onClick = onOpenTraining),
@@ -89,6 +86,7 @@ fun MainViewScreen(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                ThemeButton(tint = Color.White)
                 LanguageButton(tint = Color.White)
                 IconButton(onClick = { onLogout() }) {
                     Icon(
