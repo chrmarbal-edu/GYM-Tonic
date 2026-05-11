@@ -8,7 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.local.localModel.RoutineEntity
+import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 
 @Dao
 interface RoutineDao {

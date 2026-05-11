@@ -1,15 +1,24 @@
 package edu.gymtonic_app.data.local.localModel
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "missions")
 data class MissionEntity(
     @PrimaryKey(autoGenerate = true)
-    val mission_id: Int = 0,
+    @ColumnInfo(name = "mission_id")
+    val missionId: Int = 0,
 
-    val mission_name: String,
-    val mission_type: Int,
-    val mission_points: Int,
-    val mission_objetive: Int
+    @ColumnInfo(name = "mission_name")
+    val missionName: String,
+
+    @ColumnInfo(name = "mission_type")
+    val missionType: Int,
+
+    @ColumnInfo(name = "mission_points")
+    val missionPoints: Int,
+
+    @ColumnInfo(name = "mission_objective")
+    val missionObjective: Int
 )

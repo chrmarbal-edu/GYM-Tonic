@@ -1,6 +1,6 @@
 package edu.gymtonic_app.data.repository
 
-import edu.gymtonic_app.data.remote.datasource.GroupRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.GroupRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 
 data class GroupSummaryData(

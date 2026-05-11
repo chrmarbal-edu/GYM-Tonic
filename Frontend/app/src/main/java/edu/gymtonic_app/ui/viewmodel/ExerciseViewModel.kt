@@ -5,9 +5,9 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.local.GymTonicDatabase
-import edu.gymtonic_app.data.local.datasource.local.exercise.ExerciseLocalDataSource
+import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
-import edu.gymtonic_app.data.remote.datasource.ExerciseRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.data.repository.ExerciseRepository
 import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -6,16 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import edu.gymtonic_app.data.local.dao.*
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
-import edu.gymtonic_app.data.local.localModel.FrequestEntity
-import edu.gymtonic_app.data.local.localModel.FriendEntity
-import edu.gymtonic_app.data.local.localModel.GroupEntity
-import edu.gymtonic_app.data.local.localModel.GroupUserEntity
+import edu.gymtonic_app.data.local.localModel.social.FrequestEntity
+import edu.gymtonic_app.data.local.localModel.social.FriendEntity
+import edu.gymtonic_app.data.local.localModel.group.GroupEntity
+import edu.gymtonic_app.data.local.localModel.group.GroupUserEntity
 import edu.gymtonic_app.data.local.localModel.MissionEntity
-import edu.gymtonic_app.data.local.localModel.RoutineEntity
-import edu.gymtonic_app.data.local.localModel.RoutineExerciseEntity
-import edu.gymtonic_app.data.local.localModel.UserEntity
-import edu.gymtonic_app.data.local.localModel.UserMissionEntity
-import edu.gymtonic_app.data.local.localModel.UserRoutineEntity
+import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
+import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseEntity
+import edu.gymtonic_app.data.local.localModel.user.UserEntity
+import edu.gymtonic_app.data.local.localModel.userMission.UserMissionEntity
+import edu.gymtonic_app.data.local.localModel.userRoutine.UserRoutineEntity
 
 @Database(
     entities = [

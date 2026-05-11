@@ -1,9 +1,9 @@
 package edu.gymtonic_app.data.repository
 
-import edu.gymtonic_app.data.local.datasource.local.exercise.ExerciseLocalDataSource
+import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.data.mapper.toDomain
-import edu.gymtonic_app.data.remote.datasource.ExerciseRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.domain.model.exercise.ExerciseDetail
 import kotlinx.coroutines.flow.Flow
 

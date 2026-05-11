@@ -1,9 +1,9 @@
 package edu.gymtonic_app.data.repository
 
-import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerciseInsert
-import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerciseLocalDataSource
+import edu.gymtonic_app.data.local.localDatasource.routineExercise.RoutineExerciseInsert
+import edu.gymtonic_app.data.local.localDatasource.routineExercise.RoutineExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
-import edu.gymtonic_app.data.local.localModel.RoutineExerciseWithExerciseEntity
+import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseWithExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
 class RoutineExerciseRepository(

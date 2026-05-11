@@ -5,8 +5,8 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import edu.gymtonic_app.data.local.localModel.RoutineExerciseEntity
-import edu.gymtonic_app.data.local.localModel.RoutineExerciseWithExerciseEntity
+import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseEntity
+import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseWithExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

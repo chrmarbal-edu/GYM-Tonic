@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Delete
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.local.localModel.UserRoutineEntity
+import edu.gymtonic_app.data.local.localModel.userRoutine.UserRoutineEntity
 
 @Dao
 interface UserRoutineDao {

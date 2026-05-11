@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import edu.gymtonic_app.data.local.localModel.group.GroupUserEntity
 import kotlinx.coroutines.flow.Flow
-import edu.gymtonic_app.data.local.localModel.GroupUserEntity
 
 @Dao
 interface GroupUserDao {
@@ -32,22 +32,22 @@ interface GroupUserDao {
     // Quitar usuario de grupo
     @Query("""
         DELETE FROM group_x_user
-        WHERE group_x_user_groupid = :groupId
-          AND group_x_user_userid = :userId
+        WHERE user_x_group_id = :groupId
+          AND user_x_group_userid = :userId
     """)
     suspend fun removeUserFromGroup(groupId: Int, userId: Int): Int
 
     // Quitar TODOS los usuarios de un grupo
     @Query("""
         DELETE FROM group_x_user
-        WHERE group_x_user_groupid = :groupId
+        WHERE user_x_group_id = :groupId
     """)
     suspend fun removeAllUsersFromGroup(groupId: Int): Int
 
     // Quitar usuario de TODOS los grupos
     @Query("""
         DELETE FROM group_x_user
-        WHERE group_x_user_userid = :userId
+        WHERE user_x_group_userid = :userId
     """)
     suspend fun removeUserFromAllGroups(userId: Int): Int
 
@@ -58,9 +58,9 @@ interface GroupUserDao {
     // Cambiar rango dentro del grupo
     @Query("""
         UPDATE group_x_user
-        SET group_x_user_range = :range
-        WHERE group_x_user_groupid = :groupId
-          AND group_x_user_userid = :userId
+        SET user_x_group_range = :range
+        WHERE user_x_group_id = :groupId
+          AND user_x_group_userid = :userId
     """)
     suspend fun updateUserRange(
         groupId: Int,
@@ -82,23 +82,23 @@ interface GroupUserDao {
     // Miembros de un grupo
     @Query("""
         SELECT * FROM group_x_user
-        WHERE group_x_user_groupid = :groupId
-        ORDER BY group_x_user_range DESC
+        WHERE user_x_group_id = :groupId
+        ORDER BY user_x_group_range DESC
     """)
     fun getUsersOfGroup(groupId: Int): Flow<List<GroupUserEntity>>
 
     // Grupos de un usuario
     @Query("""
         SELECT * FROM group_x_user
-        WHERE group_x_user_userid = :userId
+        WHERE user_x_group_userid = :userId
     """)
     fun getGroupsOfUser(userId: Int): Flow<List<GroupUserEntity>>
 
     // Obtener relación concreta
     @Query("""
         SELECT * FROM group_x_user
-        WHERE group_x_user_groupid = :groupId
-          AND group_x_user_userid = :userId
+        WHERE user_x_group_id = :groupId
+          AND user_x_group_userid = :userId
         LIMIT 1
     """)
     suspend fun getRelation(
@@ -113,15 +113,15 @@ interface GroupUserDao {
     // Saber si un usuario pertenece a un grupo
     @Query("""
         SELECT COUNT(*) FROM group_x_user
-        WHERE group_x_user_groupid = :groupId
-          AND group_x_user_userid = :userId
+        WHERE user_x_group_id = :groupId
+          AND user_x_group_userid = :userId
     """)
     suspend fun isUserInGroup(groupId: Int, userId: Int): Int
 
     // Contar miembros de un grupo
     @Query("""
         SELECT COUNT(*) FROM group_x_user
-        WHERE group_x_user_groupid = :groupId
+        WHERE user_x_group_id = :groupId
     """)
     fun countUsersInGroup(groupId: Int): Flow<Int>
 }

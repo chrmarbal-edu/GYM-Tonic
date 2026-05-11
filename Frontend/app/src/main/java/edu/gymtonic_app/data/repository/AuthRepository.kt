@@ -1,6 +1,6 @@
 package edu.gymtonic_app.data.repository
 
-import edu.gymtonic_app.data.remote.datasource.AuthRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.AuthRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
