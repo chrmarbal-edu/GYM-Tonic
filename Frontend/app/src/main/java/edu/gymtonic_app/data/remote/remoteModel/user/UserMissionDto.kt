@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model.user
+package edu.gymtonic_app.data.remote.remoteModel.user
 
 data class UserMissionDto(
     val userMissionId: Int,

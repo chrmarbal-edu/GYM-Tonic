@@ -4,7 +4,7 @@ import edu.gymtonic_app.data.local.datasource.local.routine.RoutineLocalDataSour
 import edu.gymtonic_app.data.local.localModel.RoutineEntity
 import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.domain.model.routine.RoutineDetail
 import kotlinx.coroutines.flow.Flow
 

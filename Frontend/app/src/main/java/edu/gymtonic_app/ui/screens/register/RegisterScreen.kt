@@ -20,7 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 
 @Composable
@@ -30,17 +32,12 @@ fun RegisterScreen(
     onBack: () -> Unit = {}
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     val registerState by registerViewModel.registerState.collectAsState()
 
     var showStep2 by remember { mutableStateOf(false) }
 
-    val bg = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     var fullName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -77,12 +74,15 @@ fun RegisterScreen(
             .background(bg)
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
-        LanguageButton(
-            tint = Color.White,
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 4.dp)
-        )
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ThemeButton(tint = Color.White)
+            LanguageButton(tint = Color.White)
+        }
 
         Text(
             text = strings.createAccount,
@@ -101,7 +101,7 @@ fun RegisterScreen(
                 .fillMaxWidth()
                 .heightIn(min = 520.dp, max = 620.dp),
             shape = RoundedCornerShape(70.dp),
-            color = Color(0xFFD9D9D9),
+            color = colors.surfaceMain,
             shadowElevation = 10.dp
         ) {
             Column(
@@ -179,7 +179,7 @@ fun RegisterScreen(
                     modifier = Modifier.fillMaxWidth().height(58.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3B4EE8),
+                        containerColor = colors.accent,
                         contentColor = Color.White
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
@@ -220,10 +220,11 @@ fun UnderlineLabeledField(
     errorText: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
+    val colors = LocalColors.current
     Text(
         text = label,
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF2D2D2D),
+        color = colors.fieldIndicator,
         fontSize = 14.sp,
         fontWeight = FontWeight.SemiBold
     )
@@ -238,7 +239,7 @@ fun UnderlineLabeledField(
             Text(
                 placeholder,
                 fontSize = 12.sp,
-                color = Color(0xFF2D2D2D).copy(alpha = 0.45f)
+                color = colors.fieldIndicator.copy(alpha = 0.45f)
             )
         },
         singleLine = true,
@@ -248,9 +249,11 @@ fun UnderlineLabeledField(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = if (isError) Color.Red else Color(0xFF2D2D2D).copy(alpha = 0.65f),
-            unfocusedIndicatorColor = if (isError) Color.Red else Color(0xFF2D2D2D).copy(alpha = 0.35f),
-            cursorColor = if (isError) Color.Red else Color(0xFF2D2D2D)
+            focusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.65f),
+            unfocusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.35f),
+            focusedTextColor = colors.textPrimary,
+            unfocusedTextColor = colors.textPrimary,
+            cursorColor = if (isError) Color.Red else colors.fieldIndicator
         )
     )
 
@@ -272,6 +275,7 @@ fun UnderlineTextField(
     placeholder: String,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
+    val colors = LocalColors.current
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -280,7 +284,7 @@ fun UnderlineTextField(
             Text(
                 text = placeholder,
                 fontSize = 12.sp,
-                color = Color(0xFF2D2D2D).copy(alpha = 0.45f)
+                color = colors.fieldIndicator.copy(alpha = 0.45f)
             )
         },
         singleLine = true,
@@ -289,11 +293,11 @@ fun UnderlineTextField(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
             disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = Color(0xFF2D2D2D).copy(alpha = 0.65f),
-            unfocusedIndicatorColor = Color(0xFF2D2D2D).copy(alpha = 0.35f),
-            focusedTextColor = Color(0xFF2D2D2D),
-            unfocusedTextColor = Color(0xFF2D2D2D),
-            cursorColor = Color(0xFF2D2D2D)
+            focusedIndicatorColor = colors.fieldIndicator.copy(alpha = 0.65f),
+            unfocusedIndicatorColor = colors.fieldIndicator.copy(alpha = 0.35f),
+            focusedTextColor = colors.textPrimary,
+            unfocusedTextColor = colors.textPrimary,
+            cursorColor = colors.fieldIndicator
         )
     )
 }

@@ -1,10 +1,10 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.datasource.AuthRemoteDataSource
-import edu.gymtonic_app.data.remote.model.auth.LoginRequest
-import edu.gymtonic_app.data.remote.model.auth.LoginResponse
-import edu.gymtonic_app.data.remote.model.user.RegisterRequest
-import edu.gymtonic_app.data.remote.model.user.RegisterResponse
+import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
+import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
+import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
+import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 
 class AuthRepository(
 	private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource()

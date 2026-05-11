@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.RegisterState
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 
@@ -34,13 +35,8 @@ fun RegisterScreen2(
     registerState: RegisterState
 ) {
     val strings = LocalStrings.current
-    val bg = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val colors = LocalColors.current
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     var fechaNacimiento by remember { mutableStateOf("") }
     var altura by remember { mutableStateOf("") }
@@ -87,7 +83,7 @@ fun RegisterScreen2(
                 .fillMaxWidth()
                 .heightIn(min = 520.dp, max = 620.dp),
             shape = RoundedCornerShape(70.dp),
-            color = Color(0xFFD9D9D9),
+            color = colors.surfaceMain,
             shadowElevation = 10.dp
         ) {
             Column(
@@ -185,7 +181,7 @@ fun RegisterScreen2(
                     modifier = Modifier.fillMaxWidth().height(58.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF3B4EE8),
+                        containerColor = colors.accent,
                         contentColor = Color.White
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
@@ -194,7 +190,7 @@ fun RegisterScreen2(
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = Color(0xFFFFFFFF)
+                            color = Color.White
                         )
                     } else {
                         Text(
@@ -251,10 +247,11 @@ private fun UnderlineLabeledField(
     errorText: String = "",
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
+    val colors = LocalColors.current
     Text(
         text = label,
         modifier = Modifier.fillMaxWidth(),
-        color = Color(0xFF2D2D2D),
+        color = colors.fieldIndicator,
         fontSize = 14.sp,
         fontWeight = FontWeight.SemiBold
     )
@@ -262,11 +259,26 @@ private fun UnderlineLabeledField(
     TextField(
         value = value,
         onValueChange = onValueChange,
-        placeholder = { Text(placeholder) },
+        placeholder = {
+            Text(
+                placeholder,
+                color = colors.fieldIndicator.copy(alpha = 0.45f)
+            )
+        },
         visualTransformation = visualTransformation,
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            focusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.65f),
+            unfocusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.35f),
+            focusedTextColor = colors.textPrimary,
+            unfocusedTextColor = colors.textPrimary,
+            cursorColor = if (isError) Color.Red else colors.fieldIndicator
+        )
     )
     if (isError) {
         Text(

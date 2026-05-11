@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.TrainingCategoryUi
 import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 
@@ -52,6 +53,7 @@ fun TrainingScreen(
     onRefresh: () -> Unit = {}
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
 
     Column(
         modifier = Modifier
@@ -71,7 +73,7 @@ fun TrainingScreen(
                 } else {
                     strings.trainingCategoriesAvailable(categories.size)
                 },
-                color = Color(0xFF464A57),
+                color = colors.textSubtle,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
@@ -86,7 +88,7 @@ fun TrainingScreen(
             ) {
                 Text(
                     text = "+",
-                    color = Color(0xFF464A57),
+                    color = colors.textSubtle,
                     fontWeight = FontWeight.Bold,
                     fontSize = 28.sp
                 )
@@ -137,10 +139,11 @@ private fun TrainingSection(
     tapToOpen: String,
     onSelect: (String, Boolean) -> Unit
 ) {
+    val colors = LocalColors.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFE9EBF2),
+        color = colors.surfaceCard,
         shadowElevation = 2.dp
     ) {
         Column(modifier = Modifier.padding(vertical = 12.dp)) {
@@ -155,14 +158,14 @@ private fun TrainingSection(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2D2D2D)
+                    color = colors.textPrimary
                 )
 
                 Text(
                     text = routinesLabel(routines.size),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF5D6270)
+                    color = colors.textSecondary
                 )
             }
 
@@ -196,10 +199,11 @@ private fun TrainingCard(
     onSelect: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalColors.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFF8F9FC),
+        color = colors.surfaceCard,
         shadowElevation = 4.dp
     ) {
         Column(
@@ -240,13 +244,13 @@ private fun TrainingCard(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = Color(0xFF1F2330)
+                color = colors.textPrimary
             )
 
             Text(
                 text = tapToOpen,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color(0xFF5D6270),
+                color = colors.textSecondary,
                 maxLines = 1
             )
         }
@@ -255,16 +259,17 @@ private fun TrainingCard(
 
 @Composable
 private fun EmptyTrainingState(message: String) {
+    val colors = LocalColors.current
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 10.dp),
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFE9EBF2)
+        color = colors.surfaceCard
     ) {
         Text(
             text = message,
-            color = Color(0xFF4E5360),
+            color = colors.textSecondary,
             fontSize = 13.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 26.dp)

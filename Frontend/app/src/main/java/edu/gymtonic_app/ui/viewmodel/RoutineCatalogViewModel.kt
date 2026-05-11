@@ -7,6 +7,8 @@ import edu.gymtonic_app.data.local.GymTonicDatabase
 import edu.gymtonic_app.data.local.datasource.local.routine.RoutineLocalDataSource
 import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.local.localModel.RoutineEntity
+import edu.gymtonic_app.data.local.localModel.RoutineExerciseWithExerciseEntity
 import edu.gymtonic_app.data.remote.datasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.repository.RoutineExerciseRepository
 import edu.gymtonic_app.data.repository.RoutineRepository
@@ -169,7 +171,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
 
     fun createUserRoutineWithExercises(
         routineName: String,
-        exerciseIds: List<Int>,
+        exercises: List<ExerciseEntity>,
         imageKey: String? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
@@ -179,7 +181,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             return
         }
 
-        if (exerciseIds.isEmpty()) {
+        if (exercises.isEmpty()) {
             onError("Debes añadir al menos un ejercicio")
             return
         }
@@ -188,7 +190,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             routineRepository.createUserRoutine(routineName, imageKey)
                 .onSuccess { routineId ->
                     routineExerciseRepository
-                        .addMultipleExercisesToRoutine(routineId.toInt(), exerciseIds)
+                        .addMultipleExercisesToRoutine(routineId.toInt(), exercises)
                         .onSuccess {
                             onSuccess()
                         }
@@ -225,7 +227,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    fun getExercisesForUserRoutine(routineId: Int): Flow<List<ExerciseEntity>> {
+    fun getExercisesForUserRoutine(routineId: Int): Flow<List<RoutineExerciseWithExerciseEntity>> {
         return routineExerciseRepository.getExercisesForRoutine(routineId)
     }
 
@@ -254,18 +256,18 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
     }
 
     private fun mapLocalRoutineToUi(
-        routineEntity: edu.gymtonic_app.data.local.localModel.RoutineEntity,
-        exercises: List<ExerciseEntity>
+        routineEntity: RoutineEntity,
+        exercises: List<RoutineExerciseWithExerciseEntity>
     ): RoutineDetailUi {
         return RoutineDetailUi(
             id = routineEntity.routine_id.toString(),
             title = routineEntity.routine_name,
-            exercises = exercises.map { exercise ->
+            exercises = exercises.map { item ->
                 RoutineExerciseUi(
-                    id = exercise.exercise_id.toString(),
-                    name = exercise.exercise_name,
-                    reps = "",
-                    imageRes = ImageResourceMapper.fromKey(exercise.exercise_image)
+                    id = item.exercise.exercise_id.toString(),
+                    name = item.exercise.exercise_name,
+                    reps = item.reps,
+                    imageRes = ImageResourceMapper.fromKey(item.exercise.exercise_image)
                 )
             }
         )

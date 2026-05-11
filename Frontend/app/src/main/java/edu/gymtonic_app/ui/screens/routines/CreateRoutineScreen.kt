@@ -5,11 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -51,6 +50,7 @@ import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
 import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
@@ -68,6 +68,7 @@ fun CreateRoutineScreen(
     routineViewModel: RoutineCatalogViewModel = viewModel()
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     val context = LocalContext.current
     val application = context.applicationContext as Application
 
@@ -98,13 +99,16 @@ fun CreateRoutineScreen(
 
     fun saveRoutine() {
         val trimmedName = routineName.trim()
+        val selectedExercises = favoriteExercises.filter { exercise ->
+            selectedExerciseIds.contains(exercise.exercise_id)
+        }
 
         if (trimmedName.isBlank()) {
             errorMessage = "El nombre de la rutina no puede estar vacío"
             return
         }
 
-        if (selectedExerciseIds.isEmpty()) {
+        if (selectedExercises.isEmpty()) {
             errorMessage = "Debes seleccionar al menos un ejercicio"
             return
         }
@@ -112,13 +116,11 @@ fun CreateRoutineScreen(
         isSaving = true
         errorMessage = null
 
-        val imageKey = favoriteExercises
-            .firstOrNull { selectedExerciseIds.contains(it.exercise_id) }
-            ?.exercise_image
+        val imageKey = selectedExercises.firstOrNull()?.exercise_image
 
         routineViewModel.createUserRoutineWithExercises(
             routineName = trimmedName,
-            exerciseIds = selectedExerciseIds.toList(),
+            exercises = selectedExercises,
             imageKey = imageKey,
             onSuccess = {
                 isSaving = false
@@ -161,7 +163,7 @@ fun CreateRoutineScreen(
                         text = strings.basicInfo,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1D1D1D)
+                        color = colors.textPrimary
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -173,7 +175,7 @@ fun CreateRoutineScreen(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF3B4EE8),
+                            focusedBorderColor = colors.accent,
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
@@ -188,14 +190,14 @@ fun CreateRoutineScreen(
                             text = "Ejercicios favoritos",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1D1D1D),
+                            color = colors.textPrimary,
                             modifier = Modifier.weight(1f)
                         )
 
                         Text(
                             text = "${selectedExerciseIds.size}/${favoriteExercises.size}",
                             fontSize = 12.sp,
-                            color = Color(0xFF5D6270)
+                            color = colors.textSecondary
                         )
                     }
                 }
@@ -205,12 +207,12 @@ fun CreateRoutineScreen(
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
-                            color = Color(0xFFE9EBF2)
+                            color = colors.surfaceCard.copy(alpha = 0.5f)
                         ) {
                             Text(
                                 text = "No tienes ejercicios favoritos guardados todavía",
                                 modifier = Modifier.padding(20.dp),
-                                color = Color(0xFF4E5360)
+                                color = colors.textSecondary
                             )
                         }
                     }
@@ -247,9 +249,9 @@ fun CreateRoutineScreen(
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3B4EE8),
+                    containerColor = colors.accent,
                     contentColor = Color.White,
-                    disabledContainerColor = Color(0xFFB7BCEB),
+                    disabledContainerColor = colors.accent.copy(alpha = 0.4f),
                     disabledContentColor = Color.White
                 )
             ) {
@@ -278,9 +280,12 @@ private fun FavoriteExerciseRow(
     selected: Boolean,
     onToggle: () -> Unit
 ) {
-    Card(
+    val colors = LocalColors.current
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(14.dp),
+        color = colors.surfaceCard,
+        shadowElevation = 2.dp
     ) {
         Row(
             modifier = Modifier
@@ -293,12 +298,12 @@ private fun FavoriteExerciseRow(
                     text = exercise.exercise_name,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
-                    color = Color(0xFF1F2330)
+                    color = colors.textPrimary
                 )
                 Text(
                     text = exercise.exercise_description,
                     fontSize = 11.sp,
-                    color = Color(0xFF5D6270)
+                    color = colors.textSecondary
                 )
             }
 
@@ -306,7 +311,7 @@ private fun FavoriteExerciseRow(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = if (selected) Color(0xFF3B4EE8) else Color(0xFF9EA3AF)
+                    tint = if (selected) colors.accent else Color(0xFF9EA3AF)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(text = if (selected) "Añadido" else "Añadir")

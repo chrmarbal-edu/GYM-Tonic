@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,7 +30,9 @@ import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 
 @Composable
 fun TrainingShellScreen(
@@ -42,15 +45,11 @@ fun TrainingShellScreen(
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    onDeleteClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
-    val bg = Brush.verticalGradient(
-        listOf(
-            Color(0xFF1F3F73),
-            Color(0xFF3A2F7A),
-            Color(0xFF2A3344)
-        )
-    )
+    val colors = LocalColors.current
+    val bg = Brush.verticalGradient(colors.gradientColors)
 
     Box(
         modifier = Modifier
@@ -61,7 +60,7 @@ fun TrainingShellScreen(
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(34.dp),
-            color = Color(0xFFD9D9D9),
+            color = colors.surfaceMain,
             shadowElevation = 10.dp
         ) {
             Column(
@@ -72,7 +71,8 @@ fun TrainingShellScreen(
                 TrainingShellHeader(
                     title = title,
                     onBack = onBack,
-                    showBack = showBack
+                    showBack = showBack,
+                    onDeleteClick = onDeleteClick
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -103,9 +103,11 @@ fun TrainingShellScreen(
 private fun TrainingShellHeader(
     title: String,
     onBack: () -> Unit,
-    showBack: Boolean
+    showBack: Boolean,
+    onDeleteClick: (() -> Unit)?
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,7 +122,7 @@ private fun TrainingShellHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
                     contentDescription = strings.back,
-                    tint = Color(0xFF2D2D2D)
+                    tint = colors.fieldIndicator
                 )
             }
         } else {
@@ -129,13 +131,28 @@ private fun TrainingShellHeader(
 
         Text(
             text = title,
-            color = Color(0xFF1D1D1D),
+            color = colors.textPrimary,
             fontWeight = FontWeight.ExtraBold,
             fontSize = 26.sp,
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
 
-        LanguageButton(tint = Color(0xFF2D2D2D))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onDeleteClick != null) {
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = strings.deleteRoutine,
+                        tint = Color(0xFFB3261E)
+                    )
+                }
+            }
+            ThemeButton(tint = colors.fieldIndicator)
+            LanguageButton(tint = colors.fieldIndicator)
+        }
     }
 }

@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
 @Composable
@@ -46,6 +47,7 @@ fun RoutineTemplateScreen(
     onToggleFavorite: (RoutineExerciseUi) -> Unit
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
 
     Column(
         modifier = Modifier
@@ -56,7 +58,7 @@ fun RoutineTemplateScreen(
             text = strings.exercisesAvailable(exercises.size),
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF464A57),
+            color = colors.textSubtle,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -98,9 +100,10 @@ private fun RoutineExerciseRow(
     onToggleFavorite: () -> Unit,
     onClick: () -> Unit
 ) {
+    val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFFE9EBF2),
+        color = colors.surfaceCard,
         shadowElevation = 3.dp,
         modifier = Modifier
             .fillMaxWidth()
@@ -128,13 +131,13 @@ private fun RoutineExerciseRow(
                     fontSize = 14.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = Color(0xFF1F2330)
+                    color = colors.textPrimary
                 )
 
                 Text(
                     text = setsAndRepsLabel,
                     fontSize = 11.sp,
-                    color = Color(0xFF5D6270)
+                    color = colors.textSecondary
                 )
             }
 
@@ -157,13 +160,13 @@ private fun RoutineExerciseRow(
 
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = Color(0xFF8B8EEA)
+                color = colors.surfaceAccent
             ) {
                 Text(
                     text = exercise.reps,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1D1D1D),
+                    color = colors.textOnAccent,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                 )
             }

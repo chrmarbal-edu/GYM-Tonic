@@ -1,4 +1,4 @@
-package edu.gymtonic_app.data.remote.model.week
+package edu.gymtonic_app.data.remote.remoteModel.week
 
 data class WeeklyCalendarDayDto(
     val dayIndex: Int,

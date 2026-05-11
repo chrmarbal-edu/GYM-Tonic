@@ -1,7 +1,7 @@
 package edu.gymtonic_app.data.mapper
 
-import edu.gymtonic_app.data.remote.model.routine.RoutineDetailDto
-import edu.gymtonic_app.data.remote.model.routine.RoutineExerciseDto
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto
 import edu.gymtonic_app.domain.model.routine.RoutineDetail
 import edu.gymtonic_app.domain.model.routine.RoutineExercise
 import java.text.Normalizer

@@ -1,14 +1,14 @@
 package edu.gymtonic_app.data.remote.datasource
 
 import android.util.Log
-import edu.gymtonic_app.data.remote.model.exercise.ExerciseDetailDto
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.services.RetrofitClient
 
 class ExerciseRemoteDataSource {
     private val tag = ExerciseRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
-    suspend fun getExerciseById(exerciseId: String): ExerciseDetailDto {
+    suspend fun getExerciseById(exerciseId: String): ExerciseDto {
         // PRIMARY: consumo real del backend (/exercises/{id}).
         return try {
             val response = api.getExerciseById(exerciseId)
@@ -28,7 +28,7 @@ class ExerciseRemoteDataSource {
     }
 
     // FALLBACK TEMPORAL: eliminar al completar la migracion al backend real.
-    private fun buildFallbackExercise(exerciseId: String): ExerciseDetailDto {
+    private fun buildFallbackExercise(exerciseId: String): ExerciseDto {
         val normalized = exerciseId.lowercase()
         val inferredName = when {
             normalized.contains("estocadas") -> "ESTOCADAS"
@@ -50,7 +50,7 @@ class ExerciseRemoteDataSource {
             else -> "squat"
         }
 
-        return ExerciseDetailDto(
+        return ExerciseDto(
             id = exerciseId,
             name = inferredName,
             durationSeconds = 15,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,8 +34,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.register.UnderlineTextField
+import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.LoginState
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 
@@ -47,6 +50,7 @@ fun LoginFormScreen(
     onForgotPassword: () -> Unit
 ) {
     val strings = LocalStrings.current
+    val colors = LocalColors.current
     val loginState by loginViewModel.loginState.collectAsState()
 
     var username by remember { mutableStateOf("") }
@@ -55,23 +59,18 @@ fun LoginFormScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF1F3F73),
-                        Color(0xFF3A2F7A),
-                        Color(0xFF2A3344)
-                    )
-                )
-            )
+            .background(Brush.verticalGradient(colors.gradientColors))
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
-        LanguageButton(
-            tint = Color.White,
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(top = 4.dp)
-        )
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ThemeButton(tint = Color.White)
+            LanguageButton(tint = Color.White)
+        }
 
         Surface(
             modifier = Modifier
@@ -79,7 +78,7 @@ fun LoginFormScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .height(670.dp),
-            color = Color(0xFFD9D9D9),
+            color = colors.surfaceMain,
             shape = RoundedCornerShape(70.dp),
             shadowElevation = 6.dp
         ) {
@@ -89,7 +88,12 @@ fun LoginFormScreen(
                     .padding(horizontal = 36.dp, vertical = 46.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = strings.usernameLabel, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = strings.usernameLabel,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.textPrimary
+                )
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = username,
@@ -99,7 +103,12 @@ fun LoginFormScreen(
 
                 Spacer(Modifier.height(26.dp))
 
-                Text(text = strings.password, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = strings.password,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.textPrimary
+                )
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = password,
@@ -129,7 +138,7 @@ fun LoginFormScreen(
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = Color(0xFF3B4EE8)
+                            color = colors.accent
                         )
                     } else {
                         Text(strings.enterButton, fontSize = 14.sp, fontWeight = FontWeight.Bold)
@@ -138,7 +147,7 @@ fun LoginFormScreen(
 
                 Spacer(Modifier.weight(1f))
 
-                Text(strings.noAccount, fontSize = 11.sp)
+                Text(strings.noAccount, fontSize = 11.sp, color = colors.textSecondary)
                 TextButton(onClick = onRegister) {
                     Text(strings.signUpLink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }

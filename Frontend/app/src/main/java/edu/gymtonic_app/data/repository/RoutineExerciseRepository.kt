@@ -1,92 +1,74 @@
 package edu.gymtonic_app.data.repository
 
+import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerciseInsert
 import edu.gymtonic_app.data.local.datasource.local.routineExercise.RoutineExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.local.localModel.RoutineExerciseWithExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
 class RoutineExerciseRepository(
     private val routineExerciseLocalDataSource: RoutineExerciseLocalDataSource
 ) {
+    private fun repsByExerciseType(type: Int): String {
+        return when (type) {
+            1 -> "x20"
+            2 -> "x30s"
+            else -> "x12"
+        }
+    }
 
-    // -------------------------
-    // READ - Obtener ejercicios
-    // -------------------------
-
-    /**
-     * Obtiene IDs de ejercicios de una rutina
-     * Usado para validaciones
-     */
     fun getExerciseIdsForRoutine(routineId: Int): Flow<List<Int>> {
         return routineExerciseLocalDataSource.getExerciseIdsForRoutine(routineId)
     }
 
-    /**
-     * Obtiene ejercicios completos de una rutina
-     * Usado por RoutineCatalogScreen para mostrar detalles
-     */
-    fun getExercisesForRoutine(routineId: Int): Flow<List<ExerciseEntity>> {
+    fun getExercisesForRoutine(routineId: Int): Flow<List<RoutineExerciseWithExerciseEntity>> {
         return routineExerciseLocalDataSource.getExercisesForRoutine(routineId)
     }
 
-    /**
-     * Cuenta ejercicios de una rutina
-     */
     fun countExercisesInRoutine(routineId: Int): Flow<Int> {
         return routineExerciseLocalDataSource.countExercisesInRoutine(routineId)
     }
 
-    // -------------------------
-    // WRITE - Crear relaciones
-    // -------------------------
-
-    /**
-     * Agrega un ejercicio a una rutina
-     */
     suspend fun addExerciseToRoutine(routineId: Int, exerciseId: Int): Result<Long> {
         return runCatching {
-            // Validar que no esté duplicado
             val exists = routineExerciseLocalDataSource.isExerciseInRoutine(routineId, exerciseId)
             if (exists) {
                 throw IllegalArgumentException("El ejercicio ya está en esta rutina")
             }
-            routineExerciseLocalDataSource.linkExerciseToRoutine(routineId, exerciseId)
+            routineExerciseLocalDataSource.linkExerciseToRoutine(
+                routineId = routineId,
+                exerciseId = exerciseId,
+                reps = "x12"
+            )
         }
     }
 
-    /**
-     * Agrega múltiples ejercicios a una rutina (batch)
-     * Usado en CreateRoutineScreen al guardar
-     * Retorna lista de IDs de relaciones creadas
-     */
     suspend fun addMultipleExercisesToRoutine(
         routineId: Int,
-        exerciseIds: List<Int>
+        exercises: List<ExerciseEntity>
     ): Result<List<Long>> {
         return runCatching {
-            if (exerciseIds.isEmpty()) {
+            if (exercises.isEmpty()) {
                 throw IllegalArgumentException("Debe agregar al menos un ejercicio")
             }
-            routineExerciseLocalDataSource.linkMultipleExercisesToRoutine(routineId, exerciseIds)
+
+            val exerciseLinks = exercises.map { exercise ->
+                RoutineExerciseInsert(
+                    exerciseId = exercise.exercise_id,
+                    reps = repsByExerciseType(exercise.exercise_type)
+                )
+            }
+
+            routineExerciseLocalDataSource.linkMultipleExercisesToRoutine(routineId, exerciseLinks)
         }
     }
 
-    // -------------------------
-    // WRITE - Eliminar relaciones
-    // -------------------------
-
-    /**
-     * Quita un ejercicio de una rutina
-     */
     suspend fun removeExerciseFromRoutine(routineId: Int, exerciseId: Int): Result<Int> {
         return runCatching {
             routineExerciseLocalDataSource.unlinkExerciseFromRoutine(routineId, exerciseId)
         }
     }
 
-    /**
-     * Borra todos los ejercicios de una rutina
-     * Usado cuando se borra la rutina completa
-     */
     suspend fun deleteAllExercisesForRoutine(routineId: Int): Result<Int> {
         return runCatching {
             routineExerciseLocalDataSource.deleteAllExercisesForRoutine(routineId)
