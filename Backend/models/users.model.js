@@ -10,11 +10,13 @@ let user = function(user) {
     this.user_password = user.user_password
     this.user_birthdate = user.user_birthdate
     this.user_email = user.user_email
+    this.user_picture = user.user_picture
     this.user_height = user.user_height
     this.user_weight = user.user_weight
     this.user_objective = user.user_objective
     this.user_points = user.user_points
     this.user_role = user.user_role
+    this.user_oauth = user.user_oauth
 }
 
 /* <=============================== FIND ALL ===============================> */
@@ -62,6 +64,7 @@ user.updateById = async function (id, updateUser, result) {
         request.input("weight", sql.Decimal(5,2), updateUser.user_weight)
         request.input("objective", sql.Int, updateUser.user_objective)
         request.input("points", sql.Int, updateUser.user_points)
+        request.input("picture", sql.NVarChar, updateUser.user_picture)
 
         const sqlQuery = `
             UPDATE Users SET
@@ -72,7 +75,8 @@ user.updateById = async function (id, updateUser, result) {
                 user_height = @height,
                 user_weight = @weight,
                 user_objective = @objective,
-                user_points = @points
+                user_points = @points,
+                user_picture = @picture
             OUTPUT INSERTED.*
             WHERE user_id = @id
         `
@@ -98,18 +102,20 @@ user.create = async function (newUser, result) {
         request.input("height", sql.Decimal(5,2), newUser.user_height)
         request.input("weight", sql.Decimal(5,2), newUser.user_weight)
         request.input("objective", sql.Int, newUser.user_objective)
+        request.input("oauth", sql.NVarChar, newUser.user_oauth || null)
+        request.input("picture", sql.NVarChar, newUser.user_picture)
 
         const sqlQuery = `
             INSERT INTO Users (
                 user_username, user_name, user_password, user_birthdate,
-                user_email, user_height, user_weight,
-                user_objective, user_role
+                user_email, user_picture, user_height, user_weight,
+                user_objective, user_role, user_oauth
             )
             OUTPUT INSERTED.*
             VALUES (
                 @username, @name, @password, @birthdate,
-                @email, @height, @weight,
-                @objective, 0
+                @email, @picture, @height, @weight,
+                @objective, 0, @oauth
             )
         `
 
@@ -152,24 +158,6 @@ user.findByUsername = async function (usernameParam, result) {
             result("No hay datos del usuario " + usernameParam, null)
         }
 
-    } catch (err) {
-        result(err, null)
-    }
-}
-
-/* <=============================== FIND BY EMAIL ===============================> */
-user.findByEmail = async function (emailParam, result) {
-    try {
-        const pool = await sql.connect(dbConn)
-        const response = await pool.request()
-            .input("email", sql.NVarChar, emailParam)
-            .query("SELECT * FROM Users WHERE user_email = @email")
-
-        if (response.recordset.length > 0) {
-            result(null, response.recordset)
-        } else {
-            result(null, null)
-        }
     } catch (err) {
         result(err, null)
     }

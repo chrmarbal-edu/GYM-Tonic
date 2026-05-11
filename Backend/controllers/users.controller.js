@@ -110,10 +110,15 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             }
 
             // OBJECTIVE
-            if(objective && objective > 0){
+            if(objective !== undefined && objective !== ""){
                 userFounded.user_objective = objective
             }
             
+            // PICTURE
+            if(req.file){
+                userFounded.user_picture = req.file.path.replace(/\\/g, "/")
+            }
+
             // ACTUALIZAMOS USUARIO
             await userModel.updateById(id, userFounded, function(err, datosUsuarioActualizado){
                 if(err){
@@ -143,6 +148,12 @@ exports.register = wrapAsync(async function (req, res, next) {
         next(new AppError("La contraseña debe tener un carácter especial",400))
     } else{
         let newUser = {}
+        
+        // Gestión de la imagen de perfil
+        let userPicture = "public/images/users/default/user.jpg"
+        if(req.file){
+            userPicture = req.file.path.replace(/\\/g, "/")
+        }
 
         newUser = {
             user_username: username,
@@ -152,7 +163,8 @@ exports.register = wrapAsync(async function (req, res, next) {
             user_email: email,
             user_height: height,
             user_weight: weight,
-            user_objective: objective
+            user_objective: objective,
+            user_picture: userPicture
         }
 
         newUser.user_password = await bcrypt.hashPassword(newUser.user_password)

@@ -4,9 +4,19 @@ const router = express.Router()
 const jwtMW = require("../middlewares/jwt.mw")
 const rutasProtegidasMW = require("../middlewares/rutasProtegidas.mw")
 const multer = require("multer")
+const path = require("path")
 
-const storage = multer.memoryStorage()
-const upload = multer({storage: storage})
+// Configuración de Multer para almacenamiento local en disco
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/images/users') // Ruta donde se guardarán las fotos
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname)
+        cb(null, req.body.username + ext)
+    }
+})
+const upload = multer({ storage: storage })
 
 // #region USERS
 
@@ -14,10 +24,10 @@ const upload = multer({storage: storage})
 router.get("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findAllUsers)
 
 // REGISTER
-router.post("/", usersController.register)
+router.post("/", upload.single('image'), usersController.register)
 
 // UPDATE USER BY ID
-router.patch("/:id", jwtMW.authenticate, usersController.updateUser)
+router.patch("/:id", jwtMW.authenticate, upload.single('image'), usersController.updateUser)
 
 // DELETE USER BY ID
 router.delete("/:id", jwtMW.authenticate, usersController.deleteUser)
