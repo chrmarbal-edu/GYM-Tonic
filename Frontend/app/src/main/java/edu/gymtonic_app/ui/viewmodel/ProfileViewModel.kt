@@ -7,7 +7,6 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.repository.GroupRepository
 import edu.gymtonic_app.data.repository.TrainingRepository
-import edu.gymtonic_app.data.repository.WeekRepository
 import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
