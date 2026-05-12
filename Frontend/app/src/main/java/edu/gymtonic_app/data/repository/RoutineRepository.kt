@@ -2,11 +2,12 @@ package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
-import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
-import edu.gymtonic_app.domain.model.routine.RoutineDetail
 import kotlinx.coroutines.flow.Flow
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import retrofit2.Response
 
 class RoutineRepository(
     private val routineRemoteDataSource: RoutineRemoteDataSource,
@@ -89,49 +90,103 @@ class RoutineRepository(
     }
     //endregion
     //region Retrofit
-    private fun routinesById(details: List<RoutineDetailDto>): Map<String, RoutineDetail> {
-        return details.associate { dto ->
-            dto.routineId to dto.toDomain()
+    // region Retrofit
+
+    suspend fun getRoutinesFromApi(): Result<List<RoutineDto>> {
+        return runCatching {
+            unwrapList(
+                response = routineRemoteDataSource.getRoutines(),
+                defaultMessage = "No se pudieron obtener las rutinas"
+            )
         }
     }
 
-    // FALLBACK TEMPORAL: solo si la API falla.
-    suspend fun getRoutineFromMock(routineId: String): RoutineDetail {
-        val byId = routinesById(routineRemoteDataSource.getMockRoutineDetails())
-        val fallbackRoutine = byId[routineId] ?: byId.values.firstOrNull()
-
-        return fallbackRoutine ?: RoutineDetail(
-            id = routineId.ifBlank { "0" },
-            title = "Rutina",
-            exercises = emptyList()
-        )
-    }
-
-    suspend fun getAllRoutinesFromMock(): List<RoutineDetail> {
-        return routinesById(routineRemoteDataSource.getMockRoutineDetails()).values.toList()
-    }
-
-    // Ruta remote-first para listado de rutinas.
-    suspend fun getRoutinesFromApi(): Result<List<RoutineDetail>> {
+    suspend fun getRoutineCategoriesFromApi(): Result<List<TrainingCategoryDto>> {
         return runCatching {
-            val fallbackById = routinesById(routineRemoteDataSource.getMockRoutineDetails())
-            routineRemoteDataSource.getRoutinesFromApi().map { dto ->
-                RoutineDetail(
-                    id = dto.routineId,
-                    title = dto.routineName,
-                    exercises = fallbackById[dto.routineId]?.exercises ?: emptyList()
+            unwrapList(
+                response = routineRemoteDataSource.getRoutineCategories(),
+                defaultMessage = "No se pudieron obtener las categorías de rutinas"
+            )
+        }
+    }
+
+    suspend fun getRoutineByNameFromApi(name: String): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.getRoutineByName(name),
+                defaultMessage = "No se pudo obtener la rutina por nombre: $name"
+            )
+        }
+    }
+
+    suspend fun getRoutineWithExercisesByIdFromApi(routineId: String): Result<RoutineDetailDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.getRoutineWithExercisesById(routineId),
+                defaultMessage = "No se pudo obtener el detalle de la rutina con id=$routineId"
+            )
+        }
+    }
+
+    suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.getRoutineById(routineId),
+                defaultMessage = "No se pudo obtener la rutina con id=$routineId"
+            )
+        }
+    }
+
+    suspend fun createRoutineFromApi(request: Map<String, Any>): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.createRoutine(request),
+                defaultMessage = "No se pudo crear la rutina"
+            )
+        }
+    }
+
+    suspend fun updateRoutineFromApi(
+        routineId: String,
+        request: Map<String, Any?>
+    ): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.updateRoutine(routineId, request),
+                defaultMessage = "No se pudo actualizar la rutina con id=$routineId"
+            )
+        }
+    }
+
+    suspend fun deleteRoutineFromApi(routineId: String): Result<Unit> {
+        return runCatching {
+            val response = routineRemoteDataSource.deleteRoutine(routineId)
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string().orEmpty()
+                throw Exception(
+                    "Error al eliminar rutina (HTTP ${response.code()}): ${response.message()} $errorBody"
                 )
             }
+            Unit
         }
     }
 
-    // Ruta remote-first para detalle por id real de backend.
-    suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDetail> {
-        return runCatching {
-            routineRemoteDataSource.getRoutineByIdFromApi(routineId).toDomain()
-        }.recoverCatching {
-            getRoutineFromMock(routineId)
+// endregion
+
+    private fun <T> unwrapOne(response: Response<T>, defaultMessage: String): T {
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("$defaultMessage (body vacío)")
         }
+        val errorBody = response.errorBody()?.string().orEmpty()
+        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+    }
+
+    private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
+        if (response.isSuccessful) {
+            return response.body() ?: emptyList()
+        }
+        val errorBody = response.errorBody()?.string().orEmpty()
+        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
     }
     //endregion
 }
