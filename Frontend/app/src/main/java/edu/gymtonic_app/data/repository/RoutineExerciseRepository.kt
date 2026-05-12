@@ -5,6 +5,7 @@ import edu.gymtonic_app.data.local.localDatasource.routineExercise.RoutineExerci
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseWithExerciseEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class RoutineExerciseRepository(
     private val routineExerciseLocalDataSource: RoutineExerciseLocalDataSource
@@ -29,17 +30,25 @@ class RoutineExerciseRepository(
         return routineExerciseLocalDataSource.countExercisesInRoutine(routineId)
     }
 
-    suspend fun addExerciseToRoutine(routineId: Int, exerciseId: Int): Result<Long> {
+    suspend fun addExerciseToRoutine(routineId: Int, exercise: ExerciseEntity): Result<Long> {
         return runCatching {
-            val exists = routineExerciseLocalDataSource.isExerciseInRoutine(routineId, exerciseId)
+            val exists = routineExerciseLocalDataSource.isExerciseInRoutine(routineId, exercise.exercise_id)
             if (exists) {
                 throw IllegalArgumentException("El ejercicio ya está en esta rutina")
             }
-            routineExerciseLocalDataSource.linkExerciseToRoutine(
+
+            val insertedId = routineExerciseLocalDataSource.linkExerciseToRoutine(
                 routineId = routineId,
-                exerciseId = exerciseId,
-                reps = "x12"
+                exerciseId = exercise.exercise_id,
+                reps = repsByExerciseType(exercise.exercise_type)
             )
+
+            // Por seguridad extra: Room devuelve -1 cuando IGNORE evita inserción
+            if (insertedId == -1L) {
+                throw IllegalArgumentException("El ejercicio ya está en esta rutina")
+            }
+
+            insertedId
         }
     }
 
@@ -52,7 +61,22 @@ class RoutineExerciseRepository(
                 throw IllegalArgumentException("Debe agregar al menos un ejercicio")
             }
 
-            val exerciseLinks = exercises.map { exercise ->
+            // Quita repetidos dentro del propio payload
+            val uniqueInput = exercises.distinctBy { it.exercise_id }
+
+            // Evita insertar los que ya existen en la rutina
+            val existingIds = routineExerciseLocalDataSource
+                .getExerciseIdsForRoutine(routineId)
+                .first()
+                .toSet()
+
+            val toInsert = uniqueInput.filterNot { it.exercise_id in existingIds }
+
+            if (toInsert.isEmpty()) {
+                throw IllegalArgumentException("Todos los ejercicios seleccionados ya estaban en la rutina")
+            }
+
+            val exerciseLinks = toInsert.map { exercise ->
                 RoutineExerciseInsert(
                     exerciseId = exercise.exercise_id,
                     reps = repsByExerciseType(exercise.exercise_type)

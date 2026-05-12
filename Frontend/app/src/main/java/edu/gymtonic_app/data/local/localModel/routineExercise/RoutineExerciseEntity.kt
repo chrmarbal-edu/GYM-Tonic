@@ -25,7 +25,12 @@ import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
     ],
     indices = [
         Index("routine_x_exercise_routineid"),
-        Index("routine_x_exercise_exerciseid")
+        Index("routine_x_exercise_exerciseid"),
+        // Evita duplicar el mismo ejercicio dentro de la misma rutina
+        Index(
+            value = ["routine_x_exercise_routineid", "routine_x_exercise_exerciseid"],
+            unique = true
+        )
     ]
 )
 data class RoutineExerciseEntity(
