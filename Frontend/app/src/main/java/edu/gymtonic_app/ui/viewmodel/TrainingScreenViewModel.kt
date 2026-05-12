@@ -8,7 +8,6 @@ import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSourc
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.data.repository.TrainingRepository
 import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

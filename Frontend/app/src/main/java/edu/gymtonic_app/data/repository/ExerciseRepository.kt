@@ -2,10 +2,10 @@ package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
-import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
-import edu.gymtonic_app.domain.model.exercise.ExerciseDetail
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import kotlinx.coroutines.flow.Flow
+import retrofit2.Response
 
 class ExerciseRepository(
 	private val exerciseRemoteDataSource: ExerciseRemoteDataSource ,
@@ -30,43 +30,89 @@ class ExerciseRepository(
 	//endregion
 
 	//region Retrofit
-
-	//Metodo para obtener un ejercicio por id del servidor
-	suspend fun getExerciseById(exerciseId: String): Result<ExerciseDetail> {
-		// Devuelve el resultado de la llamada al servidor
+	suspend fun getExercises(): Result<List<ExerciseDto>> {
 		return runCatching {
-			//Si la llamada es exitosa, devuelve el ejercicio
-			exerciseRemoteDataSource.getExerciseById(exerciseId).toDomain(exerciseId)
-		// Si falla, devuelve un fallback
-		}.recoverCatching {
-			buildFallback(exerciseId)
-		}
-	}
-
-	//Metodo de apoyo para fallbacks
-	private fun buildFallback(exerciseId: String): ExerciseDetail {
-		val normalized = exerciseId.lowercase()
-		val inferredName = when {
-			normalized.contains("estocadas") -> "ESTOCADAS"
-			normalized.contains("press") -> "PRESS"
-			normalized.contains("pull") -> "PULL OVER"
-			normalized.contains("remo") -> "REMO"
-			normalized.contains("sentadilla") -> "SENTADILLA"
-			normalized.contains("peso") -> "PESO MUERTO"
-			else -> "EJERCICIO"
-		}
-
-		return ExerciseDetail(
-			id = exerciseId,
-			name = inferredName,
-			durationSeconds = 15,
-			imageKey = "squat",
-			instructions = listOf(
-				"Mantén tecnica controlada durante toda la serie.",
-				"Respira de forma constante y evita compensaciones.",
-				"Ajusta la carga para completar repeticiones con buena forma."
+			unwrapList(
+				response = exerciseRemoteDataSource.getExercises(),
+				defaultMessage = "No se pudieron obtener los ejercicios"
 			)
-		)
+		}
 	}
-	//endregion
+
+	suspend fun getExercisesByType(type: String): Result<List<ExerciseDto>> {
+		return runCatching {
+			unwrapList(
+				response = exerciseRemoteDataSource.getExercisesByType(type),
+				defaultMessage = "No se pudieron obtener los ejercicios del tipo $type"
+			)
+		}
+	}
+
+	suspend fun getExerciseById(exerciseId: String): Result<ExerciseDto> {
+		return runCatching {
+			unwrapOne(
+				response = exerciseRemoteDataSource.getExerciseById(exerciseId),
+				defaultMessage = "No se pudo obtener el ejercicio con id=$exerciseId"
+			)
+		}
+	}
+
+	suspend fun createExercise(request: Map<String, Any>): Result<Unit> {
+		return runCatching {
+			val response = exerciseRemoteDataSource.createExercise(request)
+			if (!response.isSuccessful) {
+				val errorBody = response.errorBody()?.string().orEmpty()
+				throw Exception(
+					"Error al crear ejercicio (HTTP ${response.code()}): ${response.message()} $errorBody"
+				)
+			}
+			Unit
+		}
+	}
+
+	suspend fun updateExercise(id: String, request: Map<String, Any?>): Result<Unit> {
+		return runCatching {
+			val response = exerciseRemoteDataSource.updateExercise(id, request)
+			if (!response.isSuccessful) {
+				val errorBody = response.errorBody()?.string().orEmpty()
+				throw Exception(
+					"Error al actualizar ejercicio (HTTP ${response.code()}): ${response.message()} $errorBody"
+				)
+			}
+			Unit
+		}
+	}
+
+	suspend fun deleteExercise(id: String): Result<Unit> {
+		return runCatching {
+			val response = exerciseRemoteDataSource.deleteExercise(id)
+			if (!response.isSuccessful) {
+				val errorBody = response.errorBody()?.string().orEmpty()
+				throw Exception(
+					"Error al eliminar ejercicio (HTTP ${response.code()}): ${response.message()} $errorBody"
+				)
+			}
+			Unit
+		}
+	}
+
+// endregion
+
+	private fun <T> unwrapOne(response: Response<T>, defaultMessage: String): T {
+		if (response.isSuccessful) {
+			return response.body() ?: throw Exception("$defaultMessage (body vacío)")
+		}
+		val errorBody = response.errorBody()?.string().orEmpty()
+		throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+	}
+
+	private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
+		if (response.isSuccessful) {
+			return response.body() ?: emptyList()
+		}
+		val errorBody = response.errorBody()?.string().orEmpty()
+		throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+
+		//endregion
+	}
 }
