@@ -3,10 +3,15 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.local.GymTonicDatabase
+import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.repository.GroupRepository
-import edu.gymtonic_app.ui.mapper.ImageResourceMapper
+import edu.gymtonic_app.data.repository.RoutineRepository
+import edu.gymtonic_app.data.repository.UserMissionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +21,7 @@ import kotlinx.coroutines.launch
 data class ProfileRoutineUi(
 	val id: String,
 	val title: String,
-	val imageRes: Int
+	val imageUrl: String  // URL desde API, no recurso local
 )
 
 data class ProfileGroupUi(
@@ -39,15 +44,31 @@ sealed class ProfileUiState {
 }
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
-	private val weekRepository = WeekRepository()
-	private val trainingRepository = TrainingRepository()
-	private val groupRepository = GroupRepository()
-	private val sessionManager = SessionManager(application.sessionDataStore)
 
+	// region Repositorios y DataSources
+	private val userMissionsRemoteDataSource : UserMissionsRemoteDatasource
+	private val userMissionsRepository : UserMissionsRepository
+	private val routineRepository: RoutineRepository
+	private val routineRemoteDataSource: RoutineRemoteDataSource
+
+	private val routineLocalDataSource: RoutineLocalDataSource
+	private val groupRepository = GroupRepository()  // Si tiene constructor sin params o DI interno
+	private val sessionManager = SessionManager(application.sessionDataStore)
+	//endregion
 	private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
 	val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
 	init {
+		val database = GymTonicDatabase.getInstance(application)
+		val dao = database.routineDao()
+
+		userMissionsRemoteDataSource = UserMissionsRemoteDatasource()
+		userMissionsRepository = UserMissionsRepository(userMissionsRemoteDataSource)
+
+		routineRemoteDataSource = RoutineRemoteDataSource()
+		routineLocalDataSource = RoutineLocalDataSource(dao)
+		routineRepository = RoutineRepository(routineRemoteDataSource, routineLocalDataSource)
+
 		loadProfile()
 	}
 
@@ -58,11 +79,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val session = sessionManager.sessionFlow.first()
 			val username = session.username ?: "Usuario"
 
-			val weekDays = weekRepository.getWeeklyCalendarDays().getOrElse { emptyList() }
+			// Obtener días de la semana del usuario para calcular streak
+			val weekDaysResult = userMissionsRepository.getWeeklyCalendarDays()
+			val weekDays = weekDaysResult.getOrElse { emptyList() }
 			val streakDone = weekDays.take(7).count { it.didWorkout }
 			val streakLabel = "$streakDone/7 Logrados"
 
-			val routinesResult = trainingRepository.getTrainingCategories()
+			// Obtener categorías de rutinas desde API
+			val routinesResult = routineRepository.getRoutineCategoriesFromApi()
 			val groupsResult = groupRepository.getUserGroups(session.userId)
 
 			if (routinesResult.isFailure || groupsResult.isFailure) {
@@ -74,6 +98,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 				return@launch
 			}
 
+			// Mapear rutinas desde categorías
 			val category = routinesResult.getOrNull().orEmpty().firstOrNull { it.id == "recent" }
 				?: routinesResult.getOrNull().orEmpty().firstOrNull()
 
@@ -81,10 +106,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 				ProfileRoutineUi(
 					id = routine.id,
 					title = routine.title,
-					imageRes = ImageResourceMapper.fromKey(routine.imageKey)
+					imageUrl = routine.imageKey  // Directo de API, sin mapper
 				)
 			}
 
+			// Mapear grupos
 			val groups = groupsResult.getOrNull().orEmpty().map {
 				ProfileGroupUi(
 					id = it.id,
@@ -104,4 +130,3 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 		}
 	}
 }
-
