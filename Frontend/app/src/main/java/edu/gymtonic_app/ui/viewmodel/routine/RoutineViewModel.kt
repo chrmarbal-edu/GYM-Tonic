@@ -1,4 +1,4 @@
-package edu.gymtonic_app.ui.viewmodel
+package edu.gymtonic_app.ui.viewmodel.routine
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -10,10 +10,10 @@ import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseWithExerciseEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.repository.RoutineExerciseRepository
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.domain.model.routine.RoutineDetail
-import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ data class RoutineExerciseUi(
     val id: String,
     val name: String,
     val reps: String,
-    val imageRes: Int
+    val imageKey: String? = null
 )
 
 data class RoutineDetailUi(
@@ -58,8 +58,8 @@ sealed class UserRoutinesUiState {
 
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
-    private lateinit var routineRepository: RoutineRepository
-    private lateinit var routineExerciseRepository: RoutineExerciseRepository
+    private  var routineRepository: RoutineRepository
+    private  var routineExerciseRepository: RoutineExerciseRepository
 
     private val _catalogUiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
     val catalogUiState: StateFlow<RoutineCatalogUiState> = _catalogUiState.asStateFlow()
@@ -135,15 +135,14 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                 return@launch
             }
 
-            routineRepository.getRoutineByIdFromApi(routineId)
-                .onSuccess { routineData ->
-                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(routineData))
+            // API detail: pedir detalle con ejercicios
+            routineRepository.getRoutineWithExercisesByIdFromApi(routineId)
+                .onSuccess { routineDetailDto ->
+                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDetailDtoToUi(routineDetailDto))
                 }
                 .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(routineId))
                     _catalogUiState.value = RoutineCatalogUiState.Error(
-                        message = error.message ?: "No se pudo cargar la rutina",
-                        fallbackRoutine = fallback
+                        message = error.message ?: "No se pudo cargar la rutina"
                     )
                 }
         }
@@ -156,14 +155,17 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             routineRepository.getRoutinesFromApi()
                 .onSuccess { routinesData ->
                     val firstRoutineData = routinesData.firstOrNull()
-                        ?: routineRepository.getRoutineFromMock("")
-                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(firstRoutineData))
+                    if (firstRoutineData != null) {
+                        _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDtoToUi(firstRoutineData))
+                    } else {
+                        _catalogUiState.value = RoutineCatalogUiState.Error(
+                            message = "No hay rutinas disponibles"
+                        )
+                    }
                 }
                 .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(""))
                     _catalogUiState.value = RoutineCatalogUiState.Error(
-                        message = error.message ?: "No se pudo cargar el catalogo",
-                        fallbackRoutine = fallback
+                        message = error.message ?: "No se pudo cargar el catalogo"
                     )
                 }
         }
@@ -267,24 +269,32 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                     id = item.exercise.exercise_id.toString(),
                     name = item.exercise.exercise_name,
                     reps = item.reps,
-                    imageRes = ImageResourceMapper.fromKey(item.exercise.exercise_image)
+                    imageKey = item.exercise.exercise_image
                 )
             }
         )
     }
 
-    private fun mapRoutineDataToUi(data: RoutineDetail): RoutineDetailUi {
+    private fun mapRoutineDetailDtoToUi(data: RoutineDetailDto): RoutineDetailUi {
         return RoutineDetailUi(
-            id = data.id,
-            title = data.title,
-            exercises = data.exercises.map { exercise ->
+            id = data.routineId,
+            title = data.routineName,
+            exercises = data.safeExercises().map { exercise ->
                 RoutineExerciseUi(
-                    id = exercise.id,
-                    name = exercise.name,
-                    reps = exercise.reps,
-                    imageRes = ImageResourceMapper.fromKey(exercise.imageKey)
+                    id = exercise.exerciseId ?: "",
+                    name = exercise.resolvedName(),
+                    reps = exercise.resolvedReps(),
+                    imageKey = exercise.resolvedImageKey()
                 )
             }
+        )
+    }
+
+    private fun mapRoutineDtoToUi(data: RoutineDto): RoutineDetailUi {
+        return RoutineDetailUi(
+            id = data.routineId,
+            title = data.routineName,
+            exercises = emptyList()
         )
     }
 }

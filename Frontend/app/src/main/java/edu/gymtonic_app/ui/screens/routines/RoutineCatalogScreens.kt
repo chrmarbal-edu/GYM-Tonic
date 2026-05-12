@@ -17,16 +17,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
-import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
-import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogUiState
 import android.widget.Toast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
 
 @Composable
 fun RoutineCatalogScreen(

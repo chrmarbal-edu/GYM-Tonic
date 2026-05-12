@@ -51,9 +51,9 @@ import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
-import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

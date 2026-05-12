@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
-import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineExerciseUi
 
 @Composable
 fun RoutineTemplateScreen(

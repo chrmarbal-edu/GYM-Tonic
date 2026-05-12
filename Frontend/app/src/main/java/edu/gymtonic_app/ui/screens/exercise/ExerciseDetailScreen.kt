@@ -38,10 +38,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
-import edu.gymtonic_app.ui.viewmodel.ExerciseUiState
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
-import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseUiState
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
 
 @Composable
 fun ExerciseDetailScreen(

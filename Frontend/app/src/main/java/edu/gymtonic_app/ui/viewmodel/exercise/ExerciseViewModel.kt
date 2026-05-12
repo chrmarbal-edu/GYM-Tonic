@@ -1,4 +1,4 @@
-package edu.gymtonic_app.ui.viewmodel
+package edu.gymtonic_app.ui.viewmodel.exercise
 
 import android.app.Application
 import android.util.Log
