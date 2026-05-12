@@ -1,7 +1,6 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.mapper.toDomain
-import edu.gymtonic_app.data.remote.remoteDatasource.TrainingRemoteDataSource
 import edu.gymtonic_app.domain.model.training.TrainingCategory
 
 class TrainingRepository(

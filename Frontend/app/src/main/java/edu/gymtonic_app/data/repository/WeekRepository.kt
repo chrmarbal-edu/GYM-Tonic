@@ -1,6 +1,5 @@
 package edu.gymtonic_app.data.repository
 
-import edu.gymtonic_app.data.remote.remoteDatasource.WeekRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.week.WeeklyCalendarDayDto
 import edu.gymtonic_app.data.remote.remoteModel.week.WeeklyGoalDto
 
