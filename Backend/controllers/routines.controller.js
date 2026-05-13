@@ -248,7 +248,13 @@ exports.updateRoutineCSR = wrapAsync(async function (req,res, next) {
         }
 
         let updateRoutine = {            
-            routine_name: name || completeRoutine.routine_name
+            routine_name: name || completeRoutine.routine_name,
+            routine_is_group_routine:
+                completeRoutine.routine_is_group_routine !== undefined &&
+                completeRoutine.routine_is_group_routine !== null
+                    ? completeRoutine.routine_is_group_routine
+                    : 0,
+            routine_groupid: completeRoutine.routine_groupid ?? null
         }
 
         // La actualización DEBE estar dentro del callback de findById

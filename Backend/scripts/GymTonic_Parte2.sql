@@ -43,6 +43,8 @@ GO
 CREATE TABLE dbo.Routines (
     routine_id   INT IDENTITY(1,1) NOT NULL,
     routine_name NVARCHAR(255)     NOT NULL,
+    routine_is_group_routine INT NOT NULL CONSTRAINT DF_Routines_is_group_routine DEFAULT (0),
+    routine_groupid INT NULL,
     CONSTRAINT PK_Routines PRIMARY KEY (routine_id)
 );
 GO
@@ -67,6 +69,10 @@ CREATE TABLE dbo.Groups (
     CONSTRAINT PK_Groups PRIMARY KEY (group_id),
     CONSTRAINT FK_Groups_Creator FOREIGN KEY (group_creator_id) REFERENCES dbo.Users(user_id)
 );
+GO
+
+ALTER TABLE dbo.Routines ADD CONSTRAINT FK_Routines_Group
+    FOREIGN KEY (routine_groupid) REFERENCES dbo.Groups (group_id) ON DELETE SET NULL;
 GO
 
 /* ============================================================

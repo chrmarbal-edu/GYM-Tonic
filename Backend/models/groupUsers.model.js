@@ -3,86 +3,98 @@ const dbConn = require("../utils/mssql.config")
 const sql = require("mssql")
 
 /* <=============================== CONSTRUCTOR ===============================> */
-let groupUser = function(groupUser){
-    this.user_x_group_id = groupUser.user_x_group_id // AUTO INCREMENTAL
-    this.user_x_group_userid = groupUser.user_x_group_userid
-    this.user_x_group_groupid = groupUser.user_x_group_groupid
-    this.user_x_group_range = groupUser.user_x_group_range
+let groupUser = function (groupUserRow) {
+    this.Group_x_user_id = groupUserRow.Group_x_user_id
+    this.Group_x_user_groupid = groupUserRow.Group_x_user_groupid
+    this.Group_x_user_userid = groupUserRow.Group_x_user_userid
+    this.Group_x_user_range = groupUserRow.Group_x_user_range
 }
 
-/* <=============================== FIND ALL ===============================> */
-groupUser.findAll = async (result) => {
+/* <=============================== FIND BY GROUP ID ===============================> */
+groupUser.findByGroupId = async function (groupId, result) {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request().query("SELECT * FROM User_X_Group")
+        const response = await pool
+            .request()
+            .input("groupId", sql.Int, groupId)
+            .query(
+                `SELECT * FROM Group_x_user WHERE Group_x_user_groupid = @groupId`
+            )
+
         result(null, response.recordset)
-        
     } catch (err) {
         result(err, null)
     }
 }
 
-/* <=============================== FIND BY ID ===============================> */
-groupUser.findById = async function (id, result) {
+/* <=============================== FIND MEMBERSHIP ===============================> */
+groupUser.findMembership = async function (groupId, userId, result) {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request()
-            .input("id", sql.Int, id)
-            .query("SELECT * FROM User_X_Group WHERE user_x_group_id = @id")
+        const response = await pool
+            .request()
+            .input("groupId", sql.Int, groupId)
+            .input("userId", sql.Int, userId)
+            .query(
+                `SELECT TOP 1 * FROM Group_x_user
+                 WHERE Group_x_user_groupid = @groupId AND Group_x_user_userid = @userId`
+            )
 
         if (response.recordset.length > 0) {
             result(null, response.recordset[0])
         } else {
-            result({ err: "No hay datos" }, null)
+            result(null, null)
         }
-
-        
     } catch (err) {
         result(err, null)
-        
     }
 }
 
 /* <=============================== CREATE ===============================> */
-groupUser.create = async (newGroupUser, result) => {
+groupUser.create = async (row, result) => {
     try {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("id", sql.Int, id)
-        request.input("userId", sql.Int, newGroupUser.user_x_group_userid)
-        request.input("groupId", sql.Int, newGroupUser.user_x_group_groupid)
-        request.input("range", sql.Int, newGroupUser.user_x_group_range)
+        request.input("groupId", sql.Int, row.Group_x_user_groupid)
+        request.input("userId", sql.Int, row.Group_x_user_userid)
+        request.input("range", sql.Int, row.Group_x_user_range ?? 0)
 
         const sqlQuery = `
-            INSERT INTO User_X_Group (
-                user_x_group_userid, user_x_group_groupid, user_x_group_range
+            INSERT INTO Group_x_user (
+                Group_x_user_groupid, Group_x_user_userid, Group_x_user_range
             )
+            OUTPUT INSERTED.*
             VALUES (
-                @userId, @groupId, @range
+                @groupId, @userId, @range
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
-        
     }
 }
 
-/* <=============================== DELETE ===============================> */
-groupUser.delete = async function (id, result) {
+/* <=============================== DELETE BY GROUP AND USER ===============================> */
+groupUser.deleteByGroupAndUser = async function (groupId, userId, result) {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request()
-            .input("id", sql.Int, id)
-            .query("DELETE FROM User_X_Group WHERE user_x_group_id = @id")
+        const response = await pool
+            .request()
+            .input("groupId", sql.Int, groupId)
+            .input("userId", sql.Int, userId)
+            .query(
+                `DELETE FROM Group_x_user
+                 WHERE Group_x_user_groupid = @groupId AND Group_x_user_userid = @userId`
+            )
 
-        result(null, response)
-        
+        result(null, response.rowsAffected[0] || 0)
     } catch (err) {
         result(err, null)
-        
     }
 }
 
 /* <======- EXPORTAMOS EL MODELO -======> */
-module.exports = routine
+module.exports = groupUser

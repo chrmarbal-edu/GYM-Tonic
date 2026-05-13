@@ -18,4 +18,10 @@ router.delete("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, groupC
 // CREATE GROUP - CSR
 router.post("/new", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, groupController.createGroupCSR)
 
+// Miembros y rutinas de grupo (solo creador del grupo; JWT requerido)
+router.post("/:id/members", jwtMW.authenticate, groupController.addUserToGroupCSR)
+router.delete("/:id/members/:userId", jwtMW.authenticate, groupController.removeUserFromGroupCSR)
+router.post("/:id/routines", jwtMW.authenticate, groupController.addGroupRoutineCSR)
+router.delete("/:id/routines/:routineId", jwtMW.authenticate, groupController.deleteGroupRoutineCSR)
+
 module.exports = router

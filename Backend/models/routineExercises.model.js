@@ -48,7 +48,6 @@ routineExercise.create = async (newRoutineExercise, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("id", sql.Int, id)
         request.input("routineId", sql.Int, newRoutineExercise.routine_x_exercise_routineid)
         request.input("exerciseId", sql.Int, newRoutineExercise.routine_x_exercise_exerciseid)
 
@@ -56,13 +55,16 @@ routineExercise.create = async (newRoutineExercise, result) => {
             INSERT INTO Routine_X_Exercise (
                 routine_x_exercise_routineid, routine_x_exercise_exerciseid
             )
+            OUTPUT INSERTED.*
             VALUES (
                 @routineId, @exerciseId
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
-        
     }
 }
 
@@ -82,5 +84,21 @@ routineExercise.delete = async function (id, result) {
     }
 }
 
+routineExercise.deleteByRoutineId = async function (routineId, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool
+            .request()
+            .input("routineId", sql.Int, routineId)
+            .query(
+                "DELETE FROM Routine_X_Exercise WHERE routine_x_exercise_routineid = @routineId"
+            )
+
+        result(null, response.rowsAffected[0] || 0)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <======- EXPORTAMOS EL MODELO -======> */
-module.exports = routine
+module.exports = routineExercise

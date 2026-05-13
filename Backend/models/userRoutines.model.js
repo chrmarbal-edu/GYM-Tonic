@@ -3,10 +3,10 @@ const dbConn = require("../utils/mssql.config")
 const sql = require("mssql")
 
 /* <=============================== CONSTRUCTOR ===============================> */
-let userRoutine = function(userRoutine){
-    this.user_x_routine_id = userRoutine.user_x_routine_id // AUTO INCREMENTAL
-    this.user_x_routine_userid = userRoutine.user_x_routine_userid 
-    this.user_x_routine_routineid = userRoutine.user_x_routine_routineid
+let userRoutine = function (userRoutineRow) {
+    this.user_x_routine_id = userRoutineRow.user_x_routine_id
+    this.user_x_routine_userid = userRoutineRow.user_x_routine_userid
+    this.user_x_routine_routineid = userRoutineRow.user_x_routine_routineid
 }
 
 /* <=============================== FIND ALL ===============================> */
@@ -15,7 +15,6 @@ userRoutine.findAll = async (result) => {
         const pool = await sql.connect(dbConn)
         const response = await pool.request().query("SELECT * FROM User_X_Routine")
         result(null, response.recordset)
-        
     } catch (err) {
         result(err, null)
     }
@@ -25,7 +24,8 @@ userRoutine.findAll = async (result) => {
 userRoutine.findById = async function (id, result) {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request()
+        const response = await pool
+            .request()
             .input("id", sql.Int, id)
             .query("SELECT * FROM User_X_Routine WHERE user_x_routine_id = @id")
 
@@ -34,11 +34,8 @@ userRoutine.findById = async function (id, result) {
         } else {
             result({ err: "No hay datos" }, null)
         }
-
-        
     } catch (err) {
         result(err, null)
-        
     }
 }
 
@@ -48,39 +45,63 @@ userRoutine.create = async (newUserRoutine, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("id", sql.Int, id)
-        request.input("userId", sql.Int, newUserRoutine.routine_x_exercise_userid)
+        request.input("userId", sql.Int, newUserRoutine.user_x_routine_userid)
         request.input("routineId", sql.Int, newUserRoutine.user_x_routine_routineid)
 
         const sqlQuery = `
             INSERT INTO User_X_Routine (
                 user_x_routine_userid, user_x_routine_routineid
             )
+            OUTPUT INSERTED.*
             VALUES (
                 @userId, @routineId
             )
         `
+
+        const response = await request.query(sqlQuery)
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
-        
     }
 }
 
-/* <=============================== DELETE ===============================> */
-routineExercise.delete = async function (id, result) {
+/* <=============================== DELETE BY ID ===============================> */
+userRoutine.deleteById = async function (id, result) {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request()
+        const response = await pool
+            .request()
             .input("id", sql.Int, id)
             .query("DELETE FROM User_X_Routine WHERE user_x_routine_id = @id")
 
-        result(null, response)
-        
+        result(null, response.rowsAffected[0] || 0)
     } catch (err) {
         result(err, null)
-        
+    }
+}
+
+/* <=============================== DELETE LINKS FOR ROUTINE IN GROUP ===============================> */
+userRoutine.deleteByRoutineForGroupMembers = async function (groupId, routineId, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool
+            .request()
+            .input("groupId", sql.Int, groupId)
+            .input("routineId", sql.Int, routineId)
+            .query(`
+                DELETE ur
+                FROM User_X_Routine ur
+                INNER JOIN Group_x_user gx
+                    ON gx.Group_x_user_userid = ur.user_x_routine_userid
+                    AND gx.Group_x_user_groupid = @groupId
+                WHERE ur.user_x_routine_routineid = @routineId
+            `)
+
+        result(null, response.rowsAffected[0] || 0)
+    } catch (err) {
+        result(err, null)
     }
 }
 
 /* <======- EXPORTAMOS EL MODELO -======> */
-module.exports = routine
+module.exports = userRoutine

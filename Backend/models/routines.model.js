@@ -3,9 +3,11 @@ const dbConn = require("../utils/mssql.config")
 const sql = require("mssql")
 
 /* <=============================== CONSTRUCTOR ===============================> */
-let routine = function(routine){
-    this.routine_id = routine.routine_id // AUTO INCREMENTAL
-    this.routine_name = routine.routine_name
+let routine = function (routineRow) {
+    this.routine_id = routineRow.routine_id
+    this.routine_name = routineRow.routine_name
+    this.routine_is_group_routine = routineRow.routine_is_group_routine
+    this.routine_groupid = routineRow.routine_groupid
 }
 
 const normalizeRoutineNameOrSlug = (value = "") => {
@@ -52,6 +54,8 @@ routine.findAllWithExerciseSummary = async (result) => {
             SELECT
                 r.routine_id,
                 r.routine_name,
+                r.routine_is_group_routine,
+                r.routine_groupid,
                 COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
                 ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
                 ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
@@ -62,7 +66,7 @@ routine.findAllWithExerciseSummary = async (result) => {
                 ON r.routine_id = rxe.routine_x_exercise_routineid
             LEFT JOIN Exercises e
                 ON rxe.routine_x_exercise_exerciseid = e.exercise_id
-            GROUP BY r.routine_id, r.routine_name
+            GROUP BY r.routine_id, r.routine_name, r.routine_is_group_routine, r.routine_groupid
             ORDER BY r.routine_id DESC
         `)
 
@@ -102,6 +106,8 @@ routine.findByIdWithExercises = async function (id, result) {
                 SELECT
                     r.routine_id,
                     r.routine_name,
+                    r.routine_is_group_routine,
+                    r.routine_groupid,
                     e.exercise_id,
                     e.exercise_name,
                     e.exercise_description,
@@ -123,6 +129,8 @@ routine.findByIdWithExercises = async function (id, result) {
         const routineWithExercises = {
             routine_id: String(response.recordset[0].routine_id),
             routine_name: response.recordset[0].routine_name,
+            routine_is_group_routine: response.recordset[0].routine_is_group_routine,
+            routine_groupid: response.recordset[0].routine_groupid,
             exercises: []
         }
 
@@ -179,10 +187,16 @@ routine.updateById = async (id, updateRoutine, result) => {
         const request = pool.request()
         request.input("id", sql.Int, id)
         request.input("name", sql.VarChar, updateRoutine.routine_name)
+        const rawIs = updateRoutine.routine_is_group_routine
+        const isGroup = rawIs === 1 || rawIs === true ? 1 : 0
+        request.input("isGroup", sql.Int, isGroup)
+        request.input("groupId", sql.Int, updateRoutine.routine_groupid ?? null)
 
         const sqlQuery = `
             UPDATE Routines SET
-                routine_name = @name
+                routine_name = @name,
+                routine_is_group_routine = @isGroup,
+                routine_groupid = CASE WHEN @isGroup = 1 THEN @groupId ELSE NULL END
             WHERE routine_id = @id
         `
 
@@ -200,24 +214,36 @@ routine.create = async (newRoutine, result) => {
     try {
         const pool = await sql.connect(dbConn)
 
+        const routineName = newRoutine.routine_name ?? newRoutine.name
+        const isGroup =
+            newRoutine.routine_is_group_routine === 1 ||
+            newRoutine.routine_is_group_routine === true
+                ? 1
+                : 0
+        const groupId =
+            isGroup === 1 && newRoutine.routine_groupid != null
+                ? newRoutine.routine_groupid
+                : null
+
         const request = pool.request()
-        request.input("name", sql.NVarChar, newRoutine.routine_name)
+        request.input("name", sql.NVarChar, routineName)
+        request.input("isGroup", sql.Int, isGroup)
+        request.input("groupId", sql.Int, groupId)
 
         const sqlQuery = `
             INSERT INTO Routines (
-                routine_name
+                routine_name, routine_is_group_routine, routine_groupid
             )
+            OUTPUT INSERTED.*
             VALUES (
-                @name
+                @name, @isGroup, @groupId
             )
         `
 
         const response = await request.query(sqlQuery)
-        result(null, response)
-
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
-        
     }
 }
 
