@@ -8,7 +8,6 @@ import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSourc
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +18,7 @@ import kotlinx.coroutines.launch
 data class TrainingRoutineUi(
     val id: String,
     val title: String,
-    val imageRes: Int,
+    val imageKey: String? = null,
     val isLocal: Boolean
 )
 
@@ -36,7 +35,6 @@ data class TrainingUiState(
 )
 
 class TrainingScreenViewModel(application: Application) : AndroidViewModel(application) {
-    private val trainingRepository: TrainingRepository
     private val routineRepository: RoutineRepository
 
     private val _uiState = MutableStateFlow(TrainingUiState())
@@ -46,8 +44,6 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
     private val _userRoutineCategory = MutableStateFlow<TrainingCategoryUi?>(null)
 
     init {
-        trainingRepository = TrainingRepository()
-
         val database = GymTonicDatabase.getInstance(application)
         val routineDao = database.routineDao()
         val routineLocalDataSource = RoutineLocalDataSource(routineDao)
@@ -70,7 +66,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
 
     private fun loadCategories() {
         viewModelScope.launch {
-            trainingRepository.getTrainingCategories()
+            routineRepository.getRoutineCategoriesFromApi()
                 .onSuccess { remoteCategories ->
                     val mappedRemoteCategories = remoteCategories.map { category ->
                         TrainingCategoryUi(
@@ -80,7 +76,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                                 TrainingRoutineUi(
                                     id = routine.id,
                                     title = routine.title,
-                                    imageRes = ImageResourceMapper.fromKey(routine.imageKey),
+                                    imageKey = routine.imageKey,
                                     isLocal = false
                                 )
                             }
@@ -120,7 +116,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                 TrainingRoutineUi(
                     id = routine.routine_id.toString(),
                     title = routine.routine_name,
-                    imageRes = ImageResourceMapper.fromKey(routine.imageKey),
+                    imageKey = routine.imageKey,
                     isLocal = true
                 )
             }
