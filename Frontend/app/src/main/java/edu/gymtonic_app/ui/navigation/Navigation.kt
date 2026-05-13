@@ -190,7 +190,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
             ) {
                 TrainingScreen(
                     onSelect = { routineId, isLocal ->
-                        navController.navigate(Routes.routine(routineId, isLocal)) },
+                        navController.navigate(Routes.routine(routineId.toString(), isLocal)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
                     isRefreshing = trainingUiState.value.isRefreshing,
@@ -263,7 +263,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal,
                 onOpenWeek = { navController.navigate(Routes.WEEK) },
                 onOpenRoutine = { routineId ->
-                    navController.navigate(Routes.routine(routineId, isLocal = false))
+                    navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
                 onLogout = {
                     homeViewModel.logout(

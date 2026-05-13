@@ -20,7 +20,7 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun getMissionById(id: String): Result<MissionDto> {
+    suspend fun getMissionById(id: Int): Result<MissionDto> {
         return runCatching {
             unwrapOne(
                 response = userMissionsRemoteDataSource.getMissionById(id),
@@ -40,7 +40,7 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun getUserMissionByUserId(userId: String): Result<List<UserMissionDto>> {
+    suspend fun getUserMissionByUserId(userId: Int): Result<List<UserMissionDto>> {
         return runCatching {
             unwrapList(
                 response = userMissionsRemoteDataSource.getUserMissionByUserId(userId),
@@ -49,7 +49,7 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun getUserMissionByMissionId(missionId: String): Result<List<UserMissionDto>> {
+    suspend fun getUserMissionByMissionId(missionId: Int): Result<List<UserMissionDto>> {
         return runCatching {
             unwrapList(
                 response = userMissionsRemoteDataSource.getUserMissionByMissionId(missionId),
@@ -58,7 +58,7 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun getUserMissionById(id: String): Result<UserMissionDto> {
+    suspend fun getUserMissionById(id: Int): Result<UserMissionDto> {
         return runCatching {
             unwrapOne(
                 response = userMissionsRemoteDataSource.getUserMissionById(id),
@@ -76,7 +76,7 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun updateUserMission(id: String, request: Map<String, Any?>): Result<UserMissionDto> {
+    suspend fun updateUserMission(id: Int, request: Map<String, Any?>): Result<UserMissionDto> {
         return runCatching {
             unwrapOne(
                 response = userMissionsRemoteDataSource.updateUserMission(id, request),
@@ -85,7 +85,7 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun deleteUserMission(id: String): Result<Unit> {
+    suspend fun deleteUserMission(id: Int): Result<Unit> {
         return runCatching {
             val response = userMissionsRemoteDataSource.deleteUserMission(id)
             if (!response.isSuccessful) {

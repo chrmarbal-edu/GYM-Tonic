@@ -6,13 +6,13 @@ class FriendRequestRemoteDataSource {
     private val api = RetrofitClient.apiService
     suspend fun getFriendRequests() = api.getFriendRequests()
 
-    suspend fun getFriendRequestById( id: String) = api.getFriendRequestById(id)
+    suspend fun getFriendRequestById( id: Int) = api.getFriendRequestById(id)
 
     suspend fun createFriendRequest(request: Map<String, Any>) = api.createFriendRequest(request)
 
-    suspend fun acceptFriendRequest( id: String)= api.acceptFriendRequest(id)
+    suspend fun acceptFriendRequest( id: Int)= api.acceptFriendRequest(id)
 
-    suspend fun rejectFriendRequest( id: String) = api.rejectFriendRequest(id)
+    suspend fun rejectFriendRequest( id: Int) = api.rejectFriendRequest(id)
 
-    suspend fun deleteFriendRequest( id: String) = api.deleteFriendRequest(id)
+    suspend fun deleteFriendRequest( id: Int) = api.deleteFriendRequest(id)
 }

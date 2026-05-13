@@ -51,10 +51,10 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
                 if(response.token != null && user != null){
                     sessionManager.saveSession(
                         token = response.token,
-                        userId = user.id,
-                        username = user.username,
-                        email = user.email,
-                        role = user.role
+                        userId = user.userId,
+                        username = user.userUsername,
+                        email = user.userEmail,
+                        role = user.userRole
                     )
                     _registerState.value = RegisterState.Success(response)
                 } else {

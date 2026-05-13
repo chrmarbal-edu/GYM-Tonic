@@ -19,6 +19,10 @@ val apiBaseUrl = (localProperties.getProperty("API_BASE_URL")
     ?: project.findProperty("API_BASE_URL") as String?)
     ?: "http://10.0.2.2:3010/api/v1/"
 
+val backendBaseUrl = (localProperties.getProperty("BACKEND_BASE_URL")?.trim()?.removeSurrounding("\"")
+    ?: project.findProperty("BACKEND_BASE_URL") as String?)
+    ?: "http://10.0.2.2:3010/"
+
 android {
     namespace = "edu.gymtonic_app"
     compileSdk = 36
@@ -30,7 +34,8 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        buildConfigField("String", "BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -103,5 +108,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     // DataStore Preferences
-    implementation("androidx.datastore:datastore-preferences:1.2.0")
+    implementation(libs.androidx.datastore.preferences)
+
+    // Coil para carga de imágenes desde URL
+    implementation(libs.coil.compose)
+
+    // Media3 para reproducción de vídeo (ExoPlayer)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
 }

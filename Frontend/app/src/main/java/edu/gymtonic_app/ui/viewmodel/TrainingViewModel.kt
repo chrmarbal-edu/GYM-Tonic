@@ -1,12 +1,15 @@
 package edu.gymtonic_app.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.local.GymTonicDatabase
 import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.repository.RoutineRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,21 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class TrainingRoutineUi(
-    val id: String,
-    val title: String,
-    val imageKey: String? = null,
-    val isLocal: Boolean
-)
-
-data class TrainingCategoryUi(
-    val id: String,
-    val title: String,
-    val routines: List<TrainingRoutineUi>
-)
-
 data class TrainingUiState(
-    val categories: List<TrainingCategoryUi> = emptyList(),
+    val categories: List<TrainingCategoryDto> = emptyList(),
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null
 )
@@ -40,8 +30,8 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
     private val _uiState = MutableStateFlow(TrainingUiState())
     val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
 
-    private val _remoteCategories = MutableStateFlow<List<TrainingCategoryUi>>(emptyList())
-    private val _userRoutineCategory = MutableStateFlow<TrainingCategoryUi?>(null)
+    private val _remoteCategories = MutableStateFlow<List<TrainingCategoryDto>>(emptyList())
+    private val _userRoutineCategory = MutableStateFlow<TrainingCategoryDto?>(null)
 
     init {
         val database = GymTonicDatabase.getInstance(application)
@@ -68,22 +58,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             routineRepository.getRoutineCategoriesFromApi()
                 .onSuccess { remoteCategories ->
-                    val mappedRemoteCategories = remoteCategories.map { category ->
-                        TrainingCategoryUi(
-                            id = category.id,
-                            title = category.title,
-                            routines = category.routines.map { routine ->
-                                TrainingRoutineUi(
-                                    id = routine.id,
-                                    title = routine.title,
-                                    imageKey = routine.imageKey,
-                                    isLocal = false
-                                )
-                            }
-                        )
-                    }
-
-                    _remoteCategories.value = mappedRemoteCategories
+                    _remoteCategories.value = remoteCategories
                     rebuildCategories()
                 }
                 .onFailure { error ->
@@ -106,18 +81,18 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    private fun mapUserRoutinesToCategory(routines: List<RoutineEntity>): TrainingCategoryUi? {
+    private fun mapUserRoutinesToCategory(routines: List<RoutineEntity>): TrainingCategoryDto? {
         if (routines.isEmpty()) return null
 
-        return TrainingCategoryUi(
+        return TrainingCategoryDto(
             id = "my_routines",
             title = "Mis rutinas",
             routines = routines.map { routine ->
-                TrainingRoutineUi(
-                    id = routine.routine_id.toString(),
-                    title = routine.routine_name,
-                    imageKey = routine.imageKey,
-                    isLocal = true
+                Log.i("Routine ID", "ID DE RUTINA: " + routine.routine_id)
+                TrainingRoutineDto(
+                    routine_id = routine.routine_id,
+                    routine_name = routine.routine_name,
+                    routine_image = routine.routine_image
                 )
             }
         )
@@ -127,7 +102,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
         val finalCategories = buildList {
             _userRoutineCategory.value?.let { add(it) }
             addAll(_remoteCategories.value)
-        }
+        }.distinctBy { it.id }
 
         _uiState.update {
             it.copy(

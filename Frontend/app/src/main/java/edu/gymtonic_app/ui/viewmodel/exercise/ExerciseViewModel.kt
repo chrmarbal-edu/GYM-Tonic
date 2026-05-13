@@ -9,24 +9,15 @@ import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSou
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.repository.ExerciseRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class ExerciseDetailUi(
-    val id: String,
-    val name: String,
-    val durationSeconds: Int,
-    val imageKey: String?,
-    val instructions: List<String>,
-    val description: String? = null,
-    val video: String? = null
-)
-
 data class FavoriteExercisePayload(
-    val id: String,
+    val id: Int,
     val name: String,
     val description: String = "",
     val type: Int = 0,
@@ -37,7 +28,7 @@ data class FavoriteExercisePayload(
 sealed class ExerciseUiState {
     object Idle : ExerciseUiState()
     object Loading : ExerciseUiState()
-    data class Success(val exercise: ExerciseDetailUi) : ExerciseUiState()
+    data class Success(val exercise: ExerciseDto) : ExerciseUiState()
     data class Error(val message: String) : ExerciseUiState()
 }
 
@@ -76,27 +67,20 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun isFavorite(exerciseId: String): Boolean {
-        val parsedId = exerciseId.toIntOrNull() ?: return false
-        return _favoritesSet.value.contains(parsedId)
+    fun isFavorite(exerciseId: Int): Boolean {
+        return _favoritesSet.value.contains(exerciseId)
     }
 
     fun onToggleFavorite(payload: FavoriteExercisePayload) {
-        val parsedId = payload.id.toIntOrNull()
-        if (parsedId == null) {
-            Log.w(TAG, "No se pudo parsear exerciseId=${payload.id} para toggle de favorito")
-            return
-        }
-
         val previousFavorites = _favoritesSet.value
         val optimistic =
-            if (previousFavorites.contains(parsedId)) previousFavorites - parsedId
-            else previousFavorites + parsedId
+            if (previousFavorites.contains(payload.id)) previousFavorites - payload.id
+            else previousFavorites + payload.id
 
         _favoritesSet.value = optimistic
 
         val entity = ExerciseEntity(
-            exercise_id = parsedId,
+            exercise_id = payload.id,
             exercise_name = payload.name,
             exercise_description = payload.description.ifBlank { "Sin descripción" },
             exercise_type = payload.type,
@@ -116,12 +100,18 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun loadSpecificExercise(exerciseId: String) {
+        val idInt = exerciseId.toIntOrNull()
+        if (idInt == null) {
+            _uiState.value = ExerciseUiState.Error("ID de ejercicio invalido")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = ExerciseUiState.Loading
 
-            exerciseRepository.getExerciseById(exerciseId)
+            exerciseRepository.getExerciseById(idInt)
                 .onSuccess { dto ->
-                    _uiState.value = ExerciseUiState.Success(dto.toUi())
+                    _uiState.value = ExerciseUiState.Success(dto)
                 }
                 .onFailure { error ->
                     _uiState.value = ExerciseUiState.Error(
@@ -167,7 +157,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun createExercise(
-        request: Map<String, Any>,
+        request: ExerciseRequest,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -183,8 +173,8 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun updateExercise(
-        id: String,
-        request: Map<String, Any?>,
+        id: Int,
+        request: ExerciseRequest,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -200,7 +190,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun deleteExercise(
-        id: String,
+        id: Int,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -213,23 +203,6 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
                     onError(message)
                 }
         }
-    }
-
-    private fun ExerciseDto.toUi(): ExerciseDetailUi {
-        val resolvedId = id ?: exerciseId ?: ""
-        val resolvedName = name ?: exerciseName ?: ""
-        val resolvedDuration = durationSeconds ?: 0
-        val resolvedImageKey = imageKey ?: exerciseImage
-
-        return ExerciseDetailUi(
-            id = resolvedId,
-            name = resolvedName,
-            durationSeconds = resolvedDuration,
-            imageKey = resolvedImageKey,
-            instructions = instructions.orEmpty(),
-            description = exerciseDescription,
-            video = exerciseVideo
-        )
     }
 
     companion object {

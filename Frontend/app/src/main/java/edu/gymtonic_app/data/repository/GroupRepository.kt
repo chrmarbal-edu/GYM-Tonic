@@ -4,59 +4,47 @@ import edu.gymtonic_app.data.remote.remoteDatasource.GroupRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import retrofit2.Response
 
-data class GroupSummaryData(
-	val id: Int,
-	val name: String,
-	val membersLabel: String
-)
-
 class GroupRepository(
 	private val groupRemoteDataSource: GroupRemoteDataSource = GroupRemoteDataSource()
 ) {
 
-	suspend fun getGroups(): Result<List<GroupSummaryData>> {
+	suspend fun getGroups(): Result<List<GroupDto>> {
 		return runCatching {
-			val groups = unwrapList(groupRemoteDataSource.getGroups(), "No se pudieron obtener los grupos")
-			groups.map(::mapDtoToData)
+			unwrapList(groupRemoteDataSource.getGroups(), "No se pudieron obtener los grupos")
 		}
 	}
 
-	suspend fun getUserGroups(userId: Int?): Result<List<GroupSummaryData>> {
+	suspend fun getUserGroups(userId: Int?): Result<List<GroupDto>> {
 		return runCatching {
 			val groups = unwrapList(groupRemoteDataSource.getGroups(), "No se pudieron obtener los grupos")
 
-			val filtered = if (userId == null) {
+			if (userId == null) {
 				groups
 			} else {
-				groups.filter { it.groupCreatorId == userId }
+				groups.filter { it.group_creator_id == userId }
 			}
-
-			filtered.map(::mapDtoToData)
 		}
 	}
 
-	suspend fun getGroupById(id: String): Result<GroupSummaryData> {
+	suspend fun getGroupById(id: Int): Result<GroupDto> {
 		return runCatching {
-			val dto = unwrapOne(groupRemoteDataSource.getGroupById(id), "No se pudo obtener el grupo con id=$id")
-			mapDtoToData(dto)
+			unwrapOne(groupRemoteDataSource.getGroupById(id), "No se pudo obtener el grupo con id=$id")
 		}
 	}
 
-	suspend fun createGroup(request: Map<String, Any>): Result<GroupSummaryData> {
+	suspend fun createGroup(request: Map<String, Any>): Result<GroupDto> {
 		return runCatching {
-			val dto = unwrapOne(groupRemoteDataSource.createGroup(request), "No se pudo crear el grupo")
-			mapDtoToData(dto)
+			unwrapOne(groupRemoteDataSource.createGroup(request), "No se pudo crear el grupo")
 		}
 	}
 
-	suspend fun updateGroup(id: String, request: Map<String, Any?>): Result<GroupSummaryData> {
+	suspend fun updateGroup(id: Int, request: Map<String, Any?>): Result<GroupDto> {
 		return runCatching {
-			val dto = unwrapOne(groupRemoteDataSource.updateGroup(id, request), "No se pudo actualizar el grupo con id=$id")
-			mapDtoToData(dto)
+			unwrapOne(groupRemoteDataSource.updateGroup(id, request), "No se pudo actualizar el grupo con id=$id")
 		}
 	}
 
-	suspend fun deleteGroup(id: String): Result<Unit> {
+	suspend fun deleteGroup(id: Int): Result<Unit> {
 		return runCatching {
 			val response = groupRemoteDataSource.deleteGroup(id)
 			if (!response.isSuccessful) {
@@ -65,17 +53,6 @@ class GroupRepository(
 			}
 			Unit
 		}
-	}
-
-	private fun mapDtoToData(dto: GroupDto): GroupSummaryData {
-		// Si backend no expone número de miembros, evita hardcode falso.
-		val membersLabel = "Miembros: N/D"
-
-		return GroupSummaryData(
-			id = dto.groupId,
-			name = dto.groupName,
-			membersLabel = membersLabel
-		)
 	}
 
 	private fun <T> unwrapOne(response: Response<T>, defaultMessage: String): T {

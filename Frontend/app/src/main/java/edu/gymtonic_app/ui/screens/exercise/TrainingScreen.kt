@@ -1,5 +1,6 @@
 package edu.gymtonic_app.ui.screens.exercise
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,17 +40,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
-import edu.gymtonic_app.ui.viewmodel.TrainingCategoryUi
-import edu.gymtonic_app.ui.viewmodel.TrainingRoutineUi
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun TrainingScreen(
-    onSelect: (String, Boolean) -> Unit,
+    onSelect: (Int, Boolean) -> Unit,
     onCreateRoutine: () -> Unit = {},
-    categories: List<TrainingCategoryUi> = emptyList(),
+    categories: List<TrainingCategoryDto> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
@@ -107,26 +109,27 @@ fun TrainingScreen(
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(top = 4.dp, bottom = 14.dp),
-                content = {
-                    if (categories.isEmpty() && !isRefreshing) {
-                        item {
-                            EmptyTrainingState(strings.trainingNoWorkouts)
-                        }
-                    } else {
-                        for (category in categories) {
-                            item(key = category.id) {
-                                TrainingSection(
-                                    title = category.title,
-                                    routines = category.routines,
-                                    routinesLabel = strings.trainingRoutines,
-                                    tapToOpen = strings.trainingTapToOpen,
-                                    onSelect = onSelect
-                                )
-                            }
-                        }
+            ) {
+                if (categories.isEmpty() && !isRefreshing) {
+                    item {
+                        EmptyTrainingState(strings.trainingNoWorkouts)
+                    }
+                } else {
+                    items(
+                        items = categories,
+                        key = { it.id }
+                    ) { category ->
+                        TrainingSection(
+                            title = category.title,
+                            routines = category.routines,
+                            routinesLabel = strings.trainingRoutines,
+                            tapToOpen = strings.trainingTapToOpen,
+                            onSelect = onSelect,
+                            isLocal = category.id == "my_routines"
+                        )
                     }
                 }
-            )
+            }
         }
     }
 }
@@ -134,10 +137,11 @@ fun TrainingScreen(
 @Composable
 private fun TrainingSection(
     title: String,
-    routines: List<TrainingRoutineUi>,
+    routines: List<TrainingRoutineDto>,
     routinesLabel: (Int) -> String,
     tapToOpen: String,
-    onSelect: (String, Boolean) -> Unit
+    onSelect: (Int, Boolean) -> Unit,
+    isLocal: Boolean
 ) {
     val colors = LocalColors.current
     Surface(
@@ -176,14 +180,15 @@ private fun TrainingSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp)
             ) {
-                items(
+                itemsIndexed(
                     items = routines,
-                    key = { routine -> routine.id }
-                ) { routine ->
+                    key = { index, routine -> "${routine.routine_id}_$index" }
+                ) { _, routine ->
                     TrainingCard(
                         option = routine,
                         tapToOpen = tapToOpen,
                         onSelect = onSelect,
+                        isLocal = isLocal,
                         modifier = Modifier.width(158.dp)
                     )
                 }
@@ -194,11 +199,14 @@ private fun TrainingSection(
 
 @Composable
 private fun TrainingCard(
-    option: TrainingRoutineUi,
+    option: TrainingRoutineDto,
     tapToOpen: String,
-    onSelect: (String, Boolean) -> Unit,
+    onSelect: (Int, Boolean) -> Unit,
+    isLocal: Boolean,
     modifier: Modifier = Modifier
 ) {
+
+    Log.i("Routine ID", option.routine_id.toString())
     val colors = LocalColors.current
     Surface(
         modifier = modifier,
@@ -208,7 +216,7 @@ private fun TrainingCard(
     ) {
         Column(
             modifier = Modifier
-                .clickable { onSelect(option.id, option.isLocal) }
+                .clickable { onSelect(option.routine_id, isLocal) }
                 .padding(8.dp)
         ) {
             Box(
@@ -217,10 +225,11 @@ private fun TrainingCard(
                     .aspectRatio(1.25f)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.White)
-            ) {/*
+            ) {
+                /*
                 Image(
                     painter = painterResource(option.imageRes),
-                    contentDescription = option.title,
+                    contentDescription = option.routine_name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )*/
@@ -239,7 +248,7 @@ private fun TrainingCard(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = option.title,
+                text = option.routine_name ?: "",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

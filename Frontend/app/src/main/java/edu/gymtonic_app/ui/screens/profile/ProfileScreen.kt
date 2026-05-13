@@ -1,6 +1,5 @@
 package edu.gymtonic_app.ui.screens.profile
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,21 +36,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
-import edu.gymtonic_app.ui.viewmodel.ProfileGroupUi
-import edu.gymtonic_app.ui.viewmodel.ProfileRoutineUi
 import edu.gymtonic_app.ui.viewmodel.ProfileUiState
 import edu.gymtonic_app.ui.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
@@ -65,7 +61,7 @@ fun ProfileScreen(
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenWeek: () -> Unit,
-    onOpenRoutine: (String) -> Unit,
+    onOpenRoutine: (Int) -> Unit,
     onLogout: () -> Unit,
     onOpenAccount: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -167,10 +163,10 @@ fun ProfileScreen(
 private fun ProfileContent(
     username: String,
     streakLabel: String,
-    routines: List<ProfileRoutineUi>,
-    groups: List<ProfileGroupUi>,
+    routines: List<TrainingRoutineDto>,
+    groups: List<GroupDto>,
     onOpenWeek: () -> Unit,
-    onOpenRoutine: (String) -> Unit,
+    onOpenRoutine: (Int) -> Unit,
     onOpenDrawer: () -> Unit
 ) {
     val strings = LocalStrings.current
@@ -230,7 +226,7 @@ private fun ProfileContent(
                         )
                     } else {
                         routines.forEach { routine ->
-                            RoutineRow(routine = routine, openLabel = strings.openLabel, onClick = { onOpenRoutine(routine.id) })
+                            RoutineRow(routine = routine, openLabel = strings.openLabel, onClick = { onOpenRoutine(routine.routine_id) })
                         }
                     }
                 }
@@ -304,7 +300,7 @@ private fun SectionCard(
 
 @Composable
 private fun RoutineRow(
-    routine: ProfileRoutineUi,
+    routine: TrainingRoutineDto,
     openLabel: String,
     onClick: () -> Unit
 ) {
@@ -322,7 +318,7 @@ private fun RoutineRow(
         ) {/*
             Image(
                 painter = painterResource(routine.imageRes),
-                contentDescription = routine.title,
+                contentDescription = routine.routine_name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(52.dp)
@@ -330,7 +326,7 @@ private fun RoutineRow(
             )*/
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = routine.title,
+                text = routine.routine_name ?: "Sin nombre",
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
@@ -349,7 +345,7 @@ private fun RoutineRow(
 }
 
 @Composable
-private fun GroupRow(group: ProfileGroupUi) {
+private fun GroupRow(group: GroupDto) {
     val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(12.dp),
@@ -369,15 +365,17 @@ private fun GroupRow(group: ProfileGroupUi) {
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = group.name,
+                    text = group.group_name ?: "Grupo sin nombre",
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
                 )
                 Text(
-                    text = group.membersLabel,
+                    text = group.group_description ?: "",
                     color = colors.textSecondary,
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

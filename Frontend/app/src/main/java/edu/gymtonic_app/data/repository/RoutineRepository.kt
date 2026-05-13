@@ -14,44 +14,28 @@ class RoutineRepository(
     private val routineLocalDataSource: RoutineLocalDataSource
 ) {
     //region Room
-    /**
-     * Obtiene todas las rutinas creadas por el usuario
-     * Observa cambios en tiempo real (Flow)
-     * Usado por: TrainingScreen para mostrar "Mis rutinas"
-     */
     fun getUserCreatedRoutines(): Flow<List<RoutineEntity>> {
         return routineLocalDataSource.getAllUserRoutines()
     }
 
-    /**
-     * Crea una nueva rutina para el usuario
-     * Retorna ID de la rutina creada
-     * Usado por: CreateRoutineScreen al guardar
-     */
     suspend fun createUserRoutine(
         routineName: String,
         imageKey: String? = null
     ): Result<Long> {
         return runCatching {
-            // Validar nombre único antes de insertar
             val exists = routineLocalDataSource.existsRoutineWithName(routineName)
             if (exists) {
                 throw IllegalArgumentException("Ya existe una rutina con ese nombre")
             }
 
-            // Crear entidad y guardar
             val routine = RoutineEntity(
                 routine_name = routineName,
-                imageKey = imageKey
+                routine_image = imageKey
             )
             routineLocalDataSource.createOrUpdateRoutine(routine)
         }
     }
 
-    /**
-     * Actualiza una rutina existente
-     * Usado por: pantalla de edición (futuro)
-     */
     suspend fun updateUserRoutine(
         routineId: Int,
         routineName: String,
@@ -61,37 +45,26 @@ class RoutineRepository(
             val routine = RoutineEntity(
                 routine_id = routineId,
                 routine_name = routineName,
-                imageKey = imageKey
+                routine_image = imageKey
             )
             routineLocalDataSource.updateRoutine(routine)
         }
     }
 
-    /**
-     * Elimina una rutina y sus ejercicios relacionados
-     * Usado por: swipe para borrar en TrainingScreen
-     */
     suspend fun deleteUserRoutine(routineId: Int): Result<Int> {
         return runCatching {
-            // Nota: También debería borrar registros en routine_x_exercise
-            // Lo haremos en RoutineExerciseRepository
             routineLocalDataSource.deleteRoutineById(routineId)
         }
     }
 
-    /**
-     * Obtiene los detalles de una rutina con sus ejercicios
-     * Usado por: RoutineCatalogScreen si quieres ver detalles de rutina usuario
-     */
     suspend fun getUserRoutineWithExercises(routineId: Int): Result<RoutineEntity?> {
         return runCatching {
             routineLocalDataSource.getRoutineWithExercises(routineId)
         }
     }
     //endregion
-    //region Retrofit
-    // region Retrofit
 
+    //region Retrofit
     suspend fun getRoutinesFromApi(): Result<List<RoutineDto>> {
         return runCatching {
             unwrapList(
@@ -119,7 +92,7 @@ class RoutineRepository(
         }
     }
 
-    suspend fun getRoutineWithExercisesByIdFromApi(routineId: String): Result<RoutineDetailDto> {
+    suspend fun getRoutineWithExercisesByIdFromApi(routineId: Int): Result<RoutineDetailDto> {
         return runCatching {
             unwrapOne(
                 response = routineRemoteDataSource.getRoutineWithExercisesById(routineId),
@@ -128,7 +101,7 @@ class RoutineRepository(
         }
     }
 
-    suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDto> {
+    suspend fun getRoutineByIdFromApi(routineId: Int): Result<RoutineDto> {
         return runCatching {
             unwrapOne(
                 response = routineRemoteDataSource.getRoutineById(routineId),
@@ -147,7 +120,7 @@ class RoutineRepository(
     }
 
     suspend fun updateRoutineFromApi(
-        routineId: String,
+        routineId: Int,
         request: Map<String, Any?>
     ): Result<RoutineDto> {
         return runCatching {
@@ -158,7 +131,7 @@ class RoutineRepository(
         }
     }
 
-    suspend fun deleteRoutineFromApi(routineId: String): Result<Unit> {
+    suspend fun deleteRoutineFromApi(routineId: Int): Result<Unit> {
         return runCatching {
             val response = routineRemoteDataSource.deleteRoutine(routineId)
             if (!response.isSuccessful) {
@@ -170,8 +143,6 @@ class RoutineRepository(
             Unit
         }
     }
-
-// endregion
 
     private fun <T> unwrapOne(response: Response<T>, defaultMessage: String): T {
         if (response.isSuccessful) {

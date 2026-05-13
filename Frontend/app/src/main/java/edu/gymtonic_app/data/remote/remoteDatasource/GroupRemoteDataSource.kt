@@ -7,13 +7,11 @@ class GroupRemoteDataSource {
 
     suspend fun getGroups() = api.getGroups()
 
-    suspend fun getGroupById( id: String) = api.getGroupById(id)
+    suspend fun getGroupById( id: Int) = api.getGroupById(id)
 
     suspend fun createGroup( request: Map<String, Any>) = api.createGroup(request)
 
-    suspend fun updateGroup(id: String, request: Map<String, Any?>) = api.updateGroup(id, request)
+    suspend fun updateGroup(id: Int, request: Map<String, Any?>) = api.updateGroup(id, request)
 
-    suspend fun deleteGroup( id: String) = api.deleteGroup(id)
+    suspend fun deleteGroup( id: Int) = api.deleteGroup(id)
 }
-
-

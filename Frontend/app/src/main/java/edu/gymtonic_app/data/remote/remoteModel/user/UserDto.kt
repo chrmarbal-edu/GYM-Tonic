@@ -4,37 +4,27 @@ import com.google.gson.annotations.SerializedName
 
 data class UserDto(
     @SerializedName("user_id")
-    val id: Int,
-
+    val userId: Int,
     @SerializedName("user_username")
-    val username: String,
-
+    val userUsername: String,
     @SerializedName("user_name")
-    val name: String,
-
-    @SerializedName("user_password")
-    val passwordHash: String,
-
+    val userName: String,
     @SerializedName("user_birthdate")
-    val birthdate: String,
-
+    val userBirthdate: String,
     @SerializedName("user_email")
-    val email: String,
-
+    val userEmail: String,
+    @SerializedName("user_picture")
+    val userPicture: String? = null,
     @SerializedName("user_height")
-    val height: Double,
-
+    val userHeight: Float,
     @SerializedName("user_weight")
-    val weight: Double,
-
-    @SerializedName("user_objective")
-    val objective: Int,
-
+    val userWeight: Float,
+    @SerializedName("user_objetive")
+    val userObjetive: Int,
     @SerializedName("user_points")
-    val points: Int,
-
+    val userPoints: Int,
     @SerializedName("user_role")
-    val role: Int
+    val userRole: Int
 )
 
 data class RegisterRequest(
@@ -51,8 +41,7 @@ data class RegisterRequest(
 data class RegisterResponse(
     val user: UserDto? = null,
     val data: UserDto? = null,
-    val token: String?
+    val token: String? = null
 ) {
-    // Soporta ambas formas de respuesta (Forma A: user, Forma B: data)
     fun resolvedUser(): UserDto? = user ?: data
 }

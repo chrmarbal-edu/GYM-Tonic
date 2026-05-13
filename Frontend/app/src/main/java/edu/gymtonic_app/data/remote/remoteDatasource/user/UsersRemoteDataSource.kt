@@ -7,9 +7,9 @@ class UsersRemoteDataSource {
 
     suspend fun getUsers() = api.getUsers()
 
-    suspend fun getUserById(id: String) = api.getUserById(id)
+    suspend fun getUserById(id: Int) = api.getUserById(id)
 
-    suspend fun updateUser(id: String, request: Map<String, Any?>) = api.updateUser(id, request)
+    suspend fun updateUser(id: Int, request: Map<String, Any?>) = api.updateUser(id, request)
 
-    suspend fun deleteUser(id: String) = api.deleteUser(id)
+    suspend fun deleteUser(id: Int) = api.deleteUser(id)
 }

@@ -9,6 +9,8 @@ import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.repository.GroupRepository
 import edu.gymtonic_app.data.repository.RoutineRepository
 import edu.gymtonic_app.data.repository.UserMissionsRepository
@@ -18,43 +20,30 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-data class ProfileRoutineUi(
-	val id: String,
-	val title: String,
-	val imageUrl: String  // URL desde API, no recurso local
-)
-
-data class ProfileGroupUi(
-	val id: Int,
-	val name: String,
-	val membersLabel: String
-)
-
-data class ProfileSuccessUi(
+data class ProfileData(
 	val username: String,
 	val streakLabel: String,
-	val recentRoutines: List<ProfileRoutineUi>,
-	val groups: List<ProfileGroupUi>
+	val recentRoutines: List<TrainingRoutineDto>,
+	val groups: List<GroupDto>
 )
 
 sealed class ProfileUiState {
 	object Loading : ProfileUiState()
-	data class Success(val data: ProfileSuccessUi) : ProfileUiState()
+	data class Success(val data: ProfileData) : ProfileUiState()
 	data class Error(val message: String) : ProfileUiState()
 }
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
-	// region Repositorios y DataSources
 	private val userMissionsRemoteDataSource : UserMissionsRemoteDatasource
 	private val userMissionsRepository : UserMissionsRepository
 	private val routineRepository: RoutineRepository
 	private val routineRemoteDataSource: RoutineRemoteDataSource
 
 	private val routineLocalDataSource: RoutineLocalDataSource
-	private val groupRepository = GroupRepository()  // Si tiene constructor sin params o DI interno
+	private val groupRepository = GroupRepository()
 	private val sessionManager = SessionManager(application.sessionDataStore)
-	//endregion
+
 	private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
 	val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
@@ -79,13 +68,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val session = sessionManager.sessionFlow.first()
 			val username = session.username ?: "Usuario"
 
-			// Obtener días de la semana del usuario para calcular streak
 			val weekDaysResult = userMissionsRepository.getWeeklyCalendarDays()
 			val weekDays = weekDaysResult.getOrElse { emptyList() }
 			val streakDone = weekDays.take(7).count { it.didWorkout }
 			val streakLabel = "$streakDone/7 Logrados"
 
-			// Obtener categorías de rutinas desde API
 			val routinesResult = routineRepository.getRoutineCategoriesFromApi()
 			val groupsResult = groupRepository.getUserGroups(session.userId)
 
@@ -98,29 +85,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 				return@launch
 			}
 
-			// Mapear rutinas desde categorías
 			val category = routinesResult.getOrNull().orEmpty().firstOrNull { it.id == "recent" }
 				?: routinesResult.getOrNull().orEmpty().firstOrNull()
 
-			val recentRoutines = category?.routines.orEmpty().take(3).map { routine ->
-				ProfileRoutineUi(
-					id = routine.id,
-					title = routine.title,
-					imageUrl = routine.imageKey  // Directo de API, sin mapper
-				)
-			}
-
-			// Mapear grupos
-			val groups = groupsResult.getOrNull().orEmpty().map {
-				ProfileGroupUi(
-					id = it.id,
-					name = it.name,
-					membersLabel = it.membersLabel
-				)
-			}
+			val recentRoutines = category?.routines.orEmpty().take(3)
+			val groups = groupsResult.getOrNull().orEmpty()
 
 			_uiState.value = ProfileUiState.Success(
-				ProfileSuccessUi(
+				ProfileData(
 					username = username,
 					streakLabel = streakLabel,
 					recentRoutines = recentRoutines,

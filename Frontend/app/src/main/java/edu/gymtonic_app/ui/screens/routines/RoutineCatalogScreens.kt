@@ -121,7 +121,7 @@ fun RoutineCatalogScreen(
 
         is RoutineCatalogUiState.Success -> {
             TrainingShellScreen(
-                title = state.routine.title,
+                title = state.routine.routine_name ?: strings.routineWorkoutsTitle,
                 onBack = onBack,
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
@@ -136,18 +136,18 @@ fun RoutineCatalogScreen(
                 }
             ) {
                 RoutineTemplateScreen(
-                    exercises = state.routine.exercises,
+                    exercises = state.routine.safeExercises(),
                     onExerciseClick = onExerciseClick,
                     favoritesSet = favoritesSet,
                     onToggleFavorite = { routineExercise ->
                         exerciseViewModel.onToggleFavorite(
                             FavoriteExercisePayload(
-                                id = routineExercise.id,
-                                name = routineExercise.name,
-                                description = routineExercise.reps,
-                                type = 0,
-                                video = null,
-                                image = null
+                                id = routineExercise.exercise_id,
+                                name = routineExercise.exercise_name ?: "Ejercicio",
+                                description = routineExercise.exercise_description ?: routineExercise.reps ?: "",
+                                type = routineExercise.exercise_type,
+                                video = routineExercise.exercise_video,
+                                image = routineExercise.exercise_image
                             )
                         )
                     }
@@ -159,7 +159,7 @@ fun RoutineCatalogScreen(
             val fallback = state.fallbackRoutine
             if (fallback != null) {
                 TrainingShellScreen(
-                    title = fallback.title,
+                    title = fallback.routine_name ?: strings.routineWorkoutsTitle,
                     onBack = onBack,
                     showBottomBar = true,
                     selectedBottomItem = BottomNavItem.TRAINING,
@@ -174,18 +174,18 @@ fun RoutineCatalogScreen(
                     }
                 ) {
                     RoutineTemplateScreen(
-                        exercises = fallback.exercises,
+                        exercises = fallback.safeExercises(),
                         onExerciseClick = onExerciseClick,
                         favoritesSet = favoritesSet,
                         onToggleFavorite = { routineExercise ->
                             exerciseViewModel.onToggleFavorite(
                                 FavoriteExercisePayload(
-                                    id = routineExercise.id,
-                                    name = routineExercise.name,
-                                    description = routineExercise.reps,
-                                    type = 0,
-                                    video = null,
-                                    image = null
+                                    id = routineExercise.exercise_id,
+                                    name = routineExercise.exercise_name ?: "Ejercicio",
+                                    description = routineExercise.reps ?: "",
+                                    type = routineExercise.exercise_type,
+                                    video = routineExercise.exercise_video,
+                                    image = routineExercise.exercise_image
                                 )
                             )
                         }

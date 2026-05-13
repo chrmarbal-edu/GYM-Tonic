@@ -11,13 +11,13 @@ class RoutineRemoteDataSource {
 
     suspend fun getRoutineByName(name: String) = api.getRoutineByName(name)
 
-    suspend fun getRoutineWithExercisesById(routineId: String) = api.getRoutineWithExercisesById(routineId)
+    suspend fun getRoutineWithExercisesById(routineId: Int) = api.getRoutineWithExercisesById(routineId)
 
-    suspend fun getRoutineById(routineId: String) = api.getRoutineById(routineId)
+    suspend fun getRoutineById(routineId: Int) = api.getRoutineById(routineId)
 
     suspend fun createRoutine (request: Map<String, Any>) = api.createRoutine(request)
 
-    suspend fun updateRoutine(routineId: String, request: Map<String, Any?>) = api.updateRoutine(routineId, request)
+    suspend fun updateRoutine(routineId: Int, request: Map<String, Any?>) = api.updateRoutine(routineId, request)
 
-    suspend fun deleteRoutine( routineId: String) = api.deleteRoutine(routineId)
+    suspend fun deleteRoutine( routineId: Int) = api.deleteRoutine(routineId)
 }
