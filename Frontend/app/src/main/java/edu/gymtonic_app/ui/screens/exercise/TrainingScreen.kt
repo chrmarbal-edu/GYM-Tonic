@@ -217,13 +217,13 @@ private fun TrainingCard(
                     .aspectRatio(1.25f)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.White)
-            ) {
+            ) {/*
                 Image(
                     painter = painterResource(option.imageRes),
                     contentDescription = option.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
-                )
+                )*/
 
                 Box(
                     modifier = Modifier

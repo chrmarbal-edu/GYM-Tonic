@@ -319,7 +319,7 @@ private fun RoutineRow(
         Row(
             modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
-        ) {
+        ) {/*
             Image(
                 painter = painterResource(routine.imageRes),
                 contentDescription = routine.title,
@@ -327,7 +327,7 @@ private fun RoutineRow(
                 modifier = Modifier
                     .size(52.dp)
                     .clip(RoundedCornerShape(8.dp))
-            )
+            )*/
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = routine.title,

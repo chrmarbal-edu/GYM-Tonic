@@ -1,6 +1,7 @@
 package edu.gymtonic_app.ui.screens.exercise
 
 import android.app.Application
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import edu.gymtonic_app.R
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -112,6 +115,10 @@ fun ExerciseDetailScreen(
             val parsedExerciseId = exercise.id.toIntOrNull()
             val isFavorite = parsedExerciseId?.let { favoritesSet.contains(it) } == true
 
+            val imageResId = remember(exercise.imageKey) {
+                resolveDrawableId(context, exercise.imageKey) ?: R.drawable.fondo_gris
+            }
+
             TrainingShellScreen(
                 title = strings.exerciseTitle,
                 onBack = onBack,
@@ -133,7 +140,7 @@ fun ExerciseDetailScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Image(
-                            painter = painterResource(exercise.imageRes),
+                            painter = painterResource(id = imageResId),
                             contentDescription = exercise.name,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -166,7 +173,7 @@ fun ExerciseDetailScreen(
                                         description = exercise.instructions.joinToString("\n"),
                                         type = 0,
                                         video = null,
-                                        image = null
+                                        image = exercise.imageKey
                                     )
                                 )
                             },
@@ -208,4 +215,17 @@ fun ExerciseDetailScreen(
             }
         }
     }
+}
+
+private fun resolveDrawableId(context: Context, imageKey: String?): Int? {
+    if (imageKey.isNullOrBlank()) return null
+
+    val normalized = imageKey
+        .substringBeforeLast(".")
+        .trim()
+        .lowercase()
+        .replace(" ", "_")
+
+    val id = context.resources.getIdentifier(normalized, "drawable", context.packageName)
+    return if (id != 0) id else null
 }
