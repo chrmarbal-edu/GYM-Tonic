@@ -308,16 +308,43 @@ exports.findUserMissionByUserId = wrapAsync(async function (req,res,next){
     const userLogued = req.userLogued
 
     if(userLogued && (userLogued.user_id == userId || userLogued.user_role == 1)){
-        await userMissionsModel.findByUserId(userId, function(err,datosUserMission){
+        await userMissionsModel.findByUserId(userId, async function(err,datosUserMission){
             if(err){
-                next(new AppError(err,404))
-            } else{
-                if(!datosUserMission || datosUserMission.length == 0) {
-                    return next(new AppError("Misiones no encontradas", 404))
-                }
+                return next(new AppError(err,404))
+            } 
 
-                res.status(200).json(datosUserMission)
+            if(!datosUserMission || datosUserMission.length == 0) {
+                return res.status(200).json({ missions: [], notifications: [] })
             }
+
+            const hoy = new Date();
+            const misionesActivas = [];
+            const notifications = [];
+
+            // Procesamos cada misión para comprobar caducidad
+            for (const mision of datosUserMission) {
+                const fechaExpiracion = new Date(mision.user_x_mission_expiration);
+
+                if (fechaExpiracion < hoy && !mision.user_x_mission_completed) {
+                    // Si ha caducado y no está completada: Notificar y Borrar
+                    notifications.push({
+                        message: `La misión "${mision.mission_name}" ha caducado.`,
+                        mission_name: mision.mission_name,
+                        expired: true
+                    });
+
+                    await new Promise((resolve) => {
+                        userMissionsModel.delete(mision.user_x_mission_id, resolve);
+                    });
+                } else {
+                    misionesActivas.push(mision);
+                }
+            }
+
+            res.status(200).json({
+                missions: misionesActivas,
+                notifications: notifications
+            });
         })
     } else{
         return next(new AppError("No estás autorizado para realizar esta petición", 403))
