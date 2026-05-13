@@ -112,7 +112,7 @@ private fun RoutineExerciseRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
-        ) {
+        ) {/*
             Image(
                 painter = painterResource(exercise.imageRes),
                 contentDescription = exercise.name,
@@ -120,7 +120,7 @@ private fun RoutineExerciseRow(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(10.dp))
-            )
+            )*/
 
             Spacer(Modifier.width(12.dp))
 
