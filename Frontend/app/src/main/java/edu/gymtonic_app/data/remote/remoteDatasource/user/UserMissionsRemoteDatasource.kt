@@ -6,18 +6,17 @@ import edu.gymtonic_app.data.remote.services.RetrofitClient
 class UserMissionsRemoteDatasource {
     private val api = RetrofitClient.apiService
 
+    //Misiones
+    suspend fun getMissions() = api.getMissions()
+    suspend fun getMissionById(id: String) = api.getMissionById(id)
+
+    //Misiones del usuario
     suspend fun getUserMissions() = api.getUserMissions()
-
     suspend fun getUserMissionByUserId( userId: String) = api.getUserMissionByUserId(userId)
-
     suspend fun getUserMissionByMissionId(missionId: String) = api.getUserMissionByMissionId(missionId)
-
     suspend fun getUserMissionById(id: String) = api.getUserMissionById(id)
-
     suspend fun createUserMission( request: Map<String, Any>) = api.createUserMission(request)
-
     suspend fun updateUserMission(id: String,request: Map<String, Any?>) = api.updateUserMission(id,request)
-
     suspend fun deleteUserMission( id: String) = api.deleteUserMission(id)
 
     //hardcodeado de los dias

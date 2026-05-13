@@ -7,6 +7,7 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.remote.remoteModel.social.FrequestDto
@@ -140,6 +141,15 @@ interface ApiService {
     @DELETE("users/{id}")
     suspend fun deleteUser(@Path("id") id: String): Response<Unit>
 
+
+    // MISSIONS
+    @GET("missions")
+    suspend fun getMissions(): Response<List<MissionDto>>
+
+    @GET("missions/{id}")
+    suspend fun getMissionById(@Path("id") id: String): Response<MissionDto>
+
+
     // USER MISSIONS
     @GET("users/missions")
     suspend fun getUserMissions(): Response<List<UserMissionDto>>
@@ -195,6 +205,11 @@ interface ApiService {
     @DELETE("exercises/{id}")
     suspend fun deleteExercise(@Path("id") id: String): Response<Unit>
 
+
+
+
+
+
     // ROUTINES
     @GET("routines/routines")
     suspend fun getRoutines(): Response<List<RoutineDto>>
@@ -225,6 +240,11 @@ interface ApiService {
     @DELETE("routines/routine/{routineId}")
     suspend fun deleteRoutine(@Path("routineId") routineId: String): Response<Unit>
 
+
+
+
+
+
     // GROUPS
     @GET("groups")
     suspend fun getGroups(): Response<List<GroupDto>>
@@ -244,6 +264,11 @@ interface ApiService {
     @DELETE("groups/{id}")
     suspend fun deleteGroup(@Path("id") id: String): Response<Unit>
 
+
+
+
+
+
     // FRIENDS
     @GET("friends")
     suspend fun getFriends(): Response<List<FriendDto>>
@@ -259,6 +284,11 @@ interface ApiService {
 
     @DELETE("friends/{id}")
     suspend fun deleteFriend(@Path("id") id: String): Response<Unit>
+
+
+
+
+
 
     // FRIEND REQUESTS
     @GET("friendRequests")

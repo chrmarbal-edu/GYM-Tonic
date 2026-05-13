@@ -1,6 +1,7 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
+import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionDto
 import edu.gymtonic_app.data.remote.remoteModel.week.WeeklyCalendarDayDto
 import retrofit2.Response
@@ -9,6 +10,27 @@ class UserMissionsRepository(
     private val userMissionsRemoteDataSource: UserMissionsRemoteDatasource
 ) {
 
+    // MISIONES
+    suspend fun getMissions(): Result<List<MissionDto>> {
+        return runCatching {
+            unwrapList(
+                response = userMissionsRemoteDataSource.getMissions(),
+                defaultMessage = "No se pudieron obtener las misiones"
+            )
+        }
+    }
+
+    suspend fun getMissionById(id: String): Result<MissionDto> {
+        return runCatching {
+            unwrapOne(
+                response = userMissionsRemoteDataSource.getMissionById(id),
+                defaultMessage = "No se pudo obtener la misión con id=$id"
+            )
+        }
+    }
+
+
+    // MISIONES DEL USUARIO
     suspend fun getUserMissions(): Result<List<UserMissionDto>> {
         return runCatching {
             unwrapList(
