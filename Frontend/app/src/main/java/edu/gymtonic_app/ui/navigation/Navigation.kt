@@ -38,8 +38,7 @@ import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 import edu.gymtonic_app.ui.viewmodel.TrainingScreenViewModel
-import edu.gymtonic_app.ui.viewmodel.WeekChallengesViewModel
-
+import edu.gymtonic_app.ui.viewmodel.UserMissionsViewModel
 @Composable
 @Suppress("UNUSED_PARAMETER")
 fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {
@@ -52,11 +51,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
     val registerViewModel: RegisterViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
     val trainingViewModel: TrainingScreenViewModel = viewModel()
-    val weekChallengesViewModel: WeekChallengesViewModel = viewModel()
+    val userMissionsViewModel: UserMissionsViewModel = viewModel()
 
     val sessionState = sessionManager.sessionFlow.collectAsState(initial = null)
     val trainingUiState = trainingViewModel.uiState.collectAsState()
-    val weekUiState = weekChallengesViewModel.uiState.collectAsState()
+    val weekUiState = userMissionsViewModel.uiState.collectAsState()
 
     val onOpenHomeGlobal = {
         navController.navigate(Routes.HOME) {
@@ -174,7 +173,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 calendarDays = week.calendarDays,
                 achievedLabel = "${week.achievedCount}/${week.totalCount} ${strings.achieved}",
                 isRefreshing = week.isRefreshing,
-                onRefresh = { weekChallengesViewModel.refreshWeekGoals() }
+                onRefresh = { userMissionsViewModel.refreshUserMissions() }
             )
         }
 
@@ -191,7 +190,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
             ) {
                 TrainingScreen(
                     onSelect = { routineId, isLocal ->
-                        navController.navigate(Routes.routine(routineId, isLocal)) },
+                        navController.navigate(Routes.routine(routineId.toString(), isLocal)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
                     isRefreshing = trainingUiState.value.isRefreshing,
@@ -264,7 +263,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenProfile = onOpenProfileGlobal,
                 onOpenWeek = { navController.navigate(Routes.WEEK) },
                 onOpenRoutine = { routineId ->
-                    navController.navigate(Routes.routine(routineId, isLocal = false))
+                    navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
                 onLogout = {
                     homeViewModel.logout(

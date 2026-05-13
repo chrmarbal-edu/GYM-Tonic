@@ -39,17 +39,13 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
                 val response = authRepository.login(request)
                 Log.i("login",response.toString())
                 if(response.token != null){
-
                     sessionManager.saveSession(
                         token = response.token,
-
                         userId = response.data.user_id,
                         username = response.data.user_username,
                         email = response.data.user_email,
                         role = response.data.user_role
                     )
-
-
                     _loginState.value = LoginState.Success(response)
                 }
             } catch (e: Exception){
@@ -57,7 +53,6 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
             }
         }
     }
-
 }
 
 sealed class LoginState {

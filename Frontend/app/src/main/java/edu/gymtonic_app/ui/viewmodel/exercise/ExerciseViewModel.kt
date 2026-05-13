@@ -1,4 +1,4 @@
-package edu.gymtonic_app.ui.viewmodel
+package edu.gymtonic_app.ui.viewmodel.exercise
 
 import android.app.Application
 import android.util.Log
@@ -8,23 +8,16 @@ import edu.gymtonic_app.data.local.GymTonicDatabase
 import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.repository.ExerciseRepository
-import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class ExerciseDetailUi(
-    val id: String,
-    val name: String,
-    val durationSeconds: Int,
-    val imageRes: Int,
-    val instructions: List<String>
-)
-
 data class FavoriteExercisePayload(
-    val id: String,
+    val id: Int,
     val name: String,
     val description: String = "",
     val type: Int = 0,
@@ -35,7 +28,7 @@ data class FavoriteExercisePayload(
 sealed class ExerciseUiState {
     object Idle : ExerciseUiState()
     object Loading : ExerciseUiState()
-    data class Success(val exercise: ExerciseDetailUi) : ExerciseUiState()
+    data class Success(val exercise: ExerciseDto) : ExerciseUiState()
     data class Error(val message: String) : ExerciseUiState()
 }
 
@@ -74,27 +67,20 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun isFavorite(exerciseId: String): Boolean {
-        val parsedId = exerciseId.toIntOrNull() ?: return false
-        return _favoritesSet.value.contains(parsedId)
+    fun isFavorite(exerciseId: Int): Boolean {
+        return _favoritesSet.value.contains(exerciseId)
     }
 
     fun onToggleFavorite(payload: FavoriteExercisePayload) {
-        val parsedId = payload.id.toIntOrNull()
-        if (parsedId == null) {
-            Log.w(TAG, "No se pudo parsear exerciseId=${payload.id} para toggle de favorito")
-            return
-        }
-
         val previousFavorites = _favoritesSet.value
         val optimistic =
-            if (previousFavorites.contains(parsedId)) previousFavorites - parsedId
-            else previousFavorites + parsedId
+            if (previousFavorites.contains(payload.id)) previousFavorites - payload.id
+            else previousFavorites + payload.id
 
         _favoritesSet.value = optimistic
 
         val entity = ExerciseEntity(
-            exercise_id = parsedId,
+            exercise_id = payload.id,
             exercise_name = payload.name,
             exercise_description = payload.description.ifBlank { "Sin descripción" },
             exercise_type = payload.type,
@@ -114,25 +100,107 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun loadSpecificExercise(exerciseId: String) {
+        val idInt = exerciseId.toIntOrNull()
+        if (idInt == null) {
+            _uiState.value = ExerciseUiState.Error("ID de ejercicio invalido")
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = ExerciseUiState.Loading
 
-            exerciseRepository.getExerciseById(exerciseId)
-                .onSuccess { detail ->
-                    _uiState.value = ExerciseUiState.Success(
-                        ExerciseDetailUi(
-                            id = detail.id,
-                            name = detail.name,
-                            durationSeconds = detail.durationSeconds,
-                            imageRes = ImageResourceMapper.fromKey(detail.imageKey),
-                            instructions = detail.instructions
-                        )
-                    )
+            exerciseRepository.getExerciseById(idInt)
+                .onSuccess { dto ->
+                    _uiState.value = ExerciseUiState.Success(dto)
                 }
                 .onFailure { error ->
                     _uiState.value = ExerciseUiState.Error(
                         error.message ?: "No se pudo cargar el ejercicio"
                     )
+                }
+        }
+    }
+
+    fun loadExercises(
+        onSuccess: (List<ExerciseDto>) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            exerciseRepository.getExercises()
+                .onSuccess { exercises ->
+                    onSuccess(exercises)
+                }
+                .onFailure { error ->
+                    val message = error.message ?: "No se pudieron cargar los ejercicios"
+                    _uiState.value = ExerciseUiState.Error(message)
+                    onError(message)
+                }
+        }
+    }
+
+    fun loadExercisesByType(
+        type: String,
+        onSuccess: (List<ExerciseDto>) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            exerciseRepository.getExercisesByType(type)
+                .onSuccess { exercises ->
+                    onSuccess(exercises)
+                }
+                .onFailure { error ->
+                    val message = error.message ?: "No se pudieron cargar los ejercicios del tipo $type"
+                    _uiState.value = ExerciseUiState.Error(message)
+                    onError(message)
+                }
+        }
+    }
+
+    fun createExercise(
+        request: ExerciseRequest,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            exerciseRepository.createExercise(request)
+                .onSuccess { onSuccess() }
+                .onFailure { error ->
+                    val message = error.message ?: "No se pudo crear el ejercicio"
+                    _uiState.value = ExerciseUiState.Error(message)
+                    onError(message)
+                }
+        }
+    }
+
+    fun updateExercise(
+        id: Int,
+        request: ExerciseRequest,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            exerciseRepository.updateExercise(id, request)
+                .onSuccess { onSuccess() }
+                .onFailure { error ->
+                    val message = error.message ?: "No se pudo actualizar el ejercicio"
+                    _uiState.value = ExerciseUiState.Error(message)
+                    onError(message)
+                }
+        }
+    }
+
+    fun deleteExercise(
+        id: Int,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            exerciseRepository.deleteExercise(id)
+                .onSuccess { onSuccess() }
+                .onFailure { error ->
+                    val message = error.message ?: "No se pudo eliminar el ejercicio"
+                    _uiState.value = ExerciseUiState.Error(message)
+                    onError(message)
                 }
         }
     }

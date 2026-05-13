@@ -2,7 +2,7 @@ package edu.gymtonic_app.data.remote.remoteModel.auth
 
 import com.google.gson.annotations.SerializedName
 
-data class LoginRequest( //peticion a la api post login
+data class LoginRequest(
     @SerializedName("username")
     val user: String,
     @SerializedName("password")
@@ -10,21 +10,20 @@ data class LoginRequest( //peticion a la api post login
 )
 
 data class LoginResponse(
-    val data: Data,
+    val data: LoginUserData,
     val token: String
 )
 
-
-data class Data(
+data class LoginUserData(
+    val user_id: Int,
+    val user_username: String,
+    val user_name: String,
     val user_birthdate: String,
     val user_email: String,
-    val user_height: Double,
-    val user_id: Int,
-    val user_name: String,
-    val user_objective: Int,
-    val user_password: String,
-    val user_points: Any,
-    val user_role: Int,
-    val user_username: String,
-    val user_weight: Double
+    val user_picture: String? = null,
+    val user_height: Float,
+    val user_weight: Float,
+    val user_objetive: Int,
+    val user_points: Int,
+    val user_role: Int
 )

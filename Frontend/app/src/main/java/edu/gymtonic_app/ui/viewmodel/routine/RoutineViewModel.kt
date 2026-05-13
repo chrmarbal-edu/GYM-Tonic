@@ -1,4 +1,4 @@
-package edu.gymtonic_app.ui.viewmodel
+package edu.gymtonic_app.ui.viewmodel.routine
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -10,56 +10,36 @@ import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseWithExerciseEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto
 import edu.gymtonic_app.data.repository.RoutineExerciseRepository
 import edu.gymtonic_app.data.repository.RoutineRepository
-import edu.gymtonic_app.domain.model.routine.RoutineDetail
-import edu.gymtonic_app.ui.mapper.ImageResourceMapper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-
-data class RoutineExerciseUi(
-    val id: String,
-    val name: String,
-    val reps: String,
-    val imageRes: Int
-)
-
-data class RoutineDetailUi(
-    val id: String,
-    val title: String,
-    val exercises: List<RoutineExerciseUi>
-)
-
-data class UserRoutineUi(
-    val id: Int,
-    val name: String,
-    val imageKey: String? = null
-)
 
 sealed class RoutineCatalogUiState {
     object Loading : RoutineCatalogUiState()
-    data class Success(val routine: RoutineDetailUi) : RoutineCatalogUiState()
+    data class Success(val routine: RoutineDetailDto) : RoutineCatalogUiState()
     data class Error(
         val message: String,
-        val fallbackRoutine: RoutineDetailUi? = null
+        val fallbackRoutine: RoutineDetailDto? = null
     ) : RoutineCatalogUiState()
 }
 
 sealed class UserRoutinesUiState {
     object Loading : UserRoutinesUiState()
-    data class Success(val routines: List<UserRoutineUi>) : UserRoutinesUiState()
+    data class Success(val routines: List<RoutineEntity>) : UserRoutinesUiState()
     data class Error(val message: String) : UserRoutinesUiState()
 }
 
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
-    private lateinit var routineRepository: RoutineRepository
-    private lateinit var routineExerciseRepository: RoutineExerciseRepository
+    private  var routineRepository: RoutineRepository
+    private  var routineExerciseRepository: RoutineExerciseRepository
 
     private val _catalogUiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
     val catalogUiState: StateFlow<RoutineCatalogUiState> = _catalogUiState.asStateFlow()
@@ -84,46 +64,36 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
     }
 
     fun loadRoutine(routineId: String, isLocal: Boolean = false) {
-        if (routineId.isBlank()) {
-            _catalogUiState.value = RoutineCatalogUiState.Error(message = "Rutina no valida")
-            return
-        }
-
         viewModelScope.launch {
             _catalogUiState.value = RoutineCatalogUiState.Loading
 
+            val idInt = routineId.toIntOrNull()
+
             if (isLocal) {
-                val localId = routineId.toIntOrNull()
-                if (localId == null) {
-                    _catalogUiState.value = RoutineCatalogUiState.Error(
-                        message = "ID de rutina local invalido"
-                    )
+                if (idInt == null) {
+                    _catalogUiState.value = RoutineCatalogUiState.Error(message = "ID de rutina local invalido")
                     return@launch
                 }
-
-                routineRepository.getUserRoutineWithExercises(localId)
+                routineRepository.getUserRoutineWithExercises(idInt)
                     .onSuccess { routineEntity ->
                         if (routineEntity != null) {
                             try {
                                 val exercises = routineExerciseRepository
-                                    .getExercisesForRoutine(localId)
+                                    .getExercisesForRoutine(idInt)
                                     .first()
 
                                 _catalogUiState.value = RoutineCatalogUiState.Success(
-                                    mapLocalRoutineToUi(routineEntity, exercises)
+                                    mapLocalRoutineToDto(routineEntity, exercises)
                                 )
-                                return@launch
                             } catch (e: Exception) {
                                 _catalogUiState.value = RoutineCatalogUiState.Error(
                                     message = e.message ?: "No se pudieron cargar los ejercicios de la rutina local"
                                 )
-                                return@launch
                             }
                         } else {
                             _catalogUiState.value = RoutineCatalogUiState.Error(
-                                message = "Rutina local no encontrada"
+                                message = "Rutina local no encontrada (ID=$idInt)"
                             )
-                            return@launch
                         }
                     }
                     .onFailure { error ->
@@ -135,17 +105,20 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                 return@launch
             }
 
-            routineRepository.getRoutineByIdFromApi(routineId)
-                .onSuccess { routineData ->
-                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(routineData))
-                }
-                .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(routineId))
-                    _catalogUiState.value = RoutineCatalogUiState.Error(
-                        message = error.message ?: "No se pudo cargar la rutina",
-                        fallbackRoutine = fallback
-                    )
-                }
+            // API detail
+            if (idInt != null) {
+                routineRepository.getRoutineWithExercisesByIdFromApi(idInt)
+                    .onSuccess { routineDetailDto ->
+                        _catalogUiState.value = RoutineCatalogUiState.Success(routineDetailDto)
+                    }
+                    .onFailure { error ->
+                        _catalogUiState.value = RoutineCatalogUiState.Error(
+                            message = error.message ?: "No se pudo cargar la rutina"
+                        )
+                    }
+            } else {
+                _catalogUiState.value = RoutineCatalogUiState.Error(message = "ID de rutina de API invalido")
+            }
         }
     }
 
@@ -156,14 +129,23 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             routineRepository.getRoutinesFromApi()
                 .onSuccess { routinesData ->
                     val firstRoutineData = routinesData.firstOrNull()
-                        ?: routineRepository.getRoutineFromMock("")
-                    _catalogUiState.value = RoutineCatalogUiState.Success(mapRoutineDataToUi(firstRoutineData))
+                    if (firstRoutineData != null) {
+                        _catalogUiState.value = RoutineCatalogUiState.Success(
+                            RoutineDetailDto(
+                                routine_id = firstRoutineData.routine_id,
+                                routine_name = firstRoutineData.routine_name,
+                                exercises = emptyList()
+                            )
+                        )
+                    } else {
+                        _catalogUiState.value = RoutineCatalogUiState.Error(
+                            message = "No hay rutinas disponibles"
+                        )
+                    }
                 }
                 .onFailure { error ->
-                    val fallback = mapRoutineDataToUi(routineRepository.getRoutineFromMock(""))
                     _catalogUiState.value = RoutineCatalogUiState.Error(
-                        message = error.message ?: "No se pudo cargar el catalogo",
-                        fallbackRoutine = fallback
+                        message = error.message ?: "No se pudo cargar el catalogo"
                     )
                 }
         }
@@ -240,49 +222,29 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
     private fun observeUserCreatedRoutines() {
         viewModelScope.launch {
             routineRepository.getUserCreatedRoutines()
-                .map { routineEntities ->
-                    routineEntities.map { entity ->
-                        UserRoutineUi(
-                            id = entity.routine_id,
-                            name = entity.routine_name,
-                            imageKey = entity.imageKey
-                        )
-                    }
-                }
                 .collect { routines ->
                     _userRoutinesState.value = UserRoutinesUiState.Success(routines)
                 }
         }
     }
 
-    private fun mapLocalRoutineToUi(
+    private fun mapLocalRoutineToDto(
         routineEntity: RoutineEntity,
         exercises: List<RoutineExerciseWithExerciseEntity>
-    ): RoutineDetailUi {
-        return RoutineDetailUi(
-            id = routineEntity.routine_id.toString(),
-            title = routineEntity.routine_name,
+    ): RoutineDetailDto {
+        return RoutineDetailDto(
+            routine_id = routineEntity.routine_id,
+            routine_name = routineEntity.routine_name,
+            routine_image = routineEntity.routine_image,
             exercises = exercises.map { item ->
-                RoutineExerciseUi(
-                    id = item.exercise.exercise_id.toString(),
-                    name = item.exercise.exercise_name,
-                    reps = item.reps,
-                    imageRes = ImageResourceMapper.fromKey(item.exercise.exercise_image)
-                )
-            }
-        )
-    }
-
-    private fun mapRoutineDataToUi(data: RoutineDetail): RoutineDetailUi {
-        return RoutineDetailUi(
-            id = data.id,
-            title = data.title,
-            exercises = data.exercises.map { exercise ->
-                RoutineExerciseUi(
-                    id = exercise.id,
-                    name = exercise.name,
-                    reps = exercise.reps,
-                    imageRes = ImageResourceMapper.fromKey(exercise.imageKey)
+                RoutineExerciseDto(
+                    exercise_id = item.exercise.exercise_id,
+                    exercise_name = item.exercise.exercise_name,
+                    exercise_description = item.exercise.exercise_description,
+                    exercise_type = item.exercise.exercise_type,
+                    exercise_video = item.exercise.exercise_video,
+                    exercise_image = item.exercise.exercise_image,
+                    reps = item.reps
                 )
             }
         )

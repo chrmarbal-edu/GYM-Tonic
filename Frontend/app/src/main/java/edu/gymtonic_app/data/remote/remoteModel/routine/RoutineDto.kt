@@ -3,69 +3,38 @@ package edu.gymtonic_app.data.remote.remoteModel.routine
 import com.google.gson.annotations.SerializedName
 
 data class RoutineDto(
-    @SerializedName("routine_id")
-    val routineId: String,
-    @SerializedName("routine_name")
-    val routineName: String,
-    @SerializedName("image_key")
-    val imageKey: String? = null
+    @SerializedName("routine_id", alternate = ["id", "routineId"])
+    val routine_id: Int,
+    @SerializedName("routine_name", alternate = ["name", "routineName"])
+    val routine_name: String? = null,
+    @SerializedName("routine_image", alternate = ["image", "routineImage", "routine_image_url"])
+    val routine_image: String? = null
 )
 
 data class RoutineExerciseDto(
-    @SerializedName("exercise_id")
-    val exerciseId: String? = null,
-    @SerializedName("exercise_name")
-    val exerciseName: String? = null,
-    @SerializedName("exercise_description")
-    val exerciseDescription: String? = null,
-    @SerializedName("exercise_type")
-    val exerciseType: Int? = null,
-    @SerializedName("exercise_video")
-    val exerciseVideo: String? = null,
-    @SerializedName("exercise_image")
-    val exerciseImage: String? = null,
-    @SerializedName("name")
-    val name: String? = null,
-    @SerializedName("reps")
-    val reps: String? = null,
-    @SerializedName("image_key")
-    val imageKey: String? = null
-) {
-    fun resolvedName(): String = exerciseName ?: name ?: "EJERCICIO"
-
-    fun resolvedReps(): String {
-        if (!reps.isNullOrBlank()) {
-            return reps
-        }
-
-        return when (exerciseType) {
-            1 -> "x20"
-            2 -> "x30s"
-            else -> "x12"
-        }
-    }
-
-    fun resolvedImageKey(): String? {
-        if (!imageKey.isNullOrBlank()) {
-            return imageKey
-        }
-
-        if (!exerciseImage.isNullOrBlank()) {
-            return exerciseImage.substringBeforeLast(".")
-        }
-
-        return null
-    }
-}
+    @SerializedName("exercise_id", alternate = ["id", "exerciseId"])
+    val exercise_id: Int,
+    @SerializedName("exercise_name", alternate = ["name", "exerciseName"])
+    val exercise_name: String? = null,
+    @SerializedName("exercise_description", alternate = ["description", "exerciseDescription"])
+    val exercise_description: String? = null,
+    @SerializedName("exercise_type", alternate = ["type", "exerciseType"])
+    val exercise_type: Int = 0,
+    @SerializedName("exercise_video", alternate = ["video", "exerciseVideo"])
+    val exercise_video: String? = null,
+    @SerializedName("exercise_image", alternate = ["image", "exerciseImage", "exercise_image_url"])
+    val exercise_image: String? = null,
+    val reps: String? = null
+)
 
 data class RoutineDetailDto(
-    @SerializedName("routine_id")
-    val routineId: String,
-    @SerializedName("routine_name")
-    val routineName: String,
-    @SerializedName("exercises")
+    @SerializedName("routine_id", alternate = ["id", "routineId"])
+    val routine_id: Int,
+    @SerializedName("routine_name", alternate = ["name", "routineName"])
+    val routine_name: String? = null,
+    @SerializedName("routine_image", alternate = ["image", "routineImage", "routine_image_url"])
+    val routine_image: String? = null,
     val exercises: List<RoutineExerciseDto>? = null
 ) {
-    // Asegura lista vacía si exercises es null
     fun safeExercises(): List<RoutineExerciseDto> = exercises ?: emptyList()
 }

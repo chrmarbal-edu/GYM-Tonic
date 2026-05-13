@@ -17,16 +17,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModel
-import edu.gymtonic_app.ui.viewmodel.ExerciseViewModelFactory
-import edu.gymtonic_app.ui.viewmodel.FavoriteExercisePayload
-import edu.gymtonic_app.ui.viewmodel.RoutineCatalogUiState
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogUiState
 import android.widget.Toast
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import edu.gymtonic_app.ui.viewmodel.RoutineCatalogViewModel
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
 
 @Composable
 fun RoutineCatalogScreen(
@@ -121,7 +121,7 @@ fun RoutineCatalogScreen(
 
         is RoutineCatalogUiState.Success -> {
             TrainingShellScreen(
-                title = state.routine.title,
+                title = state.routine.routine_name ?: strings.routineWorkoutsTitle,
                 onBack = onBack,
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
@@ -136,18 +136,18 @@ fun RoutineCatalogScreen(
                 }
             ) {
                 RoutineTemplateScreen(
-                    exercises = state.routine.exercises,
+                    exercises = state.routine.safeExercises(),
                     onExerciseClick = onExerciseClick,
                     favoritesSet = favoritesSet,
                     onToggleFavorite = { routineExercise ->
                         exerciseViewModel.onToggleFavorite(
                             FavoriteExercisePayload(
-                                id = routineExercise.id,
-                                name = routineExercise.name,
-                                description = routineExercise.reps,
-                                type = 0,
-                                video = null,
-                                image = null
+                                id = routineExercise.exercise_id,
+                                name = routineExercise.exercise_name ?: "Ejercicio",
+                                description = routineExercise.exercise_description ?: routineExercise.reps ?: "",
+                                type = routineExercise.exercise_type,
+                                video = routineExercise.exercise_video,
+                                image = routineExercise.exercise_image
                             )
                         )
                     }
@@ -159,7 +159,7 @@ fun RoutineCatalogScreen(
             val fallback = state.fallbackRoutine
             if (fallback != null) {
                 TrainingShellScreen(
-                    title = fallback.title,
+                    title = fallback.routine_name ?: strings.routineWorkoutsTitle,
                     onBack = onBack,
                     showBottomBar = true,
                     selectedBottomItem = BottomNavItem.TRAINING,
@@ -174,18 +174,18 @@ fun RoutineCatalogScreen(
                     }
                 ) {
                     RoutineTemplateScreen(
-                        exercises = fallback.exercises,
+                        exercises = fallback.safeExercises(),
                         onExerciseClick = onExerciseClick,
                         favoritesSet = favoritesSet,
                         onToggleFavorite = { routineExercise ->
                             exerciseViewModel.onToggleFavorite(
                                 FavoriteExercisePayload(
-                                    id = routineExercise.id,
-                                    name = routineExercise.name,
-                                    description = routineExercise.reps,
-                                    type = 0,
-                                    video = null,
-                                    image = null
+                                    id = routineExercise.exercise_id,
+                                    name = routineExercise.exercise_name ?: "Ejercicio",
+                                    description = routineExercise.reps ?: "",
+                                    type = routineExercise.exercise_type,
+                                    video = routineExercise.exercise_video,
+                                    image = routineExercise.exercise_image
                                 )
                             )
                         }

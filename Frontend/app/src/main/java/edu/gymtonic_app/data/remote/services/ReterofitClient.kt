@@ -7,6 +7,7 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.remote.remoteModel.social.FrequestDto
@@ -29,45 +30,39 @@ import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.PATCH
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 object RetrofitClient {
-    private val BASE_URL = BuildConfig.BASE_URL
+    private val BASE_URL = BuildConfig.API_BASE_URL
     private var sessionManager: SessionManager? = null
     private val tag = "RetrofitClient"
 
-    // Métodos para inicializar SessionManager desde la aplicación
     fun setSessionManager(manager: SessionManager) {
         sessionManager = manager
     }
 
-    // Interceptor que agrega Authorization header
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val url = originalRequest.url.toString()
 
-        // NO agregar Authorization en POST users/login y POST users (register)
         val isLoginEndpoint = url.contains("users/login") && originalRequest.method == "POST"
         val isRegisterEndpoint = url.endsWith("users") && originalRequest.method == "POST"
 
         val newRequest = if (!isLoginEndpoint && !isRegisterEndpoint && sessionManager != null) {
             try {
-                // Leer token de forma bloqueante (única forma de hacerlo en Interceptor)
                 val token = runBlocking {
                     sessionManager?.sessionFlow?.first()?.token
                 }
 
                 if (!token.isNullOrEmpty()) {
-                    Log.d(tag, "Agregando Authorization header para: $url")
                     originalRequest.newBuilder()
                         .addHeader("Authorization", "Bearer $token")
                         .build()
                 } else {
-                    Log.d(tag, "Token nulo, no agregando Authorization para: $url")
                     originalRequest
                 }
             } catch (e: Exception) {
-                Log.e(tag, "Error al leer token: ${e.message}")
                 originalRequest
             }
         } else {
@@ -93,25 +88,11 @@ object RetrofitClient {
 
 interface ApiService {
 
-    // ADVERTENCIA TEMPORAL:
-    // Hay endpoints usan Map<String, Any> / Map<String, Any?> porque no hay
-    // DTOs de request consolidados en el frontend para estas operaciones.
-    // Si ya existen DTOs tipados para crear o actualizar recursos, conviene
-    // sustituir estos mapas por clases concretas.
-
-    // AUTH
     @POST("auth/googleLogin")
     suspend fun googleLogin(@Body request: Map<String, Any>): Response<LoginResponse>
 
     @POST("auth/facebookLogin")
     suspend fun facebookLogin(@Body request: Map<String, Any>): Response<LoginResponse>
-
-
-    // ADVERTENCIA TEMPORAL:
-    // En el backend, users.routes.js declara GET /:id antes que GET /missions.
-    // Eso puede hacer que users/missions se interprete como id="missions".
-    // Si falla esta llamada, hay que mover /missions antes que /:id en el backend.
-
 
     // USERS
     @POST("users")
@@ -129,71 +110,70 @@ interface ApiService {
     suspend fun getUsers(): Response<List<UserDto>>
 
     @GET("users/{id}")
-    suspend fun getUserById(@Path("id") id: String): Response<UserDto>
+    suspend fun getUserById(@Path("id") id: Int): Response<UserDto>
 
     @PATCH("users/{id}")
     suspend fun updateUser(
-        @Path("id") id: String,
+        @Path("id") id: Int,
         @Body request: Map<String, Any?>
     ): Response<UserDto>
 
     @DELETE("users/{id}")
-    suspend fun deleteUser(@Path("id") id: String): Response<Unit>
+    suspend fun deleteUser(@Path("id") id: Int): Response<Unit>
+
+    // MISSIONS
+    @GET("missions")
+    suspend fun getMissions(): Response<List<MissionDto>>
+
+    @GET("missions/{id}")
+    suspend fun getMissionById(@Path("id") id: Int): Response<MissionDto>
 
     // USER MISSIONS
     @GET("users/missions")
     suspend fun getUserMissions(): Response<List<UserMissionDto>>
 
     @GET("users/missions/user/{userId}")
-    suspend fun getUserMissionByUserId(@Path("userId") userId: String): Response<List<UserMissionDto>>
+    suspend fun getUserMissionByUserId(@Path("userId") userId: Int): Response<List<UserMissionDto>>
 
     @GET("users/missions/mission/{missionId}")
-    suspend fun getUserMissionByMissionId(@Path("missionId") missionId: String): Response<List<UserMissionDto>>
+    suspend fun getUserMissionByMissionId(@Path("missionId") missionId: Int): Response<List<UserMissionDto>>
 
     @GET("users/missions/{id}")
-    suspend fun getUserMissionById(@Path("id") id: String): Response<UserMissionDto>
+    suspend fun getUserMissionById(@Path("id") id: Int): Response<UserMissionDto>
 
     @POST("users/missions")
     suspend fun createUserMission(@Body request: Map<String, Any>): Response<UserMissionDto>
 
     @PATCH("users/missions/{id}")
     suspend fun updateUserMission(
-        @Path("id") id: String,
+        @Path("id") id: Int,
         @Body request: Map<String, Any?>
     ): Response<UserMissionDto>
 
     @DELETE("users/missions/{id}")
-    suspend fun deleteUserMission(@Path("id") id: String): Response<Unit>
-
-
-    // ADVERTENCIA TEMPORAL:
-    // En el backend, exercises.routes.js tiene una colisión de rutas:
-    // GET /:type está antes que GET /:id, así que una petición como exercises/12
-    // puede entrar en la ruta de tipo. Lo correcto sería separar la ruta de tipo,
-    // por ejemplo exercises/type/{type}, o reordenar las rutas en el backend.
-
+    suspend fun deleteUserMission(@Path("id") id: Int): Response<Unit>
 
     // EXERCISES
     @GET("exercises")
     suspend fun getExercises(): Response<List<ExerciseDto>>
 
-    @GET("exercises/{type}")
-    suspend fun getExercisesByType(@Path("type") type: String): Response<List<ExerciseDto>>
+    @GET("exercises/type/{typeName}")
+    suspend fun getExercisesByType(@Path("typeName") typeName: String): Response<List<ExerciseDto>>
 
     @GET("exercises/{id}")
-    suspend fun getExerciseById(@Path("id") id: String): Response<ExerciseDto>
+    suspend fun getExerciseById(@Path("id") id: Int): Response<ExerciseDto>
 
     @POST("exercises")
-    suspend fun createExercise(@Body request: Map<String, Any>): Response<Unit>
+    suspend fun createExercise(@Body request: edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest): Response<Unit>
 
-    @PATCH("exercises/{id}")
+    @PUT("exercises/{id}")
     suspend fun updateExercise(
-        @Path("id") id: String,
-        @Body request: Map<String, Any?>
+        @Path("id") id: Int,
+        @Body request: edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
     ): Response<Unit>
 
     @DELETE("exercises/{id}")
-    suspend fun deleteExercise(@Path("id") id: String): Response<Unit>
+    suspend fun deleteExercise(@Path("id") id: Int): Response<Unit>
 
     // ROUTINES
     @GET("routines/routines")
@@ -207,75 +187,75 @@ interface ApiService {
 
     @GET("routines/routine/{routineId}/with-exercises")
     suspend fun getRoutineWithExercisesById(
-        @Path("routineId") routineId: String
+        @Path("routineId") routineId: Int
     ): Response<RoutineDetailDto>
 
     @GET("routines/routine/{routineId}")
-    suspend fun getRoutineById(@Path("routineId") routineId: String): Response<RoutineDto>
+    suspend fun getRoutineById(@Path("routineId") routineId: Int): Response<RoutineDto>
 
     @POST("routines/routine/new")
     suspend fun createRoutine(@Body request: Map<String, Any>): Response<RoutineDto>
 
     @PATCH("routines/routine/{routineId}")
     suspend fun updateRoutine(
-        @Path("routineId") routineId: String,
+        @Path("routineId") routineId: Int,
         @Body request: Map<String, Any?>
     ): Response<RoutineDto>
 
     @DELETE("routines/routine/{routineId}")
-    suspend fun deleteRoutine(@Path("routineId") routineId: String): Response<Unit>
+    suspend fun deleteRoutine(@Path("routineId") routineId: Int): Response<Unit>
 
     // GROUPS
     @GET("groups")
     suspend fun getGroups(): Response<List<GroupDto>>
 
     @GET("groups/{id}")
-    suspend fun getGroupById(@Path("id") id: String): Response<GroupDto>
+    suspend fun getGroupById(@Path("id") id: Int): Response<GroupDto>
 
     @POST("groups/new")
     suspend fun createGroup(@Body request: Map<String, Any>): Response<GroupDto>
 
     @PATCH("groups/{id}")
     suspend fun updateGroup(
-        @Path("id") id: String,
+        @Path("id") id: Int,
         @Body request: Map<String, Any?>
     ): Response<GroupDto>
 
     @DELETE("groups/{id}")
-    suspend fun deleteGroup(@Path("id") id: String): Response<Unit>
+    suspend fun deleteGroup(@Path("id") id: Int): Response<Unit>
 
     // FRIENDS
     @GET("friends")
     suspend fun getFriends(): Response<List<FriendDto>>
 
     @GET("friends/{id}")
-    suspend fun getFriendById(@Path("id") id: String): Response<FriendDto>
+    suspend fun getFriendById(@Path("id") id: Int): Response<FriendDto>
 
     @GET("friends/user/{userId}")
-    suspend fun getFriendsByUserId(@Path("userId") userId: String): Response<List<FriendDto>>
+    suspend fun getFriendsByUserId(@Path("userId") userId: Int): Response<List<FriendDto>>
 
     @POST("friends")
     suspend fun createFriend(@Body request: Map<String, Any>): Response<FriendDto>
 
     @DELETE("friends/{id}")
-    suspend fun deleteFriend(@Path("id") id: String): Response<Unit>
+    suspend fun deleteFriend(@Path("id") id: Int): Response<Unit>
 
     // FRIEND REQUESTS
     @GET("friendRequests")
     suspend fun getFriendRequests(): Response<List<FrequestDto>>
 
     @GET("friendRequests/{id}")
-    suspend fun getFriendRequestById(@Path("id") id: String): Response<FrequestDto>
+    suspend fun getFriendRequestById(@Path("id") id: Int): Response<FrequestDto>
 
     @POST("friendRequests")
     suspend fun createFriendRequest(@Body request: Map<String, Any>): Response<FrequestDto>
 
     @PATCH("friendRequests/accept/{id}")
-    suspend fun acceptFriendRequest(@Path("id") id: String): Response<Unit>
+    suspend fun acceptFriendRequest(@Path("id") id: Int): Response<Unit>
 
     @PATCH("friendRequests/reject/{id}")
-    suspend fun rejectFriendRequest(@Path("id") id: String): Response<Unit>
+    suspend fun rejectFriendRequest(@Path("id") id: Int): Response<Unit>
 
     @DELETE("friendRequests/{id}")
-    suspend fun deleteFriendRequest(@Path("id") id: String): Response<Unit>
+    suspend fun deleteFriendRequest(@Path("id") id: Int): Response<Unit>
 }

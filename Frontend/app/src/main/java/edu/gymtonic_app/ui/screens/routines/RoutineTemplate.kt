@@ -1,6 +1,5 @@
 package edu.gymtonic_app.ui.screens.routines
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,22 +28,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.util.Log
+import coil.compose.AsyncImage
+import edu.gymtonic_app.BuildConfig
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
-import edu.gymtonic_app.ui.viewmodel.RoutineExerciseUi
 
 @Composable
 fun RoutineTemplateScreen(
-    exercises: List<RoutineExerciseUi>,
+    exercises: List<RoutineExerciseDto>,
     onExerciseClick: (String) -> Unit,
     favoritesSet: Set<Int>,
-    onToggleFavorite: (RoutineExerciseUi) -> Unit
+    onToggleFavorite: (RoutineExerciseDto) -> Unit
 ) {
     val strings = LocalStrings.current
     val colors = LocalColors.current
@@ -73,16 +74,15 @@ fun RoutineTemplateScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             items(exercises) { exercise ->
-                val parsedId = exercise.id.toIntOrNull()
                 RoutineExerciseRow(
                     exercise = exercise,
-                    isFavorite = parsedId?.let { favoritesSet.contains(it) } == true,
-                    favoriteEnabled = parsedId != null,
+                    isFavorite = favoritesSet.contains(exercise.exercise_id),
+                    favoriteEnabled = true,
                     removeFavoriteLabel = strings.removeFavorite,
                     markFavoriteLabel = strings.markFavorite,
                     setsAndRepsLabel = strings.setsAndReps,
                     onToggleFavorite = { onToggleFavorite(exercise) },
-                    onClick = { onExerciseClick(exercise.id) }
+                    onClick = { onExerciseClick(exercise.exercise_id.toString()) }
                 )
             }
         }
@@ -91,7 +91,7 @@ fun RoutineTemplateScreen(
 
 @Composable
 private fun RoutineExerciseRow(
-    exercise: RoutineExerciseUi,
+    exercise: RoutineExerciseDto,
     isFavorite: Boolean,
     favoriteEnabled: Boolean,
     removeFavoriteLabel: String,
@@ -113,9 +113,20 @@ private fun RoutineExerciseRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
         ) {
-            Image(
-                painter = painterResource(exercise.imageRes),
-                contentDescription = exercise.name,
+            val imageKey = exercise.exercise_image
+            val imageUrl = if (!imageKey.isNullOrBlank()) {
+                if (imageKey.startsWith("http")) {
+                    imageKey
+                } else {
+                    val normalizedKey = if (imageKey.startsWith("/")) imageKey else "/$imageKey"
+                    "${BuildConfig.BACKEND_BASE_URL}$normalizedKey"
+                }
+            } else null
+
+            Log.d("RoutineTemplate", "Cargando imagen de ejercicio: $imageUrl")
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = exercise.exercise_name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(64.dp)
@@ -126,7 +137,7 @@ private fun RoutineExerciseRow(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = exercise.name,
+                    text = exercise.exercise_name ?: "Ejercicio sin nombre",
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp,
                     maxLines = 1,
@@ -162,8 +173,15 @@ private fun RoutineExerciseRow(
                 shape = RoundedCornerShape(10.dp),
                 color = colors.surfaceAccent
             ) {
+                val repsText = if (!exercise.reps.isNullOrBlank()) exercise.reps!! else {
+                    when (exercise.exercise_type) {
+                        1 -> "x20"
+                        2 -> "x30s"
+                        else -> "x12"
+                    }
+                }
                 Text(
-                    text = exercise.reps,
+                    text = repsText,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = colors.textOnAccent,

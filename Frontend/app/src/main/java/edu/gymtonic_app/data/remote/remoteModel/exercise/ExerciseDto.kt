@@ -3,27 +3,24 @@ package edu.gymtonic_app.data.remote.remoteModel.exercise
 import com.google.gson.annotations.SerializedName
 
 data class ExerciseDto(
-    @SerializedName("id")
-    val id: String? = null,
-    @SerializedName("exercise_id")
-    val exerciseId: String? = null,
-    @SerializedName("name")
-    val name: String? = null,
-    @SerializedName("exercise_name")
-    val exerciseName: String? = null,
-    @SerializedName("duration_seconds")
-    val durationSeconds: Int? = null,
-    @SerializedName("exercise_type")
-    val exerciseType: Int? = null,
-    @SerializedName("image_key")
-    val imageKey: String? = null,
-    @SerializedName("exercise_image")
-    val exerciseImage: String? = null,
-    @SerializedName("instructions")
-    val instructions: List<String>? = null,
-    @SerializedName("exercise_description")
-    val exerciseDescription: String? = null,
-    @SerializedName("exercise_video")
-    val exerciseVideo: String? = null
+    @SerializedName("exercise_id", alternate = ["id", "exerciseId"])
+    val exercise_id: Int,
+    @SerializedName("exercise_name", alternate = ["name", "exerciseName"])
+    val exercise_name: String,
+    @SerializedName("exercise_description", alternate = ["description", "exerciseDescription"])
+    val exercise_description: String,
+    @SerializedName("exercise_type", alternate = ["type", "exerciseType"])
+    val exercise_type: Int,
+    @SerializedName("exercise_video", alternate = ["video", "exerciseVideo"])
+    val exercise_video: String? = null,
+    @SerializedName("exercise_image", alternate = ["image", "exerciseImage", "img", "exercise_img", "imageUrl", "image_url", "exercise_image_url"])
+    val exercise_image: String? = null
 )
 
+data class ExerciseRequest(
+    val name: String,
+    val description: String,
+    val type: Int,
+    val video: String? = null,
+    val image: String? = null
+)

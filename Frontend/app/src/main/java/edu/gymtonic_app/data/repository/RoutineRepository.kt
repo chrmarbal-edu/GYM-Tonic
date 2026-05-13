@@ -2,55 +2,40 @@ package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
-import edu.gymtonic_app.data.mapper.toDomain
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
-import edu.gymtonic_app.domain.model.routine.RoutineDetail
 import kotlinx.coroutines.flow.Flow
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import retrofit2.Response
 
 class RoutineRepository(
     private val routineRemoteDataSource: RoutineRemoteDataSource,
     private val routineLocalDataSource: RoutineLocalDataSource
 ) {
     //region Room
-    /**
-     * Obtiene todas las rutinas creadas por el usuario
-     * Observa cambios en tiempo real (Flow)
-     * Usado por: TrainingScreen para mostrar "Mis rutinas"
-     */
     fun getUserCreatedRoutines(): Flow<List<RoutineEntity>> {
         return routineLocalDataSource.getAllUserRoutines()
     }
 
-    /**
-     * Crea una nueva rutina para el usuario
-     * Retorna ID de la rutina creada
-     * Usado por: CreateRoutineScreen al guardar
-     */
     suspend fun createUserRoutine(
         routineName: String,
         imageKey: String? = null
     ): Result<Long> {
         return runCatching {
-            // Validar nombre único antes de insertar
             val exists = routineLocalDataSource.existsRoutineWithName(routineName)
             if (exists) {
                 throw IllegalArgumentException("Ya existe una rutina con ese nombre")
             }
 
-            // Crear entidad y guardar
             val routine = RoutineEntity(
                 routine_name = routineName,
-                imageKey = imageKey
+                routine_image = imageKey
             )
             routineLocalDataSource.createOrUpdateRoutine(routine)
         }
     }
 
-    /**
-     * Actualiza una rutina existente
-     * Usado por: pantalla de edición (futuro)
-     */
     suspend fun updateUserRoutine(
         routineId: Int,
         routineName: String,
@@ -60,78 +45,119 @@ class RoutineRepository(
             val routine = RoutineEntity(
                 routine_id = routineId,
                 routine_name = routineName,
-                imageKey = imageKey
+                routine_image = imageKey
             )
             routineLocalDataSource.updateRoutine(routine)
         }
     }
 
-    /**
-     * Elimina una rutina y sus ejercicios relacionados
-     * Usado por: swipe para borrar en TrainingScreen
-     */
     suspend fun deleteUserRoutine(routineId: Int): Result<Int> {
         return runCatching {
-            // Nota: También debería borrar registros en routine_x_exercise
-            // Lo haremos en RoutineExerciseRepository
             routineLocalDataSource.deleteRoutineById(routineId)
         }
     }
 
-    /**
-     * Obtiene los detalles de una rutina con sus ejercicios
-     * Usado por: RoutineCatalogScreen si quieres ver detalles de rutina usuario
-     */
     suspend fun getUserRoutineWithExercises(routineId: Int): Result<RoutineEntity?> {
         return runCatching {
             routineLocalDataSource.getRoutineWithExercises(routineId)
         }
     }
     //endregion
+
     //region Retrofit
-    private fun routinesById(details: List<RoutineDetailDto>): Map<String, RoutineDetail> {
-        return details.associate { dto ->
-            dto.routineId to dto.toDomain()
+    suspend fun getRoutinesFromApi(): Result<List<RoutineDto>> {
+        return runCatching {
+            unwrapList(
+                response = routineRemoteDataSource.getRoutines(),
+                defaultMessage = "No se pudieron obtener las rutinas"
+            )
         }
     }
 
-    // FALLBACK TEMPORAL: solo si la API falla.
-    suspend fun getRoutineFromMock(routineId: String): RoutineDetail {
-        val byId = routinesById(routineRemoteDataSource.getMockRoutineDetails())
-        val fallbackRoutine = byId[routineId] ?: byId.values.firstOrNull()
-
-        return fallbackRoutine ?: RoutineDetail(
-            id = routineId.ifBlank { "0" },
-            title = "Rutina",
-            exercises = emptyList()
-        )
-    }
-
-    suspend fun getAllRoutinesFromMock(): List<RoutineDetail> {
-        return routinesById(routineRemoteDataSource.getMockRoutineDetails()).values.toList()
-    }
-
-    // Ruta remote-first para listado de rutinas.
-    suspend fun getRoutinesFromApi(): Result<List<RoutineDetail>> {
+    suspend fun getRoutineCategoriesFromApi(): Result<List<TrainingCategoryDto>> {
         return runCatching {
-            val fallbackById = routinesById(routineRemoteDataSource.getMockRoutineDetails())
-            routineRemoteDataSource.getRoutinesFromApi().map { dto ->
-                RoutineDetail(
-                    id = dto.routineId,
-                    title = dto.routineName,
-                    exercises = fallbackById[dto.routineId]?.exercises ?: emptyList()
+            unwrapList(
+                response = routineRemoteDataSource.getRoutineCategories(),
+                defaultMessage = "No se pudieron obtener las categorías de rutinas"
+            )
+        }
+    }
+
+    suspend fun getRoutineByNameFromApi(name: String): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.getRoutineByName(name),
+                defaultMessage = "No se pudo obtener la rutina por nombre: $name"
+            )
+        }
+    }
+
+    suspend fun getRoutineWithExercisesByIdFromApi(routineId: Int): Result<RoutineDetailDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.getRoutineWithExercisesById(routineId),
+                defaultMessage = "No se pudo obtener el detalle de la rutina con id=$routineId"
+            )
+        }
+    }
+
+    suspend fun getRoutineByIdFromApi(routineId: Int): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.getRoutineById(routineId),
+                defaultMessage = "No se pudo obtener la rutina con id=$routineId"
+            )
+        }
+    }
+
+    suspend fun createRoutineFromApi(request: Map<String, Any>): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.createRoutine(request),
+                defaultMessage = "No se pudo crear la rutina"
+            )
+        }
+    }
+
+    suspend fun updateRoutineFromApi(
+        routineId: Int,
+        request: Map<String, Any?>
+    ): Result<RoutineDto> {
+        return runCatching {
+            unwrapOne(
+                response = routineRemoteDataSource.updateRoutine(routineId, request),
+                defaultMessage = "No se pudo actualizar la rutina con id=$routineId"
+            )
+        }
+    }
+
+    suspend fun deleteRoutineFromApi(routineId: Int): Result<Unit> {
+        return runCatching {
+            val response = routineRemoteDataSource.deleteRoutine(routineId)
+            if (!response.isSuccessful) {
+                val errorBody = response.errorBody()?.string().orEmpty()
+                throw Exception(
+                    "Error al eliminar rutina (HTTP ${response.code()}): ${response.message()} $errorBody"
                 )
             }
+            Unit
         }
     }
 
-    // Ruta remote-first para detalle por id real de backend.
-    suspend fun getRoutineByIdFromApi(routineId: String): Result<RoutineDetail> {
-        return runCatching {
-            routineRemoteDataSource.getRoutineByIdFromApi(routineId).toDomain()
-        }.recoverCatching {
-            getRoutineFromMock(routineId)
+    private fun <T> unwrapOne(response: Response<T>, defaultMessage: String): T {
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("$defaultMessage (body vacío)")
         }
+        val errorBody = response.errorBody()?.string().orEmpty()
+        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+    }
+
+    private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
+        if (response.isSuccessful) {
+            return response.body() ?: emptyList()
+        }
+        val errorBody = response.errorBody()?.string().orEmpty()
+        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
     }
     //endregion
 }

@@ -1,65 +1,20 @@
 package edu.gymtonic_app.data.remote.remoteDatasource
 
-import android.util.Log
-import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.remote.services.RetrofitClient
 
 class ExerciseRemoteDataSource {
-    private val tag = ExerciseRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
-    suspend fun getExerciseById(exerciseId: String): ExerciseDto {
-        // PRIMARY: consumo real del backend (/exercises/{id}).
-        return try {
-            val response = api.getExerciseById(exerciseId)
-            if (response.isSuccessful) {
-                response.body() ?: throw Exception("Respuesta vacia del servidor")
-            } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e(tag, "Error exercise detail: ${response.code()} ${response.message()} | $errorBody")
-                // FALLBACK TEMPORAL: solo para transicion segura si la API falla.
-                buildFallbackExercise(exerciseId)
-            }
-        } catch (e: Exception) {
-            Log.e(tag, "Error exercise detail exception: ${e.message}")
-            // FALLBACK TEMPORAL: solo para transicion segura si la API falla.
-            buildFallbackExercise(exerciseId)
-        }
-    }
+    suspend fun getExercises() = api.getExercises()
 
-    // FALLBACK TEMPORAL: eliminar al completar la migracion al backend real.
-    private fun buildFallbackExercise(exerciseId: String): ExerciseDto {
-        val normalized = exerciseId.lowercase()
-        val inferredName = when {
-            normalized.contains("estocadas") -> "ESTOCADAS"
-            normalized.contains("press") -> "PRESS BANCA"
-            normalized.contains("pull") -> "PULL OVER"
-            normalized.contains("remo") -> "REMO"
-            normalized.contains("sentadilla") -> "SENTADILLA"
-            normalized.contains("peso") -> "PESO MUERTO"
-            else -> "EJERCICIO"
-        }
+    suspend fun getExercisesByType(type: String) = api.getExercisesByType(type)
 
-        val inferredImageKey = when {
-            normalized.contains("estocadas") -> "estocadas"
-            normalized.contains("press") -> "pressbanca"
-            normalized.contains("pull") -> "pullover"
-            normalized.contains("remo") -> "remo"
-            normalized.contains("sentadilla") -> "sentadilla"
-            normalized.contains("peso") -> "pesomuerto"
-            else -> "squat"
-        }
+    suspend fun getExerciseById(id: Int) = api.getExerciseById(id)
 
-        return ExerciseDto(
-            id = exerciseId,
-            name = inferredName,
-            durationSeconds = 15,
-            imageKey = inferredImageKey,
-            instructions = listOf(
-                "Manten tecnica controlada durante toda la serie.",
-                "Respira de forma constante y evita compensaciones.",
-                "Ajusta la carga para completar repeticiones con buena forma."
-            )
-        )
-    }
+    suspend fun createExercise(request: ExerciseRequest) = api.createExercise(request)
+
+    suspend fun updateExercise(id: Int, request: ExerciseRequest) = api.updateExercise(id, request)
+
+    suspend fun deleteExercise(id: Int)= api.deleteExercise(id)
 }

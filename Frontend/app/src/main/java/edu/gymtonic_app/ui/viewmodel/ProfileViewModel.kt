@@ -3,46 +3,44 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.local.GymTonicDatabase
+import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.repository.GroupRepository
-import edu.gymtonic_app.data.repository.TrainingRepository
-import edu.gymtonic_app.data.repository.WeekRepository
-import edu.gymtonic_app.ui.mapper.ImageResourceMapper
+import edu.gymtonic_app.data.repository.RoutineRepository
+import edu.gymtonic_app.data.repository.UserMissionsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-data class ProfileRoutineUi(
-	val id: String,
-	val title: String,
-	val imageRes: Int
-)
-
-data class ProfileGroupUi(
-	val id: Int,
-	val name: String,
-	val membersLabel: String
-)
-
-data class ProfileSuccessUi(
+data class ProfileData(
 	val username: String,
 	val streakLabel: String,
-	val recentRoutines: List<ProfileRoutineUi>,
-	val groups: List<ProfileGroupUi>
+	val recentRoutines: List<TrainingRoutineDto>,
+	val groups: List<GroupDto>
 )
 
 sealed class ProfileUiState {
 	object Loading : ProfileUiState()
-	data class Success(val data: ProfileSuccessUi) : ProfileUiState()
+	data class Success(val data: ProfileData) : ProfileUiState()
 	data class Error(val message: String) : ProfileUiState()
 }
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
-	private val weekRepository = WeekRepository()
-	private val trainingRepository = TrainingRepository()
+
+	private val userMissionsRemoteDataSource : UserMissionsRemoteDatasource
+	private val userMissionsRepository : UserMissionsRepository
+	private val routineRepository: RoutineRepository
+	private val routineRemoteDataSource: RoutineRemoteDataSource
+
+	private val routineLocalDataSource: RoutineLocalDataSource
 	private val groupRepository = GroupRepository()
 	private val sessionManager = SessionManager(application.sessionDataStore)
 
@@ -50,6 +48,16 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 	val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
 	init {
+		val database = GymTonicDatabase.getInstance(application)
+		val dao = database.routineDao()
+
+		userMissionsRemoteDataSource = UserMissionsRemoteDatasource()
+		userMissionsRepository = UserMissionsRepository(userMissionsRemoteDataSource)
+
+		routineRemoteDataSource = RoutineRemoteDataSource()
+		routineLocalDataSource = RoutineLocalDataSource(dao)
+		routineRepository = RoutineRepository(routineRemoteDataSource, routineLocalDataSource)
+
 		loadProfile()
 	}
 
@@ -60,11 +68,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val session = sessionManager.sessionFlow.first()
 			val username = session.username ?: "Usuario"
 
-			val weekDays = weekRepository.getWeeklyCalendarDays().getOrElse { emptyList() }
+			val weekDaysResult = userMissionsRepository.getWeeklyCalendarDays()
+			val weekDays = weekDaysResult.getOrElse { emptyList() }
 			val streakDone = weekDays.take(7).count { it.didWorkout }
 			val streakLabel = "$streakDone/7 Logrados"
 
-			val routinesResult = trainingRepository.getTrainingCategories()
+			val routinesResult = routineRepository.getRoutineCategoriesFromApi()
 			val groupsResult = groupRepository.getUserGroups(session.userId)
 
 			if (routinesResult.isFailure || groupsResult.isFailure) {
@@ -79,24 +88,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val category = routinesResult.getOrNull().orEmpty().firstOrNull { it.id == "recent" }
 				?: routinesResult.getOrNull().orEmpty().firstOrNull()
 
-			val recentRoutines = category?.routines.orEmpty().take(3).map { routine ->
-				ProfileRoutineUi(
-					id = routine.id,
-					title = routine.title,
-					imageRes = ImageResourceMapper.fromKey(routine.imageKey)
-				)
-			}
-
-			val groups = groupsResult.getOrNull().orEmpty().map {
-				ProfileGroupUi(
-					id = it.id,
-					name = it.name,
-					membersLabel = it.membersLabel
-				)
-			}
+			val recentRoutines = category?.routines.orEmpty().take(3)
+			val groups = groupsResult.getOrNull().orEmpty()
 
 			_uiState.value = ProfileUiState.Success(
-				ProfileSuccessUi(
+				ProfileData(
 					username = username,
 					streakLabel = streakLabel,
 					recentRoutines = recentRoutines,
@@ -106,4 +102,3 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 		}
 	}
 }
-
