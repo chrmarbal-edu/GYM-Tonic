@@ -51,7 +51,7 @@ userMission.findByUserId = async function (userId, result) {
                 WHERE um.user_x_mission_userid = @userId
             `)
 
-        result(null, response.recordset[0])
+        result(null, response.recordset)
     } catch (err) {
         result(err, null)
     }
@@ -71,7 +71,7 @@ userMission.findByMissionId = async function (missionId, result) {
                 WHERE um.user_x_mission_missionid = @missionId
             `)
 
-        result(null, response.recordset[0])
+        result(null, response.recordset)
     } catch (err) {
         result(err, null)
     }

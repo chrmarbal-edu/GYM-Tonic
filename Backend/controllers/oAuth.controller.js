@@ -7,7 +7,6 @@ const AppError = require("../utils/AppError")
 // oAuth Clients
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
-
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
     return function (req, res, next) {
@@ -18,7 +17,7 @@ function wrapAsync(fn) {
 }
 
 // Función auxiliar para buscar o crear el usuario y generar el token
-async function findOrCreateUser(email, name, req, res, next) {
+async function findOrCreateUser(email, name, oauthProvider, req, res, next) {
     await userModel.findByEmail(email, async function(err, userFound) {
         if (err) return next(new AppError("Error al buscar usuario", 500))
 
@@ -34,7 +33,8 @@ async function findOrCreateUser(email, name, req, res, next) {
                 user_email: email,
                 user_height: 0,
                 user_weight: 0,
-                user_objective: 0
+                user_objective: 0,
+                user_oauth: oauthProvider
             }
 
             await userModel.create(newUser, function(createErr, createdUser) {
@@ -65,7 +65,7 @@ exports.googleLogin = wrapAsync(async function(req, res, next) {
         const userEmail = payload.email
         const userName = payload.name
 
-        await findOrCreateUser(userEmail, userName, req, res, next)
+        await findOrCreateUser(userEmail, userName, "Google", req, res, next)
     } catch (error) {
         return next(new AppError("Token de Google inválido", 401))
     }
@@ -97,9 +97,8 @@ exports.facebookLogin = wrapAsync(async function(req, res, next) {
             return next(new AppError("No se pudo obtener el email de la cuenta de Facebook", 400))
         }
 
-        await findOrCreateUser(userEmail, userName, req, res, next)
+        await findOrCreateUser(userEmail, userName, "Facebook", req, res, next)
     } catch (error) {
-        console.error("FB Login Error:", error)
         return next(new AppError("Error en la autenticación con Facebook", 500))
     }
 })

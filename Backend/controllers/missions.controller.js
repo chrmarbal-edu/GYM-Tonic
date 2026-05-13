@@ -2,6 +2,7 @@
 /* <=============================== DEPENDENCIAS ===============================> */
 const missionmodel = require("../models/missions.model.js")
 const userModel = require("../models/users.model.js")
+const userMissionsModel = require("../models/userMissions.model.js")
 const fs = require("fs").promises
 const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
@@ -83,7 +84,7 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
 
             next(new AppError(err, 500))
         }else{     
-            completeMission = objetoDatos[0]
+            completeMission = objetoDatos
         }
 
         let updateMission = {}           
@@ -105,7 +106,7 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
             if(err){
                 console.log("ERROR UPDATE BY ID SSR");
 
-                next(err, 500)
+                next(new AppError(err, 500))
             } else{
                 res.status(200).json(datosMissionActualizada);
             }
@@ -128,14 +129,11 @@ exports.createMissionCSR = wrapAsync(async function (req, res, next) {
         }
 
         // Realizamos la redirección en la promesa de la creación.
-        await missionmodelModel.create(newMission,function(err,datosMisionCreada){
+        await missionmodel.create(newMission,function(err,datosMisionCreada){
             if(err){
                 console.log(err)
-                console.log(datosMisionCreada)
-
                 console.log("ERROR CREATE MISSIONS CSR");
-
-                res.status(500).json({error: err})
+                return next(new AppError(err, 500))
             } else{
                 res.status(200).json({ datosMisionCreada })
             }
@@ -147,7 +145,7 @@ exports.createMissionCSR = wrapAsync(async function (req, res, next) {
 /* <=============================== 8. DELETEMISSION ===============================> */
 exports.deleteMissionCSR = wrapAsync(async function (req, res, next) {
     const { id } = req.params;
-        await missionmodelModel.findById(id, async function (err, objetoDatos) {
+        await missionmodel.findById(id, async function (err, objetoDatos) {
             if (err) {
                 return next(new AppError("Misión no encontrada", 404));
             }
@@ -157,7 +155,7 @@ exports.deleteMissionCSR = wrapAsync(async function (req, res, next) {
             }
 
             /* <================== PARTE 2 ==================> */
-            await missionmodelModel.delete(id, function (err, datosMisionEliminada) {
+            await missionmodel.delete(id, function (err, datosMisionEliminada) {
                 if (err) {
                     return next(new AppError("Error al eliminar la misión", 500));
                 }else {
@@ -166,3 +164,5 @@ exports.deleteMissionCSR = wrapAsync(async function (req, res, next) {
             });
         });
 });
+
+// #endregion

@@ -283,6 +283,9 @@
  *               expiration:
  *                 type: string
  *                 format: date-time
+ *               progress:
+ *                 type: integer
+ *                 description: Progreso inicial de la misión
  *     responses:
  *       201:
  *         description: Misión asignada exitosamente
@@ -382,6 +385,9 @@
  *                 type: integer
  *                 description: "0: No completada, 1: Completada"
  *                 enum: [0, 1]
+ *               progress:
+ *                 type: integer
+ *                 description: Valor numérico del progreso actual
  *     responses:
  *       200:
  *         description: Misión actualizada correctamente
@@ -404,4 +410,29 @@
  *         description: Asignación eliminada
  *       403:
  *         description: No autorizado
+ */
+
+/**
+ * @swagger
+ * /users/missions/{id}/complete:
+ *   patch:
+ *     summary: Marcar una misión como completada manualmente
+ *     tags: [Misiones de Usuario]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Misión marcada como completada
+ *       400:
+ *         description: La misión ya ha expirado
+ *       403:
+ *         description: No autorizado para completar esta misión
+ *       404:
+ *         description: Misión no encontrada
  */
