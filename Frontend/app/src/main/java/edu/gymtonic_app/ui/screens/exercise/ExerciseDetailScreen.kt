@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -133,24 +135,27 @@ fun ExerciseDetailScreen(
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
                 ) {
+                    // VIDEO SECTION - 55% de altura
                     Surface(
                         shape = RoundedCornerShape(14.dp),
                         color = colors.surfaceCard,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(380.dp)
+                            .padding(horizontal = 14.dp)
                     ) {
                         val videoKey = exercise.exercise_video
                         if (!videoKey.isNullOrBlank()) {
-                            val videoUrl = if (videoKey.startsWith("http")) videoKey 
-                                          else "${BuildConfig.BACKEND_BASE_URL}${if (videoKey.startsWith("/")) "" else "/"}$videoKey"
+                            val videoUrl = if (videoKey.startsWith("http")) videoKey
+                            else "${BuildConfig.BACKEND_BASE_URL}${if (videoKey.startsWith("/")) "" else "/"}$videoKey"
                             Log.d("ExerciseDetail", "Reproduciendo video: $videoUrl")
                             VideoPlayer(
                                 videoUrl = videoUrl,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(220.dp)
+                                    .fillMaxSize()
                                     .clip(RoundedCornerShape(14.dp))
                             )
                         } else {
@@ -163,12 +168,11 @@ fun ExerciseDetailScreen(
                                     "${BuildConfig.BACKEND_BASE_URL}$finalKey"
                                 }
                             } else null
-                            
+
                             Log.d("ExerciseDetail", "Cargando imagen de detalle (fallback): $imageUrl")
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(220.dp)
+                                    .fillMaxSize()
                                     .clip(RoundedCornerShape(14.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -182,63 +186,73 @@ fun ExerciseDetailScreen(
                         }
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(20.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                    // INFORMACIÓN SECTION - Con scroll
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp)
                     ) {
-                        Text(
-                            text = exercise.exercise_name,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = colors.textPrimary,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = exercise.exercise_name,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = colors.textPrimary,
+                                modifier = Modifier.weight(1f)
+                            )
 
-                        IconButton(
-                            onClick = {
-                                resolvedViewModel.onToggleFavorite(
-                                    FavoriteExercisePayload(
-                                        id = exercise.exercise_id,
-                                        name = exercise.exercise_name,
-                                        description = exercise.exercise_description,
-                                        type = exercise.exercise_type,
-                                        video = exercise.exercise_video,
-                                        image = exercise.exercise_image
+                            IconButton(
+                                onClick = {
+                                    resolvedViewModel.onToggleFavorite(
+                                        FavoriteExercisePayload(
+                                            id = exercise.exercise_id,
+                                            name = exercise.exercise_name,
+                                            description = exercise.exercise_description,
+                                            type = exercise.exercise_type,
+                                            video = exercise.exercise_video,
+                                            image = exercise.exercise_image
+                                        )
                                     )
+                                }
+                            ) {
+                                Icon(
+                                    imageVector =
+                                        if (isFavorite) Icons.Filled.Favorite
+                                        else Icons.Outlined.FavoriteBorder,
+                                    contentDescription =
+                                        if (isFavorite) strings.removeFavorite
+                                        else strings.markFavorite,
+                                    tint = Color(0xFFE53935)
                                 )
                             }
-                        ) {
-                            Icon(
-                                imageVector =
-                                    if (isFavorite) Icons.Filled.Favorite
-                                    else Icons.Outlined.FavoriteBorder,
-                                contentDescription =
-                                    if (isFavorite) strings.removeFavorite
-                                    else strings.markFavorite,
-                                tint = Color(0xFFE53935)
-                            )
                         }
+
+                        Text(
+                            text = strings.seconds(0), // No tenemos duración en el DTO por ahora
+                            fontSize = 16.sp,
+                            color = colors.accentDark,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Log.d("ExerciseDetail", "Mostrando descripción: ${exercise.exercise_description}")
+                        Text(
+                            text = exercise.exercise_description,
+                            fontSize = 14.sp,
+                            color = colors.textPrimary,
+                            modifier = Modifier.padding(vertical = 3.dp),
+                            lineHeight = 20.sp
+                        )
+
+                        Spacer(Modifier.height(30.dp))
                     }
-
-                    Text(
-                        text = strings.seconds(0), // No tenemos duración en el DTO por ahora
-                        fontSize = 16.sp,
-                        color = colors.accentDark,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Log.d("ExerciseDetail", "Mostrando descripción: ${exercise.exercise_description}")
-                    Text(
-                        text = exercise.exercise_description,
-                        fontSize = 14.sp,
-                        color = colors.textPrimary,
-                        modifier = Modifier.padding(vertical = 3.dp)
-                    )
                 }
             }
         }
