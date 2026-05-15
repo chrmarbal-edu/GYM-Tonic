@@ -23,6 +23,10 @@ val backendBaseUrl = (localProperties.getProperty("BACKEND_BASE_URL")?.trim()?.r
     ?: project.findProperty("BACKEND_BASE_URL") as String?)
     ?: "http://10.0.2.2:3010/"
 
+val googleWebClientId = (localProperties.getProperty("GOOGLE_WEB_CLIENT_ID")
+    ?: project.findProperty("GOOGLE_WEB_CLIENT_ID") as String?)
+    ?: ""
+
 android {
     namespace = "edu.gymtonic_app"
     compileSdk = 36
@@ -36,6 +40,7 @@ android {
 
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -116,4 +121,9 @@ dependencies {
     // Media3 para reproducción de vídeo (ExoPlayer)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
+
+    // Google Sign-In with Credential Manager
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 }

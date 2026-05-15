@@ -3,6 +3,7 @@ package edu.gymtonic_app.data.remote.services
 import android.util.Log
 import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
+import edu.gymtonic_app.data.remote.remoteModel.auth.GoogleLoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
@@ -52,8 +53,10 @@ object RetrofitClient {
 
         val isLoginEndpoint = url.contains("users/login") && originalRequest.method == "POST"
         val isRegisterEndpoint = url.endsWith("users") && originalRequest.method == "POST"
+        val isGoogleLogin = url.contains("auth/googleLogin") && originalRequest.method == "POST"
+        val isFacebookLogin = url.contains("auth/facebookLogin") && originalRequest.method == "POST"
 
-        val newRequest = if (!isLoginEndpoint && !isRegisterEndpoint && sessionManager != null) {
+        val newRequest = if (!isLoginEndpoint && !isRegisterEndpoint && !isGoogleLogin && !isFacebookLogin && sessionManager != null) {
             try {
                 val token = runBlocking {
                     sessionManager?.sessionFlow?.first()?.token
@@ -93,7 +96,7 @@ object RetrofitClient {
 interface ApiService {
 
     @POST("auth/googleLogin")
-    suspend fun googleLogin(@Body request: Map<String, Any>): Response<LoginResponse>
+    suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<Any>
 
     @POST("auth/facebookLogin")
     suspend fun facebookLogin(@Body request: Map<String, Any>): Response<LoginResponse>

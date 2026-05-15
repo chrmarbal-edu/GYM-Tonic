@@ -23,6 +23,17 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
     val registerState: StateFlow<RegisterState> = _registerState
 
+    // Datos temporales para registro con Google
+    var googleUserData: GoogleUserData? = null
+        private set
+
+    data class GoogleUserData(
+        val name: String,
+        val email: String,
+        val picture: String?,
+        val oauth: String
+    )
+
     init {
         authRepository = AuthRepository()
 
@@ -30,18 +41,27 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
         sessionManager = SessionManager(dataStore)
     }
 
+    fun prepareGoogleRegistration(name: String, email: String, picture: String?, oauth: String) {
+        googleUserData = GoogleUserData(name, email, picture, oauth)
+    }
+
+    fun clearGoogleData() {
+        googleUserData = null
+    }
+
     fun register(
         username: String,
         name: String,
-        password: String,
+        password: String?,
         birthdate: String,
         email: String,
         height: Double,
         weight: Double,
-        objective: Int
+        objective: Int,
+        oauth: String? = null
     ) {
         viewModelScope.launch {
-            val request = RegisterRequest(username, name, password, birthdate, email, height, weight, objective)
+            val request = RegisterRequest(username, name, password, birthdate, email, height, weight, objective, oauth)
             _registerState.value = RegisterState.Loading
 
             try{
@@ -49,6 +69,7 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
                 Log.i("register",response.toString())
                 val user = response.resolvedUser()
                 if(response.token != null && user != null){
+                    clearGoogleData() // Limpiamos los datos de Google tras el éxito
                     sessionManager.saveSession(
                         token = response.token,
                         userId = user.userId,

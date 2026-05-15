@@ -63,10 +63,30 @@ exports.googleLogin = wrapAsync(async function(req, res, next) {
 
         const payload = ticket.getPayload()
         const userEmail = payload.email
-        const userName = payload.name
+        const userPicture = payload.picture
+        const userUsername = payload.given_name
+        const userData = {
+            email: userEmail,
+            username: userUsername,
+            picture: userPicture,
+            oauth: "Google"
+        }
 
-        await findOrCreateUser(userEmail, userName, "Google", req, res, next)
+        await userModel.findOAuthUserByEmail(userEmail, function(err, userFound) {
+            if (err) return next(new AppError("Error al buscar usuario", 500))
+
+            if (userFound) {
+                const jwtToken = jwtMW.createJWT(req, res, next, userFound)
+                return res.status(200).json({
+                    data: userFound,
+                    token: jwtToken
+                })
+            } else {
+                return res.status(200).json(userData)
+            }
+        })
     } catch (error) {
+        console.log(error)
         return next(new AppError("Token de Google inválido", 401))
     }
 })

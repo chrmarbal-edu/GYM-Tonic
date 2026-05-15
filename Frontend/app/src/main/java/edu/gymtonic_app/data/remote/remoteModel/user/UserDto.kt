@@ -30,12 +30,13 @@ data class UserDto(
 data class RegisterRequest(
     val username: String,
     val name: String,
-    val password: String,
+    val password: String? = null,
     val birthdate: String,
     val email: String,
     val height: Double,
     val weight: Double,
-    val objective: Int
+    val objective: Int,
+    val oauth: String? = null
 )
 
 data class RegisterResponse(

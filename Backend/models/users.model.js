@@ -93,6 +93,8 @@ user.create = async function (newUser, result) {
     try {
         const pool = await sql.connect(dbConn)
 
+        console.log(newUser.user_objective)
+
         const request = pool.request()
         request.input("username", sql.NVarChar, newUser.user_username)
         request.input("name", sql.NVarChar, newUser.user_name)
@@ -158,6 +160,25 @@ user.findByUsername = async function (usernameParam, result) {
             result("No hay datos del usuario " + usernameParam, null)
         }
 
+    } catch (err) {
+        result(err, null)
+    }
+}
+
+/* <=============================== FIND OAUTH USER BY EMAIL ===============================> */
+user.findOAuthUserByEmail = async function (email, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT * FROM Users WHERE user_email = @email AND user_oauth IS NOT NULL")
+
+        if (response.recordset.length > 0) {
+            // Devolvemos el primer usuario encontrado ya que el email es único
+            result(null, response.recordset[0])
+        } else {
+            result(null, null)
+        }
     } catch (err) {
         result(err, null)
     }

@@ -14,6 +14,18 @@ data class LoginResponse(
     val token: String
 )
 
+data class GoogleLoginResponse(
+    val email: String,
+    val username: String,
+    val picture: String?,
+    val oauth: String
+)
+
+data class GoogleLoginRequest(
+    @SerializedName("idToken")
+    val idToken: String
+)
+
 data class LoginUserData(
     val user_id: Int,
     val user_username: String,

@@ -13,6 +13,10 @@ class AuthRepository(
 		return authRemoteDataSource.login(request)
 	}
 
+	suspend fun googleLogin(idToken: String): Any {
+		return authRemoteDataSource.googleLogin(idToken)
+	}
+
 	suspend fun register(request: RegisterRequest): RegisterResponse {
 		return authRemoteDataSource.register(request)
 	}

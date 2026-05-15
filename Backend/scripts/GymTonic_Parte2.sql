@@ -19,7 +19,7 @@ CREATE TABLE dbo.Users (
     user_picture   NVARCHAR(500)     DEFAULT 'public/images/users/default/user.jpg' NOT NULL,
     user_height    FLOAT             NOT NULL,
     user_weight    FLOAT             NOT NULL,
-    user_objetive  INT               NOT NULL,
+    user_objective  INT               NOT NULL,
     user_points    INT               NULL,
     user_role      INT               NOT NULL,
     user_oauth     NVARCHAR(50)      NULL,
@@ -54,7 +54,7 @@ CREATE TABLE dbo.Missions (
     mission_name     NVARCHAR(255)     NOT NULL,
     mission_type     INT               NOT NULL,
     mission_points   INT               NOT NULL,
-    mission_objetive INT               NOT NULL,
+    mission_objective INT               NOT NULL,
     CONSTRAINT PK_Missions PRIMARY KEY (mission_id)
 );
 GO
@@ -149,7 +149,7 @@ GO
 ============================================================ */
 INSERT INTO dbo.Users
     (user_username, user_name, user_password, user_birthdate,
-     user_email, user_height, user_weight, user_objetive, user_points, user_role)
+     user_email, user_height, user_weight, user_objective, user_points, user_role)
 VALUES
     ('admin', 'Administrador',
      '$2b$12$bvvrPTWlj.GC8RDiz3ZtRezksJJVtvmB9GVzJBQUBQfc6ZUxfNExG',
@@ -163,7 +163,7 @@ GO
 -- Usuarios
 INSERT INTO dbo.Users
     (user_username, user_name, user_password, user_birthdate,
-     user_email, user_height, user_weight, user_objetive, user_points, user_role)
+     user_email, user_height, user_weight, user_objective, user_points, user_role)
 VALUES
     ('carlos_g', 'Carlos García',   '$2b$12$bvvrPTWlj.GC8RDiz3ZtRezksJJVtvmB9GVzJBQUBQfc6ZUxfNExG', '1995-03-15', 'carlos@example.com', 178, 80, 1, 120, 0),
     ('laura_m',  'Laura Martínez',  '$2b$12$bvvrPTWlj.GC8RDiz3ZtRezksJJVtvmB9GVzJBQUBQfc6ZUxfNExG', '1998-07-22', 'laura@example.com',  165, 60, 0, 340, 0),
@@ -239,7 +239,7 @@ VALUES
 GO
 
 -- Misiones (mission_type: 0=diaria 1=semanal 2=mensual)
-INSERT INTO dbo.Missions (mission_name, mission_type, mission_points, mission_objetive)
+INSERT INTO dbo.Missions (mission_name, mission_type, mission_points, mission_objective)
 VALUES
     ('Primera sesión',            0,  10,     1),
     ('Racha de 3 días',           0,  30,     3),
