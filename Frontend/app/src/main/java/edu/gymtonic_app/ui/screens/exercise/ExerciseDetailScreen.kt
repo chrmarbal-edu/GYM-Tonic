@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
@@ -54,6 +56,7 @@ import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseUiState
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
 import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun ExerciseDetailScreen(
@@ -125,7 +128,7 @@ fun ExerciseDetailScreen(
             val isFavorite = favoritesSet.contains(exercise.exercise_id)
 
             TrainingShellScreen(
-                title = strings.exerciseTitle,
+                title = "",
                 onBack = onBack,
                 showBottomBar = showBottomBar,
                 selectedBottomItem = BottomNavItem.TRAINING,
@@ -199,60 +202,85 @@ fun ExerciseDetailScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
+                            // Nombre a la izquierda, ocupa el espacio disponible
                             Text(
-                                text = exercise.exercise_name,
+                                text = exercise.exercise_name ?: strings.exerciseTitle,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = colors.textPrimary,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
 
-                            IconButton(
-                                onClick = {
-                                    resolvedViewModel.onToggleFavorite(
-                                        FavoriteExercisePayload(
-                                            id = exercise.exercise_id,
-                                            name = exercise.exercise_name,
-                                            description = exercise.exercise_description,
-                                            type = exercise.exercise_type,
-                                            video = exercise.exercise_video,
-                                            image = exercise.exercise_image
+                            // Contenedor derecho con icono + reps, no ocupa el espacio restante
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.wrapContentWidth()
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        resolvedViewModel.onToggleFavorite(
+                                            FavoriteExercisePayload(
+                                                id = exercise.exercise_id,
+                                                name = exercise.exercise_name,
+                                                description = exercise.exercise_description,
+                                                type = exercise.exercise_type,
+                                                video = exercise.exercise_video,
+                                                image = exercise.exercise_image
+                                            )
                                         )
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                        contentDescription = if (isFavorite) strings.removeFavorite else strings.markFavorite,
+                                        tint = Color(0xFFE53935)
                                     )
                                 }
-                            ) {
-                                Icon(
-                                    imageVector =
-                                        if (isFavorite) Icons.Filled.Favorite
-                                        else Icons.Outlined.FavoriteBorder,
-                                    contentDescription =
-                                        if (isFavorite) strings.removeFavorite
-                                        else strings.markFavorite,
-                                    tint = Color(0xFFE53935)
+
+                                Spacer(modifier = Modifier.width(6.dp))
+
+                                Text(
+                                    text = reps,
+                                    fontSize = 16.sp,
+                                    color = colors.accentDark,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(top = 2.dp)
                                 )
                             }
                         }
 
-                        Text(
-                            text = reps,
-                            fontSize = 16.sp,
-                            color = colors.accentDark,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-
                         Spacer(Modifier.height(16.dp))
 
                         Log.d("ExerciseDetail", "Mostrando descripción: ${exercise.exercise_description}")
+
+                        //Descripción del ejercicio
                         Text(
-                            text = exercise.exercise_description,
-                            fontSize = 14.sp,
-                            color = colors.textPrimary,
-                            modifier = Modifier.padding(vertical = 3.dp),
-                            lineHeight = 20.sp
+                            text = "Descripción",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.textPrimary.copy(alpha = 0.75f),
+                            modifier = Modifier.padding(bottom = 8.dp)
                         )
 
-                        Spacer(Modifier.height(30.dp))
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = colors.surfaceCard.copy(alpha = 0.65f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = exercise.exercise_description,
+                                fontSize = 14.sp,
+                                lineHeight = 22.sp,
+                                color = colors.textPrimary,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
+                            )
+                        }
+
+                        Spacer(Modifier.height(20.dp))
                     }
                 }
             }

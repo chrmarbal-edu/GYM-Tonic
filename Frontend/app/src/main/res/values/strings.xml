@@ -6,4 +6,5 @@
     <string name="ejercicio">Ejercicio</string>
     <string name="quitar_favorito">Quitar favorito</string>
     <string name="marcar_favorito">Marcar favorito</string>
+    <string name="informaci_n_del_ejercicio">Información del ejercicio:</string>
 </resources>
