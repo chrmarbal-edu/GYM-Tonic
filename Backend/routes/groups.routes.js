@@ -6,6 +6,8 @@ const rutasProtegidasMW = require("../middlewares/rutasProtegidas.mw")
 
 // FIND ALL GROUPS - CSR
 router.get("/", jwtMW.authenticate, groupController.findAllGroupsCSR)
+// Grupos del usuario logueado (por membresía)
+router.get("/my", jwtMW.authenticate, groupController.findMyGroupsCSR)
 // FIND GROUP BY ID - CSR
 router.get("/:id", jwtMW.authenticate, groupController.findGroupByIdCSR)
 
@@ -15,10 +17,14 @@ router.patch("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, groupCo
 // DELETE GROUP BY ID - CSR
 router.delete("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, groupController.deleteGroupCSR)
 
-// CREATE GROUP - CSR
-router.post("/new", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, groupController.createGroupCSR)
+// CREATE GROUP - CSR (usuario autenticado)
+router.post("/new", jwtMW.authenticate, groupController.createGroupCSR)
 
-// Miembros y rutinas de grupo (solo creador del grupo; JWT requerido)
+// Miembros y rutinas de grupo
+router.get("/:id/members", jwtMW.authenticate, groupController.findGroupMembersCSR)
+router.get("/:id/routines", jwtMW.authenticate, groupController.findGroupRoutinesCSR)
+router.post("/:id/join", jwtMW.authenticate, groupController.joinGroupCSR)
+router.delete("/:id/leave", jwtMW.authenticate, groupController.leaveGroupCSR)
 router.post("/:id/members", jwtMW.authenticate, groupController.addUserToGroupCSR)
 router.delete("/:id/members/:userId", jwtMW.authenticate, groupController.removeUserFromGroupCSR)
 router.post("/:id/routines", jwtMW.authenticate, groupController.addGroupRoutineCSR)

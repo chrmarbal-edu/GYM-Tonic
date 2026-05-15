@@ -78,6 +78,14 @@ const assertGroupCreator = (group, userLogued) => {
     const creatorId = Number(group.group_creator_id)
     return uid === creatorId
 }
+
+const loadGroupMembership = (groupId, userId) =>
+    fromCallback(groupUserModel.findMembership, groupId, userId)
+
+const assertGroupMember = async (groupId, userLogued) => {
+    const membership = await loadGroupMembership(groupId, Number(userLogued.user_id))
+    return membership != null
+}
 /* 
 400 - BAD REQUEST (EL SERVIDOR NO PUEDE PROCESAR LA SOLICITUD)
 404 - NOT FOUND (NO EXISTE EN EL SERVIDOR EL RECURSO PEDIDO)
@@ -171,34 +179,59 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
     })
 })
 
+// #region MY GROUPS - CSR
+exports.findMyGroupsCSR = wrapAsync(async function (req, res, next) {
+    const userLogued = req.userLogued
+    if (!userLogued) {
+        return next(new AppError("No estás registrado!", 403))
+    }
+
+    const userId = Number(userLogued.user_id)
+    await groupmodel.findByUserId(userId, function (err, datosGroups) {
+        if (err) {
+            return next(new AppError(err, 400))
+        }
+        return res.status(200).json(datosGroups)
+    })
+})
+
 // #region CREATEGROUP - CSR
 /* <=============================== 7. CREATEGROUP ===============================> */
 exports.createGroupCSR = wrapAsync(async function (req, res, next) {
-    const { name, description, image, points, creator_id } = req.body
-    
-        let newGroup = {
-            group_name: name,
-            group_description: description,
-            group_image: image,
-            group_points: points || 0,
-            group_creator_id: creator_id
-        }
+    const userLogued = req.userLogued
+    if (!userLogued) {
+        return next(new AppError("No estás registrado!", 403))
+    }
 
-        // Realizamos la redirección en la promesa de la creación.
-        await groupmodel.create(newGroup,function(err,datosGrupoCreado){
-            if(err){
-                console.log(err)
-                console.log(datosGrupoCreado)
+    const { name, description, image, points } = req.body
 
-                console.log("ERROR CREATE GROUPS CSR");
+    if (!name || typeof name !== "string" || !name.trim()) {
+        return next(new AppError("El nombre del grupo es obligatorio", 400))
+    }
 
-                res.status(500).json({error: err})
-            } else{
-                res.status(200).json({ datosGrupoCreado })
-            }
-        })
-    
-});
+    const creatorId = Number(userLogued.user_id)
+    const newGroup = {
+        group_name: name.trim(),
+        group_description: description?.trim() || null,
+        group_image: image?.trim() || null,
+        group_points: Number.isFinite(Number(points)) ? Number(points) : 0,
+        group_creator_id: creatorId
+    }
+
+    if (!Number.isFinite(creatorId) || creatorId <= 0) {
+        return next(new AppError("No se pudo identificar al usuario creador", 400))
+    }
+
+    const createdGroup = await fromCallback(groupmodel.create, newGroup)
+
+    await fromCallback(groupUserModel.create, {
+        Group_x_user_groupid: createdGroup.group_id,
+        Group_x_user_userid: creatorId,
+        Group_x_user_range: 2
+    })
+
+    return res.status(201).json(createdGroup)
+})
 
 // #region DELETE - CSR
 /* <=============================== 8. DELETEGROUP ===============================> */
@@ -223,6 +256,132 @@ exports.deleteGroupCSR = wrapAsync(async function (req, res, next) {
             });
         });
 });
+
+// #region JOIN GROUP (usuario logueado)
+exports.joinGroupCSR = wrapAsync(async function (req, res, next) {
+    const userLogued = req.userLogued
+    if (!userLogued) {
+        return next(new AppError("No estás registrado!", 403))
+    }
+
+    const groupId = Number(req.params.id)
+    const userId = Number(userLogued.user_id)
+
+    if (!Number.isFinite(groupId)) {
+        return next(new AppError("group_id inválido", 400))
+    }
+
+    const group = await loadGroup(groupId)
+    if (!group) {
+        return next(new AppError("Grupo no encontrado", 404))
+    }
+
+    const existing = await loadGroupMembership(groupId, userId)
+    if (existing) {
+        return next(new AppError("Ya perteneces a este grupo", 409))
+    }
+
+    const inserted = await fromCallback(groupUserModel.create, {
+        Group_x_user_groupid: groupId,
+        Group_x_user_userid: userId,
+        Group_x_user_range: 0
+    })
+
+    return res.status(201).json(inserted)
+})
+
+// #region LEAVE GROUP (usuario logueado)
+exports.leaveGroupCSR = wrapAsync(async function (req, res, next) {
+    const userLogued = req.userLogued
+    if (!userLogued) {
+        return next(new AppError("No estás registrado!", 403))
+    }
+
+    const groupId = Number(req.params.id)
+    const userId = Number(userLogued.user_id)
+
+    if (!Number.isFinite(groupId)) {
+        return next(new AppError("group_id inválido", 400))
+    }
+
+    const group = await loadGroup(groupId)
+    if (!group) {
+        return next(new AppError("Grupo no encontrado", 404))
+    }
+
+    if (userId === Number(group.group_creator_id)) {
+        return next(
+            new AppError(
+                "El creador del grupo no puede abandonarlo. Elimínalo o transfiere la propiedad.",
+                403
+            )
+        )
+    }
+
+    const deletedRows = await fromCallback(
+        groupUserModel.deleteByGroupAndUser,
+        groupId,
+        userId
+    )
+
+    if (!deletedRows) {
+        return next(new AppError("No perteneces a este grupo", 404))
+    }
+
+    return res.status(200).json({ msg: "Has abandonado el grupo correctamente" })
+})
+
+// #region GROUP MEMBERS LIST
+exports.findGroupMembersCSR = wrapAsync(async function (req, res, next) {
+    const userLogued = req.userLogued
+    if (!userLogued) {
+        return next(new AppError("No estás registrado!", 403))
+    }
+
+    const groupId = Number(req.params.id)
+    if (!Number.isFinite(groupId)) {
+        return next(new AppError("group_id inválido", 400))
+    }
+
+    const group = await loadGroup(groupId)
+    if (!group) {
+        return next(new AppError("Grupo no encontrado", 404))
+    }
+
+    const isMember = await assertGroupMember(groupId, userLogued)
+    if (!isMember) {
+        return next(new AppError("Debes ser miembro del grupo para ver sus integrantes", 403))
+    }
+
+    const members = await fromCallback(groupUserModel.findByGroupId, groupId)
+    return res.status(200).json(members)
+})
+
+// #region GROUP ROUTINES LIST
+exports.findGroupRoutinesCSR = wrapAsync(async function (req, res, next) {
+    const userLogued = req.userLogued
+    if (!userLogued) {
+        return next(new AppError("No estás registrado!", 403))
+    }
+
+    const groupId = Number(req.params.id)
+    if (!Number.isFinite(groupId)) {
+        return next(new AppError("group_id inválido", 400))
+    }
+
+    const group = await loadGroup(groupId)
+    if (!group) {
+        return next(new AppError("Grupo no encontrado", 404))
+    }
+
+    const isMember = await assertGroupMember(groupId, userLogued)
+    if (!isMember) {
+        return next(new AppError("Debes ser miembro del grupo para ver sus rutinas", 403))
+    }
+
+    const routines = await fromCallback(routinesModel.findByGroupId, groupId)
+    return res.status(200).json(routines)
+})
 
 // #region ADD USER TO GROUP (creador del grupo)
 exports.addUserToGroupCSR = wrapAsync(async function (req, res, next) {
@@ -295,8 +454,14 @@ exports.removeUserFromGroupCSR = wrapAsync(async function (req, res, next) {
         return next(new AppError("Grupo no encontrado", 404))
     }
 
-    if (!assertGroupCreator(group, userLogued)) {
-        return next(new AppError("Solo el creador del grupo puede eliminar miembros", 403))
+    const isSelfLeave =
+        userIdToRemove === Number(userLogued.user_id) &&
+        userIdToRemove !== Number(group.group_creator_id)
+
+    if (!isSelfLeave && !assertGroupCreator(group, userLogued)) {
+        return next(
+            new AppError("Solo el creador del grupo puede eliminar a otros miembros", 403)
+        )
     }
 
     if (userIdToRemove === Number(group.group_creator_id)) {

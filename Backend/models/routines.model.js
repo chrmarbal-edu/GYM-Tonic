@@ -76,6 +76,26 @@ routine.findAllWithExerciseSummary = async (result) => {
     }
 }
 
+/* <=============================== FIND BY GROUP ID ===============================> */
+routine.findByGroupId = async function (groupId, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool
+            .request()
+            .input("groupId", sql.Int, groupId)
+            .query(`
+                SELECT *
+                FROM Routines
+                WHERE routine_is_group_routine = 1 AND routine_groupid = @groupId
+                ORDER BY routine_id DESC
+            `)
+
+        result(null, response.recordset)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <=============================== FIND BY ID ===============================> */
 routine.findById = async function (id, result) {
     try {

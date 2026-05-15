@@ -24,6 +24,27 @@ group.findAll = async (result) => {
     }
 }
 
+/* <=============================== FIND BY USER ID (membership) ===============================> */
+group.findByUserId = async function (userId, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool
+            .request()
+            .input("userId", sql.Int, userId)
+            .query(`
+                SELECT g.*
+                FROM Groups g
+                INNER JOIN Group_x_user gx ON g.group_id = gx.Group_x_user_groupid
+                WHERE gx.Group_x_user_userid = @userId
+                ORDER BY g.group_name
+            `)
+
+        result(null, response.recordset)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <=============================== FIND BY ID ===============================> */
 group.findById = async function (id, result) {
     try {
@@ -83,10 +104,10 @@ group.create = async (newGroup, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("name", sql.NVarChar, newGroup.group_name)
-        request.input("description", sql.NVarChar, newGroup.group_description)
-        request.input("image", sql.NVarChar, newGroup.group_image)
-        request.input("points", sql.Int, newGroup.group_points)
+        request.input("name", sql.NVarChar(255), newGroup.group_name)
+        request.input("description", sql.NVarChar(sql.MAX), newGroup.group_description ?? null)
+        request.input("image", sql.NVarChar(500), newGroup.group_image ?? null)
+        request.input("points", sql.Int, newGroup.group_points ?? 0)
         request.input("creator_id", sql.Int, newGroup.group_creator_id)
 
         const sqlQuery = `
