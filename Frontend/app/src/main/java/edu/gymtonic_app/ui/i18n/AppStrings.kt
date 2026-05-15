@@ -51,7 +51,6 @@ data class AppStrings(
     val homeTechnogym: String,
     val homeDiscounts: String,
     val homeChallenges: String,
-    val homeFindGym: String,
     val homeClientArea: String,
     val homeChat: String,
 
@@ -254,7 +253,6 @@ val SpanishStrings = AppStrings(
     homeTechnogym = "Technogym App",
     homeDiscounts = "Descuentos",
     homeChallenges = "Desafios",
-    homeFindGym = "Encontrar gimnasio",
     homeClientArea = "Mi espacio cliente",
     homeChat = "Chat",
 
@@ -448,7 +446,6 @@ val EnglishStrings = AppStrings(
     homeTechnogym = "Technogym App",
     homeDiscounts = "Discounts",
     homeChallenges = "Challenges",
-    homeFindGym = "Find gym",
     homeClientArea = "My profile",
     homeChat = "Chat",
 

@@ -39,7 +39,6 @@ fun MainViewScreen(
     onCreateRoutine: () -> Unit,
     onOpenTechnogym: () -> Unit,
     onOpenDiscounts: () -> Unit,
-    onOpenFindGym: () -> Unit,
     onOpenClientArea: () -> Unit,
     onInviteFriend: () -> Unit,
     onOpenMissions: () -> Unit
@@ -54,7 +53,6 @@ fun MainViewScreen(
         HomeAction(strings.homeTechnogym, Icons.Outlined.Devices, onClick = onOpenTechnogym),
         HomeAction(strings.homeDiscounts, Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
         HomeAction(strings.homeChallenges, Icons.Outlined.EventAvailable, onClick = onOpenMissions),
-        HomeAction(strings.homeFindGym, Icons.Outlined.LocationOn, onClick = onOpenFindGym),
         HomeAction(strings.homeClientArea, Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
         HomeAction(strings.homeChat, Icons.Outlined.GroupAdd, onClick = onInviteFriend),
     )

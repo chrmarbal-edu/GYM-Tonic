@@ -202,7 +202,6 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                 onOpenTechnogym = { },
                 onOpenDiscounts = { },
-                onOpenFindGym = { },
                 onOpenClientArea = { navController.navigate(Routes.PROFILE) },
                 onInviteFriend = { },
                 onOpenMissions = { navController.navigate(Routes.WEEK) },
