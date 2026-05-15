@@ -2,6 +2,7 @@ package edu.gymtonic_app.data.remote.remoteDatasource
 
 import android.util.Log
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
+import edu.gymtonic_app.data.remote.remoteModel.auth.GoogleLoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.services.RetrofitClient
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
@@ -20,6 +21,19 @@ class AuthRemoteDataSource {
         val errorBody = response.errorBody()?.string()
         Log.e(tag, "Error login: ${response.code()} ${response.message()} | $errorBody")
         throw Exception("Error en login: ${response.message()}")
+    }
+
+    suspend fun googleLogin(idToken: String): Any {
+        Log.d(tag, "Enviando token a googleLogin: ${idToken.take(10)}...")
+        val response = api.googleLogin(GoogleLoginRequest(idToken))
+        if (response.isSuccessful) {
+            Log.d(tag, "googleLogin exitoso")
+            return response.body() ?: throw Exception("Respuesta vacía del servidor")
+        }
+
+        val errorBody = response.errorBody()?.string()
+        Log.e(tag, "Error googleLogin: ${response.code()} ${response.message()} | $errorBody")
+        throw Exception("Error en googleLogin: ${response.code()} - $errorBody")
     }
 
     suspend fun register(request: RegisterRequest): RegisterResponse {

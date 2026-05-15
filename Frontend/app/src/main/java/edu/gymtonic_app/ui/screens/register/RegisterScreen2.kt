@@ -172,9 +172,10 @@ fun RegisterScreen2(
                                 password = password,
                                 birthdate = fechaNacimiento,
                                 email = email,
-                                altura.toDouble(),
-                                peso.toDouble(),
-                                objetivoValue
+                                height = altura.toDouble(),
+                                weight = peso.toDouble(),
+                                objective = objetivoValue,
+                                oauth = registerViewModel.googleUserData?.oauth
                             )
                         }
                     },

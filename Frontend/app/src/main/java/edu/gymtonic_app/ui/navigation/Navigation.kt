@@ -1,17 +1,25 @@
 package edu.gymtonic_app.ui.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import edu.gymtonic_app.ui.screens.register.RegisterScreen
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
+import edu.gymtonic_app.data.remote.remoteModel.auth.GoogleLoginResponse
+import edu.gymtonic_app.ui.viewmodel.LoginState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -28,6 +36,8 @@ import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
+import edu.gymtonic_app.ui.screens.login.GoogleAuthHelper
+import androidx.compose.runtime.rememberCoroutineScope
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.profile.AccountScreen
 import edu.gymtonic_app.ui.screens.profile.ProfileScreen
@@ -46,6 +56,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
     val strings = LocalStrings.current
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context.sessionDataStore) }
+    val coroutineScope = rememberCoroutineScope()
+    val googleAuthHelper = remember { GoogleAuthHelper(context) }
 
     val loginViewModel: LoginViewModel = viewModel()
     val registerViewModel: RegisterViewModel = viewModel()
@@ -104,10 +116,49 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
     ) {
 
         composable(Routes.WELCOME) {
+            val loginState by loginViewModel.loginState.collectAsState()
+
+            LaunchedEffect(loginState) {
+                when (loginState) {
+                    is LoginState.Success -> {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.WELCOME) { inclusive = true }
+                        }
+                    }
+                    is LoginState.NeedsRegistration -> {
+                        val googleData = (loginState as LoginState.NeedsRegistration).googleData
+                        registerViewModel.prepareGoogleRegistration(
+                            name = googleData.username,
+                            email = googleData.email,
+                            picture = googleData.picture,
+                            oauth = googleData.oauth
+                        )
+                        navController.navigate(Routes.REGISTER)
+                    }
+                    is LoginState.Error -> {
+                        snackbarHostState.showSnackbar((loginState as LoginState.Error).message)
+                    }
+                    else -> {}
+                }
+            }
+
             GymTonicLoginScreen(
                 onLogin = { navController.navigate(Routes.LOGIN_FORM) },
                 onRegister = { navController.navigate(Routes.REGISTER) },
-                onGoogle = { },
+                onGoogle = {
+                    googleAuthHelper.signInWithGoogle(
+                        scope = coroutineScope,
+                        onSuccess = { credential ->
+                            loginViewModel.googleLogin(credential.idToken)
+                        },
+                        onError = { message ->
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Error Google: $message")
+                            }
+                            Log.e("Navigation", "Google Sign In Error: $message")
+                        }
+                    )
+                },
                 onFacebook = { }
             )
         }
