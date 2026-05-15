@@ -33,7 +33,7 @@ fun RoutineCatalogScreen(
     routineId: String,
     isLocal: Boolean = false,
     onBack: () -> Unit,
-    onExerciseClick: (String) -> Unit,
+    onExerciseClick: (String, String) -> Unit,
     onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},

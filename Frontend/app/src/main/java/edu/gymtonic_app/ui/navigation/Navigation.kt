@@ -227,8 +227,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 routineId = routineId,
                 isLocal = isLocal,
                 onBack = { navController.popBackStack() },
-                onExerciseClick = { exerciseId ->
-                    navController.navigate(Routes.exercise(exerciseId))
+                onExerciseClick = { exerciseId, reps ->
+                    navController.navigate(Routes.exercise(exerciseId, reps))
                 },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
@@ -239,12 +239,20 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
         composable(
             route = Routes.EXERCISE_DETAIL,
-            arguments = listOf(navArgument("exerciseId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("exerciseId") { type = NavType.StringType },
+                navArgument("reps") {
+                    type = NavType.StringType
+                    defaultValue = "N/A"
+                }
+            )
         ) { backStackEntry ->
             val exerciseId = backStackEntry.arguments?.getString("exerciseId").orEmpty()
+            val reps = backStackEntry.arguments?.getString("reps") ?: "N/A"
 
             ExerciseDetailScreen(
                 exerciseId = exerciseId,
+                reps = reps,
                 onBack = { navController.popBackStack() },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,

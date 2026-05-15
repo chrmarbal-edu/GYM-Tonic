@@ -58,6 +58,7 @@ import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
 @Composable
 fun ExerciseDetailScreen(
     exerciseId: String,
+    reps: String = "N/A",
     onBack: () -> Unit,
     onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
@@ -233,7 +234,7 @@ fun ExerciseDetailScreen(
                         }
 
                         Text(
-                            text = strings.seconds(0), // No tenemos duración en el DTO por ahora
+                            text = reps,
                             fontSize = 16.sp,
                             color = colors.accentDark,
                             fontWeight = FontWeight.Bold,

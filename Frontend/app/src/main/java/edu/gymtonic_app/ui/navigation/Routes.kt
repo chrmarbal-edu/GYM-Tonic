@@ -16,13 +16,13 @@ object Routes {
 
     // Dynamic route using backend routineId.
     const val ROUTINE_DETAIL = "routine/{routineId}?local={local}"
-    const val EXERCISE_DETAIL = "exercise/{exerciseId}"
+    const val EXERCISE_DETAIL = "exercise/{exerciseId}?reps={reps}"
     const val PROFILE = "profile"
     const val ACCOUNT = "account"
     const val SETTINGS = "settings"
 
     fun routine(routineId: String, isLocal: Boolean): String = "routine/$routineId?local=$isLocal"
-    fun exercise(exerciseId: String): String = "exercise/$exerciseId"
+    fun exercise(exerciseId: String, reps: String = "N/A"): String = "exercise/$exerciseId?reps=$reps"
 
     const val WEEK = "week_challenges"
 }

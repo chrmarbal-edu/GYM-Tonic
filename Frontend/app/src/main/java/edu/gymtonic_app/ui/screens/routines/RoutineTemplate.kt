@@ -43,7 +43,7 @@ import edu.gymtonic_app.ui.theme.LocalColors
 @Composable
 fun RoutineTemplateScreen(
     exercises: List<RoutineExerciseDto>,
-    onExerciseClick: (String) -> Unit,
+    onExerciseClick: (String, String) -> Unit,
     favoritesSet: Set<Int>,
     onToggleFavorite: (RoutineExerciseDto) -> Unit
 ) {
@@ -82,7 +82,14 @@ fun RoutineTemplateScreen(
                     markFavoriteLabel = strings.markFavorite,
                     setsAndRepsLabel = strings.setsAndReps,
                     onToggleFavorite = { onToggleFavorite(exercise) },
-                    onClick = { onExerciseClick(exercise.exercise_id.toString()) }
+                    onClick = {
+                        val repsText = if (!exercise.reps.isNullOrBlank()) exercise.reps!! else when (exercise.exercise_type) {
+                            1 -> "x20"
+                            2 -> "x30s"
+                            else -> "x12"
+                        }
+                        onExerciseClick(exercise.exercise_id.toString(), repsText)
+                    }
                 )
             }
         }
