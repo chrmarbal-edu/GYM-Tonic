@@ -1,7 +1,11 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.remoteDatasource.GroupRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupRequest
+import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupRoutineRequest
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import retrofit2.Response
 
 class GroupRepository(
@@ -14,15 +18,9 @@ class GroupRepository(
 		}
 	}
 
-	suspend fun getUserGroups(userId: Int?): Result<List<GroupDto>> {
+	suspend fun getUserGroups(): Result<List<GroupDto>> {
 		return runCatching {
-			val groups = unwrapList(groupRemoteDataSource.getGroups(), "No se pudieron obtener los grupos")
-
-			if (userId == null) {
-				groups
-			} else {
-				groups.filter { it.group_creator_id == userId }
-			}
+			unwrapList(groupRemoteDataSource.getMyGroups(), "No se pudieron obtener tus grupos")
 		}
 	}
 
@@ -32,9 +30,73 @@ class GroupRepository(
 		}
 	}
 
-	suspend fun createGroup(request: Map<String, Any>): Result<GroupDto> {
+	suspend fun getGroupMembers(groupId: Int): Result<List<GroupUserDto>> {
 		return runCatching {
-			unwrapOne(groupRemoteDataSource.createGroup(request), "No se pudo crear el grupo")
+			unwrapList(
+				groupRemoteDataSource.getGroupMembers(groupId),
+				"No se pudieron obtener los miembros del grupo"
+			)
+		}
+	}
+
+	suspend fun getGroupRoutines(groupId: Int): Result<List<RoutineDto>> {
+		return runCatching {
+			unwrapList(
+				groupRemoteDataSource.getGroupRoutines(groupId),
+				"No se pudieron obtener las rutinas del grupo"
+			)
+		}
+	}
+
+	suspend fun createGroup(name: String, description: String): Result<GroupDto> {
+		return runCatching {
+			val request = CreateGroupRequest(
+				name = name.trim(),
+				description = description.trim()
+			)
+			val response = groupRemoteDataSource.createGroup(request)
+			if (!response.isSuccessful) {
+				val errorBody = response.errorBody()?.string().orEmpty()
+				throw Exception(
+					"No se pudo crear el grupo (HTTP ${response.code()}): ${response.message()} $errorBody"
+				)
+			}
+			response.body()?.toGroupDto()
+				?: throw Exception("No se pudo crear el grupo (respuesta vacía)")
+		}
+	}
+
+	suspend fun joinGroup(groupId: Int): Result<GroupUserDto> {
+		return runCatching {
+			unwrapOne(groupRemoteDataSource.joinGroup(groupId), "No se pudo unir al grupo")
+		}
+	}
+
+	suspend fun leaveGroup(groupId: Int): Result<Unit> {
+		return runCatching {
+			val response = groupRemoteDataSource.leaveGroup(groupId)
+			if (!response.isSuccessful) {
+				val errorBody = response.errorBody()?.string().orEmpty()
+				throw Exception("Error al salir del grupo (HTTP ${response.code()}): ${response.message()} $errorBody")
+			}
+			Unit
+		}
+	}
+
+	suspend fun addGroupRoutine(
+		groupId: Int,
+		name: String,
+		exerciseIds: List<Int>
+	): Result<RoutineDto> {
+		return runCatching {
+			val request = CreateGroupRoutineRequest(
+				name = name.trim(),
+				exercise_ids = exerciseIds
+			)
+			unwrapOne(
+				groupRemoteDataSource.addGroupRoutine(groupId, request),
+				"No se pudo añadir la rutina al grupo"
+			)
 		}
 	}
 

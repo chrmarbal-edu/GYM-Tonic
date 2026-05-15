@@ -74,7 +74,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val streakLabel = "$streakDone/7 Logrados"
 
 			val routinesResult = routineRepository.getRoutineCategoriesFromApi()
-			val groupsResult = groupRepository.getUserGroups(session.userId)
+			val groupsResult = groupRepository.getUserGroups()
 
 			if (routinesResult.isFailure || groupsResult.isFailure) {
 				_uiState.value = ProfileUiState.Error(

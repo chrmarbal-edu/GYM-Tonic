@@ -61,6 +61,8 @@ fun ProfileScreen(
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenWeek: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
     onLogout: () -> Unit,
     onOpenAccount: () -> Unit,
@@ -150,6 +152,8 @@ fun ProfileScreen(
                         routines = state.data.recentRoutines,
                         groups = state.data.groups,
                         onOpenWeek = onOpenWeek,
+                        onOpenGroups = onOpenGroups,
+                        onOpenGroup = onOpenGroup,
                         onOpenRoutine = onOpenRoutine,
                         onOpenDrawer = { scope.launch { drawerState.open() } }
                     )
@@ -166,6 +170,8 @@ private fun ProfileContent(
     routines: List<TrainingRoutineDto>,
     groups: List<GroupDto>,
     onOpenWeek: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
     onOpenDrawer: () -> Unit
 ) {
@@ -234,7 +240,11 @@ private fun ProfileContent(
         }
 
         item {
-            SectionCard(title = strings.myGroups) {
+            SectionCard(
+                title = strings.myGroups,
+                actionText = strings.groupsManage,
+                onActionClick = onOpenGroups
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (groups.isEmpty()) {
                         Text(
@@ -244,7 +254,10 @@ private fun ProfileContent(
                         )
                     } else {
                         groups.forEach { group ->
-                            GroupRow(group = group)
+                            GroupRow(
+                                group = group,
+                                onClick = { onOpenGroup(group.group_id) }
+                            )
                         }
                     }
                 }
@@ -345,12 +358,17 @@ private fun RoutineRow(
 }
 
 @Composable
-private fun GroupRow(group: GroupDto) {
+private fun GroupRow(
+    group: GroupDto,
+    onClick: () -> Unit
+) {
     val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = colors.surfaceCard,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(10.dp),

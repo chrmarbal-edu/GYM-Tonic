@@ -21,6 +21,13 @@ object Routes {
     const val ACCOUNT = "account"
     const val SETTINGS = "settings"
 
+    const val GROUPS = "groups"
+    const val GROUP_DETAIL = "group/{groupId}"
+    const val GROUP_ADD_ROUTINE = "group/{groupId}/add-routine"
+
+    fun groupDetail(groupId: Int): String = "group/$groupId"
+    fun groupAddRoutine(groupId: Int): String = "group/$groupId/add-routine"
+
     fun routine(routineId: String, isLocal: Boolean): String = "routine/$routineId?local=$isLocal"
     fun exercise(exerciseId: String, reps: String = "N/A"): String = "exercise/$exerciseId?reps=$reps"
 

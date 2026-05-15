@@ -6,7 +6,11 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
+import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupRequest
+import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupResponse
+import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupRoutineRequest
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
+import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
 import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
@@ -209,11 +213,33 @@ interface ApiService {
     @GET("groups")
     suspend fun getGroups(): Response<List<GroupDto>>
 
+    @GET("groups/my")
+    suspend fun getMyGroups(): Response<List<GroupDto>>
+
     @GET("groups/{id}")
     suspend fun getGroupById(@Path("id") id: Int): Response<GroupDto>
 
+    @GET("groups/{id}/members")
+    suspend fun getGroupMembers(@Path("id") id: Int): Response<List<GroupUserDto>>
+
+    @GET("groups/{id}/routines")
+    suspend fun getGroupRoutines(@Path("id") id: Int): Response<List<RoutineDto>>
+
     @POST("groups/new")
-    suspend fun createGroup(@Body request: Map<String, Any>): Response<GroupDto>
+    @Headers("Content-Type: application/json")
+    suspend fun createGroup(@Body request: CreateGroupRequest): Response<CreateGroupResponse>
+
+    @POST("groups/{id}/join")
+    suspend fun joinGroup(@Path("id") id: Int): Response<GroupUserDto>
+
+    @DELETE("groups/{id}/leave")
+    suspend fun leaveGroup(@Path("id") id: Int): Response<Map<String, String>>
+
+    @POST("groups/{id}/routines")
+    suspend fun addGroupRoutine(
+        @Path("id") id: Int,
+        @Body request: CreateGroupRoutineRequest
+    ): Response<RoutineDto>
 
     @PATCH("groups/{id}")
     suspend fun updateGroup(

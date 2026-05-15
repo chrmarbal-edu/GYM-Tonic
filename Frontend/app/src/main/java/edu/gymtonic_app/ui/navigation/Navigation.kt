@@ -32,6 +32,9 @@ import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.profile.AccountScreen
 import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.profile.SettingsScreen
+import edu.gymtonic_app.ui.screens.groups.AddGroupRoutineScreen
+import edu.gymtonic_app.ui.screens.groups.GroupDetailScreen
+import edu.gymtonic_app.ui.screens.groups.GroupsListScreen
 import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
 import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
@@ -270,6 +273,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
                 onOpenWeek = { navController.navigate(Routes.WEEK) },
+                onOpenGroups = { navController.navigate(Routes.GROUPS) },
+                onOpenGroup = { groupId -> navController.navigate(Routes.groupDetail(groupId)) },
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
@@ -304,6 +309,54 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            )
+        }
+
+        composable(Routes.GROUPS) {
+            GroupsListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenGroup = { groupId -> navController.navigate(Routes.groupDetail(groupId)) },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            )
+        }
+
+        composable(
+            route = Routes.GROUP_DETAIL,
+            arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getInt("groupId") ?: return@composable
+
+            GroupDetailScreen(
+                groupId = groupId,
+                onBack = { navController.popBackStack() },
+                onAddRoutine = { id -> navController.navigate(Routes.groupAddRoutine(id)) },
+                onOpenRoutine = { routineId ->
+                    navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
+                },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            )
+        }
+
+        composable(
+            route = Routes.GROUP_ADD_ROUTINE,
+            arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val groupId = backStackEntry.arguments?.getInt("groupId") ?: return@composable
+
+            AddGroupRoutineScreen(
+                groupId = groupId,
+                onBack = { navController.popBackStack() },
+                onRoutineAdded = { navController.popBackStack() },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
