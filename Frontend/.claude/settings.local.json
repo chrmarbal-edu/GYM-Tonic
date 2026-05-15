@@ -12,7 +12,13 @@
       "PowerShell(Get-Content \"C:\\\\Users\\\\Juanan\\\\Desktop\\\\PROYECTO\\\\GYM-Tonic\\\\Frontend\\\\app\\\\src\\\\main\\\\java\\\\edu\\\\gymtonic_app\\\\ui\\\\i18n\\\\AppStrings.kt\" -Raw | Select-String -Pattern \"deleteExercise|deleteRoutine|routineDescription\" -AllMatches | ForEach-Object { $_.Matches } | Select-Object Value)",
       "Bash(Get-Content \"C:\\\\Users\\\\Juanan\\\\Desktop\\\\PROYECTO\\\\GYM-Tonic\\\\Frontend\\\\app\\\\src\\\\main\\\\java\\\\edu\\\\gymtonic_app\\\\ui\\\\screens\\\\exercise\\\\TrainingShellScreen.kt\")",
       "Bash(Get-ChildItem -Path . -Recurse -Filter \"*Routes*\" -Include \"*.kt\")",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Juanan\\\\Desktop\\\\PROYECTO\\\\GYM-Tonic\\\\Frontend\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(xargs grep -l \"WeekChallengesScreen\\\\|UserMissionsViewModel\")",
+      "Bash(xargs grep -l \"WeekChallengesScreen\")",
+      "Bash(xargs grep -l \"showMore\\\\|showMoreCalendar\")",
+      "Bash(xargs grep -l \"CalendarView\\\\|LocalDate\\\\|LocalDateTime\\\\|Calendar\\\\|DateFormat\")"
     ]
   }
 }

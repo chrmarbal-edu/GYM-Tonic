@@ -1,8 +1,10 @@
 package edu.gymtonic_app.ui.screens.missions
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,6 +58,8 @@ fun WeekChallengesScreen(
     onShowMoreCalendar: () -> Unit,
     goals: List<WeeklyGoalUi> = emptyList(),
     calendarDays: List<CalendarDayUi> = emptyList(),
+    calendarYear: Int = 0,
+    calendarMonth: Int = 0,
     achievedLabel: String = "0/0",
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
@@ -151,7 +155,7 @@ fun WeekChallengesScreen(
                         }
 
                         item {
-                            CalendarCard(days = calendarDays)
+                            CalendarCard(days = calendarDays, year = calendarYear, month = calendarMonth)
                         }
                     }
                 }
@@ -261,11 +265,17 @@ private fun GoalCard(goal: WeeklyGoalUi) {
 }
 
 @Composable
-private fun CalendarCard(days: List<CalendarDayUi>) {
+private fun CalendarCard(days: List<CalendarDayUi>, year: Int, month: Int) {
+    val strings = LocalStrings.current
     val colors = LocalColors.current
     val doneColor = Color(0xFF22FF19)
     val missedColor = Color(0xFFFF1A1A)
     val pendingColor = if (colors.isDark) Color(0xFF3A3D5A) else Color(0xFFD0D3DB)
+    val todayBorderColor = colors.accentDark
+
+    val effectiveMonth = if (month in 1..12) month else java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1
+    val effectiveYear = if (year > 0) year else java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+    val monthName = strings.calendarMonthNames.getOrNull(effectiveMonth - 1) ?: return
 
     Surface(
         modifier = Modifier
@@ -277,28 +287,78 @@ private fun CalendarCard(days: List<CalendarDayUi>) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            for (row in 0 until 4) {
+            Text(
+                text = "$monthName $effectiveYear",
+                color = colors.textOnAccent,
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 4.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                strings.calendarDayNames.forEach { dayName ->
+                    Text(
+                        text = dayName,
+                        modifier = Modifier.weight(1f),
+                        color = colors.textOnAccent.copy(alpha = 0.55f),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            days.chunked(7).forEach { chunk ->
+                val row = if (chunk.size < 7) chunk + List(7 - chunk.size) {
+                    CalendarDayUi(dayIndex = -1, dayNumber = 0, status = CalendarDayUiStatus.PENDING)
+                } else chunk
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    for (col in 0 until 7) {
-                        val colorIndex = row * 7 + col
-                        val dayColor = when (days.getOrNull(colorIndex)?.status) {
-                            CalendarDayUiStatus.DONE -> doneColor
-                            CalendarDayUiStatus.MISSED -> missedColor
-                            else -> pendingColor
+                    row.forEach { day ->
+                        if (day.dayNumber == 0) {
+                            Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                        } else {
+                            val bgColor = when (day.status) {
+                                CalendarDayUiStatus.DONE -> doneColor
+                                CalendarDayUiStatus.MISSED -> missedColor
+                                else -> pendingColor
+                            }
+                            val textColor = when (day.status) {
+                                CalendarDayUiStatus.DONE -> Color(0xFF0D3200)
+                                CalendarDayUiStatus.MISSED -> Color.White
+                                else -> colors.textOnAccent.copy(alpha = 0.75f)
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .aspectRatio(1f)
+                                    .then(
+                                        if (day.isToday) Modifier.border(
+                                            2.dp, todayBorderColor, RoundedCornerShape(6.dp)
+                                        ) else Modifier
+                                    )
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(bgColor),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = day.dayNumber.toString(),
+                                    color = textColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (day.isToday) FontWeight.ExtraBold else FontWeight.Medium,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(24.dp)
-                                .clip(RoundedCornerShape(2.dp))
-                                .background(dayColor)
-                        )
                     }
                 }
             }

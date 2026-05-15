@@ -29,12 +29,16 @@ enum class CalendarDayUiStatus {
 
 data class CalendarDayUi(
 	val dayIndex: Int,
-	val status: CalendarDayUiStatus
+	val dayNumber: Int = 0,
+	val status: CalendarDayUiStatus,
+	val isToday: Boolean = false
 )
 
 data class UserMissionsUiState(
 	val goals: List<WeeklyGoalUi> = emptyList(),
 	val calendarDays: List<CalendarDayUi> = emptyList(),
+	val calendarYear: Int = 0,
+	val calendarMonth: Int = 0,
 	val achievedCount: Int = 0,
 	val totalCount: Int = 0,
 	val isRefreshing: Boolean = false,
@@ -68,11 +72,30 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 			val missionsDetailsResult = userMissionsRepository.getMissions()
 			val calendarResult = userMissionsRepository.getWeeklyCalendarDays()
 
+			// El calendario siempre se muestra, independientemente del resultado de las misiones
+			val mappedCalendar = calendarResult.getOrElse { emptyList() }.map { day ->
+				CalendarDayUi(
+					dayIndex = day.dayIndex,
+					status = when {
+						day.isClosedDay && day.didWorkout -> CalendarDayUiStatus.DONE
+						day.isClosedDay && !day.didWorkout -> CalendarDayUiStatus.MISSED
+						else -> CalendarDayUiStatus.PENDING
+					}
+				)
+			}
+			val currentCal = java.util.Calendar.getInstance()
+			_uiState.update {
+				it.copy(
+					calendarDays = normalizeCalendar(mappedCalendar),
+					calendarYear = currentCal.get(java.util.Calendar.YEAR),
+					calendarMonth = currentCal.get(java.util.Calendar.MONTH) + 1
+				)
+			}
+
 			userMissionsResult
 				.onSuccess { userMissions ->
 					missionsDetailsResult
 						.onSuccess { missionDetails ->
-							// Mapear UserMissionDto + MissionDto → WeeklyGoalUi
 							val mappedGoals = userMissions.mapNotNull { userMission ->
 								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
 								if (missionDetail != null) {
@@ -82,7 +105,6 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 									} else {
 										0f
 									}
-
 									WeeklyGoalUi(
 										userMissionId = userMission.userMissionId,
 										missionId = userMission.missionId,
@@ -95,24 +117,10 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 									null
 								}
 							}
-
 							val achievedCount = mappedGoals.count { it.progress >= 1f }
-
-							val mappedCalendar = calendarResult.getOrElse { emptyList() }.map { day ->
-								CalendarDayUi(
-									dayIndex = day.dayIndex,
-									status = when {
-										day.isClosedDay && day.didWorkout -> CalendarDayUiStatus.DONE
-										day.isClosedDay && !day.didWorkout -> CalendarDayUiStatus.MISSED
-										else -> CalendarDayUiStatus.PENDING
-									}
-								)
-							}
-
 							_uiState.update {
 								it.copy(
 									goals = mappedGoals,
-									calendarDays = normalizeCalendar(mappedCalendar),
 									achievedCount = achievedCount,
 									totalCount = mappedGoals.size,
 									isRefreshing = false,
@@ -141,12 +149,39 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 	}
 
 	private fun normalizeCalendar(days: List<CalendarDayUi>): List<CalendarDayUi> {
-		val sortedDays = days.sortedBy { it.dayIndex }
-		if (sortedDays.size >= 28) return sortedDays.take(28)
+		val cal = java.util.Calendar.getInstance()
+		val todayDay = cal.get(java.util.Calendar.DAY_OF_MONTH)
+		val daysInMonth = cal.getActualMaximum(java.util.Calendar.DAY_OF_MONTH)
 
-		val padding = (sortedDays.size until 28).map { index ->
-			CalendarDayUi(dayIndex = index, status = CalendarDayUiStatus.PENDING)
+		cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+		// Convert Sunday=1..Saturday=7 to Monday-first offset (0=Mon, 6=Sun)
+		val firstDayOffset = (cal.get(java.util.Calendar.DAY_OF_WEEK) - 2 + 7) % 7
+
+		val sortedDays = days.sortedBy { it.dayIndex }
+		val result = mutableListOf<CalendarDayUi>()
+
+		repeat(firstDayOffset) {
+			result.add(CalendarDayUi(dayIndex = -1, dayNumber = 0, status = CalendarDayUiStatus.PENDING))
 		}
-		return sortedDays + padding
+
+		for (dayNum in 1..daysInMonth) {
+			val dayIdx = dayNum - 1
+			val existing = sortedDays.find { it.dayIndex == dayIdx }
+			result.add(CalendarDayUi(
+				dayIndex = dayIdx,
+				dayNumber = dayNum,
+				status = existing?.status ?: CalendarDayUiStatus.PENDING,
+				isToday = (dayNum == todayDay)
+			))
+		}
+
+		val remainder = result.size % 7
+		if (remainder != 0) {
+			repeat(7 - remainder) {
+				result.add(CalendarDayUi(dayIndex = -1, dayNumber = 0, status = CalendarDayUiStatus.PENDING))
+			}
+		}
+
+		return result
 	}
 }

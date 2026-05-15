@@ -225,6 +225,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onShowMoreCalendar = { },
                 goals = week.goals,
                 calendarDays = week.calendarDays,
+                calendarYear = week.calendarYear,
+                calendarMonth = week.calendarMonth,
                 achievedLabel = "${week.achievedCount}/${week.totalCount} ${strings.achieved}",
                 isRefreshing = week.isRefreshing,
                 onRefresh = { userMissionsViewModel.refreshUserMissions() }

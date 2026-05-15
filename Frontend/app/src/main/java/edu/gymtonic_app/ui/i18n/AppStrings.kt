@@ -197,6 +197,8 @@ data class AppStrings(
     val myCalendar: String,
     val showMore: String,
     val achieved: String,
+    val calendarDayNames: List<String>,
+    val calendarMonthNames: List<String>,
 
     // Routine deletion
     val deleteRoutine: String,
@@ -389,6 +391,9 @@ val SpanishStrings = AppStrings(
     myCalendar = "Mi Calendario",
     showMore = "Mostrar mas",
     achieved = "Logrados",
+    calendarDayNames = listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"),
+    calendarMonthNames = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"),
 
     deleteRoutine = "Eliminar rutina",
     deleteRoutineTitle = "Eliminar rutina",
@@ -580,6 +585,9 @@ val EnglishStrings = AppStrings(
     myCalendar = "My Calendar",
     showMore = "Show more",
     achieved = "Achieved",
+    calendarDayNames = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
+    calendarMonthNames = listOf("January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"),
 
     deleteRoutine = "Delete routine",
     deleteRoutineTitle = "Delete routine",
