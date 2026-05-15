@@ -5,6 +5,7 @@ const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
 const { DateTime } = require("mssql")
+const crypto = require("crypto")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -133,18 +134,25 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
 
 /* <=============================== REGISTER ===============================> */
 exports.register = wrapAsync(async function (req, res, next) {
-    let { username, name, password, birthdate, email, height, weight, objective} = req.body
+    let { username, name, password, birthdate, email, height, weight, objective, oauth, picture} = req.body
+
+    // Si es un registro por OAuth, generamos una password aleatoria (UUID) y saltamos validaciones
+    if (oauth) {
+        password = crypto.randomUUID()
+    }
+
+    console.log(oauth)
 
     // VALIDACIONES DE CONTRASEÑA
-    if(password.length<8){
+    if(!oauth && (!password || password.length<8)){
         next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
-    } else if(!password.match(/[A-Z]/)){
+    } else if(!oauth && !password.match(/[A-Z]/)){
         next(new AppError("La contraseña debe tener una mayúscula",400))
-    } else if(!password.match(/[a-z]/)){
+    } else if(!oauth && !password.match(/[a-z]/)){
         next(new AppError("La contraseña debe tener una minúscula",400))
-    } else if(!password.match(/[/\d/]/)){
+    } else if(!oauth && !password.match(/[/\d/]/)){
         next(new AppError("La contraseña debe tener un número",400))
-    } else if(!password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
+    } else if(!oauth && !password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
         next(new AppError("La contraseña debe tener un carácter especial",400))
     } else{
         let newUser = {}
@@ -153,6 +161,8 @@ exports.register = wrapAsync(async function (req, res, next) {
         let userPicture = "public/images/users/default/user.jpg"
         if(req.file){
             userPicture = req.file.path.replace(/\\/g, "/")
+        } else if (picture) {
+            userPicture = picture
         }
 
         newUser = {
@@ -164,7 +174,8 @@ exports.register = wrapAsync(async function (req, res, next) {
             user_height: height,
             user_weight: weight,
             user_objective: objective,
-            user_picture: userPicture
+            user_picture: userPicture,
+            user_oauth: oauth || null
         }
 
         newUser.user_password = await bcrypt.hashPassword(newUser.user_password)

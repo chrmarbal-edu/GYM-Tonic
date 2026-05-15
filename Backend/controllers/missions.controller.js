@@ -70,7 +70,7 @@ exports.findMissionByIdCSR = wrapAsync(async function (req,res,next){
 // Actualizamos la misión.
 exports.updateMissionCSR = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    let { name, type, points, objetive } = req.body
+    let { name, type, points, objective } = req.body
 
     console.log("id", id);
 
@@ -92,13 +92,13 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
             name: name,
             type: type,
             points: points,
-            objetive: objetive
+            objective: objective
         }
 
         completeMission.name = updateMission.name
         completeMission.type = updateMission.type
         completeMission.points = updateMission.points
-        completeMission.objetive = updateMission.objetive
+        completeMission.objective = updateMission.objective
 
         
         // Realizamos la redirección en la promesa de la actualización.
@@ -117,7 +117,7 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
 // #region CREATEMISSION - CSR
 /* <=============================== 7. CREATEMISSION ===============================> */
 exports.createMissionCSR = wrapAsync(async function (req, res, next) {
-    const { name, type, points, objetive } = req.body
+    const { name, type, points, objective } = req.body
 
         let newMission = {}
 
@@ -125,7 +125,7 @@ exports.createMissionCSR = wrapAsync(async function (req, res, next) {
             name: name,
             type: type,
             points: points,
-            objetive: objetive
+            objective: objective
         }
 
         // Realizamos la redirección en la promesa de la creación.
