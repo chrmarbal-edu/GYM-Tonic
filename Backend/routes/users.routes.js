@@ -21,7 +21,7 @@ const upload = multer({ storage: storage })
 // #region USERS
 
 // REGISTER
-router.post("/", upload.single('image'), usersController.register)
+router.post("/", upload.single('picture'), usersController.register)
 
 // LOGIN
 router.post("/login", usersController.login)
@@ -62,7 +62,7 @@ router.get("/missions/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, 
 // #region USER DYNAMIC ROUTES
 
 // UPDATE USER BY ID
-router.patch("/:id", jwtMW.authenticate, upload.single('image'), usersController.updateUser)
+router.patch("/:id", jwtMW.authenticate, upload.single('picture'), usersController.updateUser)
 
 // DELETE USER BY ID
 router.delete("/:id", jwtMW.authenticate, usersController.deleteUser)

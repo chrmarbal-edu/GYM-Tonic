@@ -36,7 +36,8 @@ data class RegisterRequest(
     val height: Double,
     val weight: Double,
     val objective: Int,
-    val oauth: String? = null
+    val oauth: String? = null,
+    val picture: String? = null
 )
 
 data class RegisterResponse(

@@ -1,6 +1,7 @@
 package edu.gymtonic_app.ui.navigation
 
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -50,6 +50,12 @@ import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 import edu.gymtonic_app.ui.viewmodel.TrainingScreenViewModel
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import androidx.compose.runtime.DisposableEffect
 import edu.gymtonic_app.ui.viewmodel.UserMissionsViewModel
 @Composable
 @Suppress("UNUSED_PARAMETER")
@@ -64,12 +70,33 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
     val loginViewModel: LoginViewModel = viewModel()
     val registerViewModel: RegisterViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
-    val trainingViewModel: TrainingScreenViewModel = viewModel()
-    val userMissionsViewModel: UserMissionsViewModel = viewModel()
 
     val sessionState = sessionManager.sessionFlow.collectAsState(initial = null)
-    val trainingUiState = trainingViewModel.uiState.collectAsState()
-    val weekUiState = userMissionsViewModel.uiState.collectAsState()
+
+    // CONFIGURACIÓN DE FACEBOOK DIRECTA
+    val callbackManager = remember { CallbackManager.Factory.create() }
+    val fbLauncher = rememberLauncherForActivityResult(
+        LoginManager.getInstance().createLogInActivityResultContract(callbackManager)
+    ) { /* El resultado se maneja en el callback de abajo */ }
+
+    DisposableEffect(Unit) {
+        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(result: LoginResult) {
+                val token = result.accessToken.token
+                Log.d("FacebookAuth", "Token obtenido: ${token.take(10)}...")
+                loginViewModel.facebookLogin(token)
+            }
+            override fun onCancel() {
+                Log.d("FacebookAuth", "Login cancelado")
+            }
+            override fun onError(error: FacebookException) {
+                Log.e("FacebookAuth", "Error: ${error.message}")
+            }
+        })
+        onDispose {
+            LoginManager.getInstance().unregisterCallback(callbackManager)
+        }
+    }
 
     val onOpenHomeGlobal = {
         navController.navigate(Routes.HOME) {
@@ -102,6 +129,37 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         else -> Routes.WELCOME
     }
 
+    val authRoutes = setOf(Routes.WELCOME, Routes.LOGIN_FORM, Routes.REGISTER)
+
+    val onLogout: () -> Unit = {
+        loginViewModel.resetLoginState()
+        googleAuthHelper.signOut(coroutineScope)
+        homeViewModel.logout(
+            onError = { message ->
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(message)
+                }
+            }
+        )
+    }
+
+    LaunchedEffect(sessionState.value?.token) {
+        val session = sessionState.value ?: return@LaunchedEffect
+        if (session.token != null) return@LaunchedEffect
+
+        val currentRoute = navController.currentDestination?.route ?: return@LaunchedEffect
+        if (currentRoute in authRoutes) return@LaunchedEffect
+
+        loginViewModel.resetLoginState()
+        googleAuthHelper.signOut(coroutineScope)
+        navController.navigate(Routes.WELCOME) {
+            popUpTo(navController.graph.id) {
+                inclusive = true
+            }
+            launchSingleTop = true
+        }
+    }
+
     if (startRoute == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -128,12 +186,12 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                         }
                     }
                     is LoginState.NeedsRegistration -> {
-                        val googleData = (loginState as LoginState.NeedsRegistration).googleData
-                        registerViewModel.prepareGoogleRegistration(
-                            name = googleData.username,
-                            email = googleData.email,
-                            picture = googleData.picture,
-                            oauth = googleData.oauth
+                        val socialData = (loginState as LoginState.NeedsRegistration).socialData
+                        registerViewModel.prepareSocialRegistration(
+                            name = socialData.username,
+                            email = socialData.email,
+                            picture = socialData.picture,
+                            oauth = socialData.oauth
                         )
                         navController.navigate(Routes.REGISTER)
                     }
@@ -161,7 +219,9 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                         }
                     )
                 },
-                onFacebook = { }
+                onFacebook = {
+                    fbLauncher.launch(listOf("public_profile", "email"))
+                }
             )
         }
 
@@ -184,19 +244,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
         composable(Routes.HOME) {
             MainViewScreen(
-                onLogout = {
-                    homeViewModel.logout(
-                        onLoggedOut = {
-                            navController.navigate(Routes.WELCOME) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    inclusive = true
-                                }
-                                launchSingleTop = true
-                            }
-                        },
-                        onError = { }
-                    )
-                },
+                onLogout = onLogout,
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
                 onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                 onOpenTechnogym = { },
@@ -209,6 +257,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         }
 
         composable(Routes.WEEK) {
+            val userMissionsViewModel: UserMissionsViewModel = viewModel()
+            val weekUiState = userMissionsViewModel.uiState.collectAsState()
             val week = weekUiState.value
             WeekChallengesScreen(
                 onBack = { navController.popBackStack() },
@@ -233,6 +283,8 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         }
 
         composable(Routes.TRAINING) {
+            val trainingViewModel: TrainingScreenViewModel = viewModel()
+            val trainingUiState = trainingViewModel.uiState.collectAsState()
             TrainingShellScreen(
                 title = strings.trainingTitle,
                 onBack = { navController.popBackStack() },
@@ -330,19 +382,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
-                onLogout = {
-                    homeViewModel.logout(
-                        onLoggedOut = {
-                            navController.navigate(Routes.WELCOME) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    inclusive = true
-                                }
-                                launchSingleTop = true
-                            }
-                        },
-                        onError = { }
-                    )
-                },
+                onLogout = onLogout,
                 onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) }
             )
@@ -354,7 +394,12 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
-                onOpenProfile = onOpenProfileGlobal
+                onOpenProfile = onOpenProfileGlobal,
+                onDeleted = {
+                    navController.navigate(Routes.WELCOME) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                }
             )
         }
 

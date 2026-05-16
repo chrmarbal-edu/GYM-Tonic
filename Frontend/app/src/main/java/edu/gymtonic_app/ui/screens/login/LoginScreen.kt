@@ -116,45 +116,62 @@ fun GymTonicLoginScreen(
                 fontWeight = FontWeight.SemiBold
             )
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(18.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BotonesRedesSociales(
-                    drawableRes = R.drawable.google_logo,
-                    contentDescription = "Google",
-                    onClick = onGoogle
-                )
-                BotonesRedesSociales(
-                    drawableRes = R.drawable.facebook_logo,
-                    contentDescription = "Facebook",
-                    onClick = onFacebook
-                )
-            }
+            SocialSignInButton(
+                text = strings.continueWithGoogle,
+                iconRes = R.drawable.google_logo,
+                containerColor = Color.White,
+                contentColor = Color(0xFF1F1F1F),
+                onClick = onGoogle
+            )
+
+            Spacer(Modifier.height(14.dp))
+
+            SocialSignInButton(
+                text = strings.continueWithFacebook,
+                iconRes = R.drawable.facebook_logo,
+                containerColor = Color(0xFF1877F2),
+                contentColor = Color.White,
+                onClick = onFacebook
+            )
         }
     }
 }
 
 @Composable
-private fun BotonesRedesSociales(
-    drawableRes: Int,
-    contentDescription: String,
+private fun SocialSignInButton(
+    text: String,
+    iconRes: Int,
+    containerColor: Color,
+    contentColor: Color,
     onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
-        color = Color(0xFFF4F5F7),
-        shadowElevation = 2.dp,
-        modifier = Modifier.size(54.dp)
+        color = containerColor,
+        shadowElevation = 1.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(54.dp)
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
             Image(
-                painter = painterResource(drawableRes),
-                contentDescription = contentDescription,
-                modifier = Modifier.size(30.dp)
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = text,
+                color = contentColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }

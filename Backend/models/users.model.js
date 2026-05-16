@@ -93,8 +93,6 @@ user.create = async function (newUser, result) {
     try {
         const pool = await sql.connect(dbConn)
 
-        console.log(newUser.user_objective)
-
         const request = pool.request()
         request.input("username", sql.NVarChar, newUser.user_username)
         request.input("name", sql.NVarChar, newUser.user_name)

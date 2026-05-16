@@ -10,11 +10,11 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
-    val data: LoginUserData,
+    val data: LoginUserData?,
     val token: String
 )
 
-data class GoogleLoginResponse(
+data class SocialLoginResponse(
     val email: String,
     val username: String,
     val picture: String?,
@@ -24,6 +24,11 @@ data class GoogleLoginResponse(
 data class GoogleLoginRequest(
     @SerializedName("idToken")
     val idToken: String
+)
+
+data class FacebookLoginRequest(
+    @SerializedName("accessToken")
+    val accessToken: String
 )
 
 data class LoginUserData(

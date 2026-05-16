@@ -37,9 +37,9 @@ fun RegisterScreen(
     val colors = LocalColors.current
     val registerState by registerViewModel.registerState.collectAsState()
 
-    // Datos iniciales desde Google si existen
-    val googleData = registerViewModel.googleUserData
-    var showStep2 by remember { mutableStateOf(googleData != null) }
+    // Datos iniciales desde registro social si existen
+    val socialData = registerViewModel.socialUserData
+    var showStep2 by remember { mutableStateOf(socialData != null) }
 
     val bg = Brush.verticalGradient(colors.gradientColors)
 
@@ -54,9 +54,9 @@ fun RegisterScreen(
         }
     }
 
-    var fullName by remember { mutableStateOf(googleData?.name ?: "") }
-    var username by remember { mutableStateOf(googleData?.name ?: "") }
-    var email by remember { mutableStateOf(googleData?.email ?: "") }
+    var fullName by remember { mutableStateOf(socialData?.name ?: "") }
+    var username by remember { mutableStateOf(socialData?.name ?: "") }
+    var email by remember { mutableStateOf(socialData?.email ?: "") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
@@ -91,8 +91,8 @@ fun RegisterScreen(
             password,
             registerViewModel = registerViewModel,
             onBack = { 
-                if (googleData != null) {
-                    registerViewModel.clearGoogleData()
+                if (socialData != null) {
+                    registerViewModel.clearSocialData()
                     onBack()
                 } else {
                     showStep2 = false 
@@ -101,38 +101,39 @@ fun RegisterScreen(
             registerState
         )
     } else {
-        Box(
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bg)
+            .padding(horizontal = 18.dp, vertical = 18.dp)
+    ) {
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .background(bg)
-                .padding(horizontal = 18.dp, vertical = 18.dp)
+                .align(Alignment.TopEnd)
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ThemeButton(tint = Color.White)
-                LanguageButton(tint = Color.White)
-            }
+            ThemeButton(tint = Color.White)
+            LanguageButton(tint = Color.White)
+        }
 
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
             Text(
                 text = strings.createAccount,
                 color = Color.White,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(top = 55.dp)
+                    .padding(top = 55.dp, bottom = 20.dp)
             )
 
             Surface(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 80.dp)
                     .fillMaxWidth()
-                    .heightIn(min = 520.dp, max = 620.dp),
+                    .weight(1f)
+                    .padding(bottom = 80.dp),
                 shape = RoundedCornerShape(70.dp),
                 color = colors.surfaceMain,
                 shadowElevation = 10.dp
@@ -181,7 +182,7 @@ fun RegisterScreen(
                         label = strings.password,
                         value = password,
                         onValueChange = {
-                            password = it
+                            password = it.trim()
                             passwordError = false
                             passwordsMatchError = false
                         },
@@ -195,7 +196,7 @@ fun RegisterScreen(
                         label = strings.confirmPassword,
                         value = confirmPassword,
                         onValueChange = {
-                            confirmPassword = it
+                            confirmPassword = it.trim()
                             confirmPasswordError = false
                             passwordsMatchError = false
                         },
@@ -229,6 +230,7 @@ fun RegisterScreen(
                 }
             }
         }
+    }
     }
 }
 

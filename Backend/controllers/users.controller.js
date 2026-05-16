@@ -6,6 +6,8 @@ const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
 const { DateTime } = require("mssql")
 const crypto = require("crypto")
+const fs = require("fs")
+const path = require("path")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -72,7 +74,7 @@ exports.findUserById = wrapAsync(async function (req,res,next){
 /* <=============================== UPDATE USER ===============================> */
 exports.updateUser = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    let { username, name, currentPassword = "", newPassword = "", email, height, weight, objective} = req.body
+    let { username, name, currentPassword = "", newPassword = "", email, height, weight, objective, picture} = req.body
     
     // BUSCAMOS USUARIO
     await userModel.findById(id, async function(err,userFounded){
@@ -134,8 +136,19 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             }
             
             // PICTURE
-            if(req.file){
-                userFounded.user_picture = req.file.path.replace(/\\/g, "/")
+            if (picture === "default") {
+                userFounded.user_picture = "images/users/default/user.jpg"
+            } else if (req.file) {
+                // Obtenemos la extensión original del archivo (ej: .jpg, .png)
+                const extension = path.extname(req.file.originalname)
+                const fileName = `${userFounded.user_username}${extension}`
+                const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
+
+                // Renombramos el archivo físicamente al nombre del usuario en la carpeta destino
+                fs.renameSync(req.file.path, targetPath)
+
+                // Guardamos en DB la ruta empezando desde 'users' como solicitaste
+                userFounded.user_picture = `images/users/${fileName}`
             }
 
             // ACTUALIZAMOS USUARIO
@@ -143,7 +156,13 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
                 if(err){
                     next(new AppError(err, 500))
                 } else{
-                    res.status(200).json(datosUsuarioActualizado)
+                    // Si el usuario que está modificando datos es el mismo, actualizamos los datos de la sesión
+                    if (req.userLogued && req.userLogued.user_id == id) {
+                        Object.assign(req.userLogued, userFounded)
+                        res.status(200).json(req.userLogued)
+                    } else{
+                        res.status(200).json(datosUsuarioActualizado)
+                    }
                 }
             })
         }
@@ -159,8 +178,6 @@ exports.register = wrapAsync(async function (req, res, next) {
         password = crypto.randomUUID()
     }
 
-    console.log(oauth)
-
     // VALIDACIONES DE CONTRASEÑA
     if(!oauth && (!password || password.length<8)){
         next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
@@ -173,17 +190,25 @@ exports.register = wrapAsync(async function (req, res, next) {
     } else if(!oauth && !password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
         next(new AppError("La contraseña debe tener un carácter especial",400))
     } else{
-        let newUser = {}
-        
         // Gestión de la imagen de perfil
-        let userPicture = "public/images/users/default/user.jpg"
-        if(req.file){
-            userPicture = req.file.path.replace(/\\/g, "/")
+        let userPicture = "users/default/user.jpg"
+        
+        if (req.file) {
+            // Obtenemos la extensión original del archivo (ej: .jpg, .png)
+            const extension = path.extname(req.file.originalname)
+            const fileName = `${username}${extension}`
+            const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
+
+            // Renombramos el archivo físicamente al nombre del usuario en la carpeta destino
+            fs.renameSync(req.file.path, targetPath)
+
+            // Guardamos en DB la ruta empezando desde 'users' como solicitaste
+            userPicture = `users/${fileName}`
         } else if (picture) {
             userPicture = picture
         }
 
-        newUser = {
+        let newUser = {
             user_username: username,
             user_name: name,
             user_password: password,

@@ -9,11 +9,11 @@ import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.repository.AuthRepository
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
-import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 class RegisterViewModel(application: Application): AndroidViewModel(application) {
     val authRepository: AuthRepository
@@ -23,11 +23,11 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Idle)
     val registerState: StateFlow<RegisterState> = _registerState
 
-    // Datos temporales para registro con Google
-    var googleUserData: GoogleUserData? = null
+    // Datos temporales para registro social (Google/Facebook)
+    var socialUserData: SocialUserData? = null
         private set
 
-    data class GoogleUserData(
+    data class SocialUserData(
         val name: String,
         val email: String,
         val picture: String?,
@@ -41,12 +41,12 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
         sessionManager = SessionManager(dataStore)
     }
 
-    fun prepareGoogleRegistration(name: String, email: String, picture: String?, oauth: String) {
-        googleUserData = GoogleUserData(name, email, picture, oauth)
+    fun prepareSocialRegistration(name: String, email: String, picture: String?, oauth: String) {
+        socialUserData = SocialUserData(name, email, picture, oauth)
     }
 
-    fun clearGoogleData() {
-        googleUserData = null
+    fun clearSocialData() {
+        socialUserData = null
     }
 
     fun register(
@@ -58,18 +58,31 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
         height: Double,
         weight: Double,
         objective: Int,
-        oauth: String? = null
+        oauth: String? = null,
+        pictureFile: File? = null,
+        pictureUrl: String? = null
     ) {
         viewModelScope.launch {
-            val request = RegisterRequest(username, name, password, birthdate, email, height, weight, objective, oauth)
             _registerState.value = RegisterState.Loading
 
             try{
-                val response = authRepository.register(request)
+                val response = authRepository.register(
+                    username = username.trim(),
+                    name = name.trim(),
+                    password = password?.trim(),
+                    birthdate = birthdate.trim(),
+                    email = email.trim(),
+                    height = height,
+                    weight = weight,
+                    objective = objective,
+                    oauth = oauth,
+                    pictureFile = pictureFile,
+                    pictureUrl = pictureUrl
+                )
                 Log.i("register",response.toString())
                 val user = response.resolvedUser()
                 if(response.token != null && user != null){
-                    clearGoogleData() // Limpiamos los datos de Google tras el éxito
+                    clearSocialData() // Limpiamos los datos tras el éxito
                     sessionManager.saveSession(
                         token = response.token,
                         userId = user.userId,

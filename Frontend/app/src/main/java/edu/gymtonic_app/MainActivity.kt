@@ -1,7 +1,11 @@
 package edu.gymtonic_app
 
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Base64
+import android.util.Log
+import java.security.MessageDigest
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -38,6 +42,8 @@ class MainActivity : ComponentActivity() {
         val sessionManager = SessionManager(sessionDataStore)
         RetrofitClient.setSessionManager(sessionManager)
 
+        printKeyHash()
+
         setContent {
             val currentLanguage by LanguageManager.language.collectAsState()
             val strings = if (currentLanguage == AppLanguage.SPANISH) SpanishStrings else EnglishStrings
@@ -67,6 +73,26 @@ class MainActivity : ComponentActivity() {
                     Navigation(navController, snackbarHostState)
                 }
             }
+        }
+    }
+
+    private fun printKeyHash() {
+        try {
+            val info = packageManager.getPackageInfo(
+                packageName,
+                PackageManager.GET_SIGNING_CERTIFICATES
+            )
+            val signatures = info.signingInfo?.signingCertificateHistory
+            if (signatures != null) {
+                for (signature in signatures) {
+                    val md = MessageDigest.getInstance("SHA")
+                    md.update(signature.toByteArray())
+                    val hash = Base64.encodeToString(md.digest(), Base64.DEFAULT)
+                    Log.d("KeyHash", "KeyHash: $hash")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("KeyHash", "Error getting key hash", e)
         }
     }
 }

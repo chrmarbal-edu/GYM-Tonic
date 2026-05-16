@@ -4,6 +4,7 @@ import android.util.Log
 import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.GoogleLoginRequest
+import edu.gymtonic_app.data.remote.remoteModel.auth.FacebookLoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
@@ -35,9 +36,11 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
+import retrofit2.http.Multipart
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 object RetrofitClient {
@@ -52,6 +55,8 @@ object RetrofitClient {
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val url = originalRequest.url.toString()
+        
+        Log.d("RetrofitClient", "--> ${originalRequest.method} $url")
 
         val isLoginEndpoint = url.contains("users/login") && originalRequest.method == "POST"
         val isRegisterEndpoint = url.endsWith("users") && originalRequest.method == "POST"
@@ -101,12 +106,27 @@ interface ApiService {
     suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<Any>
 
     @POST("auth/facebookLogin")
-    suspend fun facebookLogin(@Body request: Map<String, Any>): Response<LoginResponse>
+    suspend fun facebookLogin(@Body request: FacebookLoginRequest): Response<Any>
 
     // USERS
     @POST("users")
     @Headers("Content-Type: application/json")
     suspend fun register(@Body request: RegisterRequest): Response<RegisterResponse>
+
+    @Multipart
+    @POST("users")
+    suspend fun registerWithFile(
+        @Part("username") username: okhttp3.RequestBody,
+        @Part("name") name: okhttp3.RequestBody,
+        @Part("password") password: okhttp3.RequestBody?,
+        @Part("birthdate") birthdate: okhttp3.RequestBody,
+        @Part("email") email: okhttp3.RequestBody,
+        @Part("height") height: okhttp3.RequestBody,
+        @Part("weight") weight: okhttp3.RequestBody,
+        @Part("objective") objective: okhttp3.RequestBody,
+        @Part("oauth") oauth: okhttp3.RequestBody?,
+        @Part picture: okhttp3.MultipartBody.Part?
+    ): Response<RegisterResponse>
 
     @POST("users/login")
     @Headers("Content-Type: application/json")
@@ -124,8 +144,19 @@ interface ApiService {
     @PATCH("users/{id}")
     suspend fun updateUser(
         @Path("id") id: Int,
-        @Body request: Map<String, Any?>
-    ): Response<UserDto>
+        @Body request: @JvmSuppressWildcards Map<String, Any?>
+    ): Response<LoginResponse>
+
+    @Multipart
+    @PATCH("users/{id}")
+    suspend fun updateUserWithFile(
+        @Path("id") id: Int,
+        @Part("username") username: okhttp3.RequestBody?,
+        @Part("password") password: okhttp3.RequestBody?,
+        @Part("height") height: okhttp3.RequestBody?,
+        @Part("weight") weight: okhttp3.RequestBody?,
+        @Part picture: okhttp3.MultipartBody.Part?
+    ): Response<LoginResponse>
 
     @DELETE("users/{id}")
     suspend fun deleteUser(@Path("id") id: Int): Response<Unit>
@@ -151,12 +182,12 @@ interface ApiService {
     suspend fun getUserMissionById(@Path("id") id: Int): Response<UserMissionDto>
 
     @POST("users/missions")
-    suspend fun createUserMission(@Body request: Map<String, Any>): Response<UserMissionDto>
+    suspend fun createUserMission(@Body request: @JvmSuppressWildcards Map<String, Any>): Response<UserMissionDto>
 
     @PATCH("users/missions/{id}")
     suspend fun updateUserMission(
         @Path("id") id: Int,
-        @Body request: Map<String, Any?>
+        @Body request: @JvmSuppressWildcards Map<String, Any?>
     ): Response<UserMissionDto>
 
     @DELETE("users/missions/{id}")
@@ -203,12 +234,12 @@ interface ApiService {
     suspend fun getRoutineById(@Path("routineId") routineId: Int): Response<RoutineDto>
 
     @POST("routines/routine/new")
-    suspend fun createRoutine(@Body request: Map<String, Any>): Response<RoutineDto>
+    suspend fun createRoutine(@Body request: @JvmSuppressWildcards Map<String, Any>): Response<RoutineDto>
 
     @PATCH("routines/routine/{routineId}")
     suspend fun updateRoutine(
         @Path("routineId") routineId: Int,
-        @Body request: Map<String, Any?>
+        @Body request: @JvmSuppressWildcards Map<String, Any?>
     ): Response<RoutineDto>
 
     @DELETE("routines/routine/{routineId}")
@@ -249,7 +280,7 @@ interface ApiService {
     @PATCH("groups/{id}")
     suspend fun updateGroup(
         @Path("id") id: Int,
-        @Body request: Map<String, Any?>
+        @Body request: @JvmSuppressWildcards Map<String, Any?>
     ): Response<GroupDto>
 
     @DELETE("groups/{id}")
@@ -266,7 +297,7 @@ interface ApiService {
     suspend fun getFriendsByUserId(@Path("userId") userId: Int): Response<List<UserSummaryDto>>
 
     @POST("friends")
-    suspend fun createFriend(@Body request: Map<String, Any>): Response<FriendDto>
+    suspend fun createFriend(@Body request: @JvmSuppressWildcards Map<String, Any>): Response<FriendDto>
 
     @DELETE("friends/{id}")
     suspend fun deleteFriend(@Path("id") id: Int): Response<Unit>
@@ -284,7 +315,7 @@ interface ApiService {
     suspend fun getFriendRequestById(@Path("id") id: Int): Response<FrequestDto>
 
     @POST("friendRequests")
-    suspend fun createFriendRequest(@Body request: Map<String, Any>): Response<FrequestDto>
+    suspend fun createFriendRequest(@Body request: @JvmSuppressWildcards Map<String, Any>): Response<FrequestDto>
 
     @PATCH("friendRequests/accept/{id}")
     suspend fun acceptFriendRequest(@Path("id") id: Int): Response<Unit>

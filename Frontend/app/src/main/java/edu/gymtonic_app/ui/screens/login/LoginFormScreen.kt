@@ -112,7 +112,7 @@ fun LoginFormScreen(
                 Spacer(Modifier.height(8.dp))
                 UnderlineTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { password = it.trim() },
                     placeholder = "••••••••",
                     visualTransformation = PasswordVisualTransformation()
                 )

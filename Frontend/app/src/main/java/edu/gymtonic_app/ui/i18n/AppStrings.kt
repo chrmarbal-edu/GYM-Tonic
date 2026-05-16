@@ -14,6 +14,8 @@ data class AppStrings(
     val loginButton: String,
     val registerButton: String,
     val continueWith: String,
+    val continueWithGoogle: String,
+    val continueWithFacebook: String,
 
     // Login form
     val usernameLabel: String,
@@ -39,9 +41,10 @@ data class AppStrings(
     val height: String,
     val weight: String,
     val selectGoal: String,
+    val goalMaintenance: String,
     val goalLoseWeight: String,
-    val goalToneUp: String,
     val goalBuildMuscle: String,
+    val goalPerformance: String,
     val signUpButton: String,
 
     // Main / Home
@@ -266,6 +269,8 @@ val SpanishStrings = AppStrings(
     loginButton = "ENTRAR",
     registerButton = "Registrarse",
     continueWith = "Continúa con",
+    continueWithGoogle = "Continúa con Google",
+    continueWithFacebook = "Continúa con Facebook",
 
     usernameLabel = "Usuario",
     password = "Contraseña",
@@ -288,9 +293,10 @@ val SpanishStrings = AppStrings(
     height = "Altura (cm)",
     weight = "Peso (kg)",
     selectGoal = "Selecciona un objetivo",
-    goalLoseWeight = "Perder peso",
-    goalToneUp = "Tonificar",
-    goalBuildMuscle = "Ganar masa muscular",
+    goalMaintenance = "Mantenimiento",
+    goalLoseWeight = "Pérdida de peso",
+    goalBuildMuscle = "Ganancia muscular",
+    goalPerformance = "Rendimiento / Resistencia",
     signUpButton = "ENTRAR",
 
     homeSlogan = "DESAFÍATE · SUPÉRATE",
@@ -503,6 +509,8 @@ val EnglishStrings = AppStrings(
     loginButton = "LOG IN",
     registerButton = "Register",
     continueWith = "Continue with",
+    continueWithGoogle = "Continue with Google",
+    continueWithFacebook = "Continue with Facebook",
 
     usernameLabel = "Username",
     password = "Password",
@@ -525,9 +533,10 @@ val EnglishStrings = AppStrings(
     height = "Height (cm)",
     weight = "Weight (kg)",
     selectGoal = "Select a goal",
-    goalLoseWeight = "Lose weight",
-    goalToneUp = "Tone up",
-    goalBuildMuscle = "Build muscle",
+    goalMaintenance = "Maintenance",
+    goalLoseWeight = "Weight loss",
+    goalBuildMuscle = "Muscle gain",
+    goalPerformance = "Performance / Endurance",
     signUpButton = "SIGN UP",
 
     homeSlogan = "CHALLENGE · SURPASS",

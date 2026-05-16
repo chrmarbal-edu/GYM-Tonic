@@ -27,6 +27,14 @@ val googleWebClientId = (localProperties.getProperty("GOOGLE_WEB_CLIENT_ID")
     ?: project.findProperty("GOOGLE_WEB_CLIENT_ID") as String?)
     ?: ""
 
+val facebookAppId = (localProperties.getProperty("FACEBOOK_APP_ID")
+    ?: project.findProperty("FACEBOOK_APP_ID") as String?)
+    ?: ""
+
+val facebookClientToken = (localProperties.getProperty("FACEBOOK_CLIENT_TOKEN")
+    ?: project.findProperty("FACEBOOK_CLIENT_TOKEN") as String?)
+    ?: ""
+
 android {
     namespace = "edu.gymtonic_app"
     compileSdk = 36
@@ -41,6 +49,10 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("String", "BACKEND_BASE_URL", "\"$backendBaseUrl\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
+        buildConfigField("String", "FACEBOOK_APP_ID", "\"$facebookAppId\"")
+        resValue("string", "facebook_app_id", facebookAppId)
+        resValue("string", "facebook_client_token", facebookClientToken)
+        resValue("string", "fb_login_protocol_scheme", "fb$facebookAppId")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -126,4 +138,5 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.facebook.login)
 }
