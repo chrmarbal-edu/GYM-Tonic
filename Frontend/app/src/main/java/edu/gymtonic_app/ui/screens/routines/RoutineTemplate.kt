@@ -126,7 +126,8 @@ private fun RoutineExerciseRow(
                     imageKey
                 } else {
                     val normalizedKey = if (imageKey.startsWith("/")) imageKey else "/$imageKey"
-                    "${BuildConfig.BACKEND_BASE_URL}$normalizedKey"
+                    val finalKey = if (!normalizedKey.contains(".")) "$normalizedKey.png" else normalizedKey
+                    "${BuildConfig.BACKEND_BASE_URL}$finalKey"
                 }
             } else null
 
