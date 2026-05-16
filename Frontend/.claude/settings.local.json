@@ -18,7 +18,9 @@
       "Bash(xargs grep -l \"WeekChallengesScreen\\\\|UserMissionsViewModel\")",
       "Bash(xargs grep -l \"WeekChallengesScreen\")",
       "Bash(xargs grep -l \"showMore\\\\|showMoreCalendar\")",
-      "Bash(xargs grep -l \"CalendarView\\\\|LocalDate\\\\|LocalDateTime\\\\|Calendar\\\\|DateFormat\")"
+      "Bash(xargs grep -l \"CalendarView\\\\|LocalDate\\\\|LocalDateTime\\\\|Calendar\\\\|DateFormat\")",
+      "Bash(dir C:UsersJuananDesktopPROYECTOGYM-TonicFrontend *)",
+      "Bash(./gradlew.bat compileDebugKotlin)"
     ]
   }
 }

@@ -38,13 +38,23 @@ exports.findAllUsers = wrapAsync(async function (req,res,next) {
 /* <=============================== FIND USER BY ID ===============================> */
 exports.findUserById = wrapAsync(async function (req,res,next){
     const {id} = req.params
+    const userLogued = req.userLogued
+
+    if(!userLogued || (userLogued.user_role != 1 && userLogued.user_id != id)){
+        return next(new AppError("No estás autorizado para realizar esta petición", 403))
+    }
+
     await userModel.findById(id,function(err,datosUsuario){
         if(err){
             next(new AppError(err,404))
-        } 
+        }
 
         if(!datosUsuario || datosUsuario.length == 0) {
             return next(new AppError("Usuario no encontrado", 404))
+        }
+
+        if(userLogued.user_role != 1){
+            delete datosUsuario.user_password
         }
 
         res.status(200).json(datosUsuario)

@@ -206,6 +206,25 @@ data class AppStrings(
     val deleteRoutineConfirm: String,
     val deleteRoutineCancel: String,
     val routineDeleted: String,
+
+    // Discounts
+    val discountsTitle: String,
+    val discountsYourPoints: String,
+    val discountsPointsSuffix: String,
+    val discountsLoading: String,
+    val discountsErrorGeneric: String,
+    val discountsRetry: String,
+    val discountsAvailableTitle: String,
+    val discountsTierLabel: (Int) -> String,
+    val discountsRequiredPoints: (Int) -> String,
+    val discountsPointsToUnlock: (Int) -> String,
+    val discountsUnlocked: String,
+    val discountsClaim: String,
+    val discountsCodeTitle: String,
+    val discountsCodeMessage: String,
+    val discountsCopyCode: String,
+    val discountsCodeCopied: String,
+    val discountsClose: String,
 )
 
 val SpanishStrings = AppStrings(
@@ -399,6 +418,24 @@ val SpanishStrings = AppStrings(
     deleteRoutineConfirm = "Eliminar",
     deleteRoutineCancel = "Cancelar",
     routineDeleted = "Rutina eliminada",
+
+    discountsTitle = "Descuentos",
+    discountsYourPoints = "Tus puntos",
+    discountsPointsSuffix = "pts",
+    discountsLoading = "Cargando puntos...",
+    discountsErrorGeneric = "No se pudieron cargar tus puntos",
+    discountsRetry = "Reintentar",
+    discountsAvailableTitle = "Recompensas disponibles",
+    discountsTierLabel = { percent -> "$percent% de descuento" },
+    discountsRequiredPoints = { points -> "$points pts" },
+    discountsPointsToUnlock = { remaining -> "Te faltan $remaining pts" },
+    discountsUnlocked = "Desbloqueado",
+    discountsClaim = "Obtener descuento",
+    discountsCodeTitle = "Tu codigo de descuento",
+    discountsCodeMessage = "Presenta este codigo en recepcion para canjear tu descuento.",
+    discountsCopyCode = "Copiar codigo",
+    discountsCodeCopied = "Codigo copiado",
+    discountsClose = "Cerrar",
 )
 
 val EnglishStrings = AppStrings(
@@ -592,4 +629,22 @@ val EnglishStrings = AppStrings(
     deleteRoutineConfirm = "Delete",
     deleteRoutineCancel = "Cancel",
     routineDeleted = "Routine deleted",
+
+    discountsTitle = "Discounts",
+    discountsYourPoints = "Your points",
+    discountsPointsSuffix = "pts",
+    discountsLoading = "Loading points...",
+    discountsErrorGeneric = "Could not load your points",
+    discountsRetry = "Retry",
+    discountsAvailableTitle = "Available rewards",
+    discountsTierLabel = { percent -> "$percent% off" },
+    discountsRequiredPoints = { points -> "$points pts" },
+    discountsPointsToUnlock = { remaining -> "$remaining pts to unlock" },
+    discountsUnlocked = "Unlocked",
+    discountsClaim = "Claim discount",
+    discountsCodeTitle = "Your discount code",
+    discountsCodeMessage = "Show this code at reception to redeem your discount.",
+    discountsCopyCode = "Copy code",
+    discountsCodeCopied = "Code copied",
+    discountsClose = "Close",
 )

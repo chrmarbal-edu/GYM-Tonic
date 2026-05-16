@@ -32,4 +32,6 @@ object Routes {
     fun exercise(exerciseId: String, reps: String = "N/A"): String = "exercise/$exerciseId?reps=$reps"
 
     const val WEEK = "week_challenges"
+
+    const val DISCOUNTS = "discounts"
 }

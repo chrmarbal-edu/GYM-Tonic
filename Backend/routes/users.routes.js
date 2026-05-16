@@ -68,7 +68,7 @@ router.patch("/:id", jwtMW.authenticate, upload.single('image'), usersController
 router.delete("/:id", jwtMW.authenticate, usersController.deleteUser)
 
 // FIND BY ID
-router.get("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findUserById)
+router.get("/:id", jwtMW.authenticate, usersController.findUserById)
 
 // #endregion
 
