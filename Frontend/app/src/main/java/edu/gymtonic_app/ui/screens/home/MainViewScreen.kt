@@ -41,7 +41,8 @@ fun MainViewScreen(
     onOpenDiscounts: () -> Unit,
     onOpenClientArea: () -> Unit,
     onOpenGroup: () -> Unit,
-    onOpenMissions: () -> Unit
+    onOpenMissions: () -> Unit,
+    onOpenFriends: () -> Unit
 ) {
     val strings = LocalStrings.current
     val colors = LocalColors.current
@@ -55,6 +56,7 @@ fun MainViewScreen(
         HomeAction(strings.homeChallenges, Icons.Outlined.EventAvailable, onClick = onOpenMissions),
         HomeAction(strings.homeClientArea, Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
         HomeAction(strings.homeGroup, Icons.Outlined.GroupAdd, onClick = onOpenGroup),
+        HomeAction(strings.homeFriends, Icons.Outlined.Group, onClick = onOpenFriends),
     )
 
     Column(

@@ -19,20 +19,28 @@ function wrapAsync(fn) {
 // #region USERS
 
 /* <=============================== FIND ALL USERS ===============================> */
-exports.findAllUsers = wrapAsync(async function (req,res,next) { 
+exports.findAllUsers = wrapAsync(async function (req,res,next) {
     await userModel.findAll(async function(err, datosUser){
         if(err){
             next(new AppError(err,400))
-        } else{                
+        } else{
             const userLogued = req.userLogued
 
+            // Usuarios normales reciben datos publicos (sin password ni info sensible)
+            // para poder buscar amigos. Admin recibe todo.
             if(userLogued.user_role != 1){
-                return next(new AppError("No estás autorizado para realizar esta petición", 403))
+                const sanitized = (datosUser || []).map(u => ({
+                    user_id: u.user_id,
+                    user_username: u.user_username,
+                    user_name: u.user_name,
+                    user_picture: u.user_picture
+                }))
+                return res.status(200).json(sanitized)
             }
-                  
+
             res.status(200).json(datosUser)
         }
-    })        
+    })
 })
 
 /* <=============================== FIND USER BY ID ===============================> */

@@ -40,6 +40,7 @@ import edu.gymtonic_app.ui.screens.profile.AccountScreen
 import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.profile.SettingsScreen
 import edu.gymtonic_app.ui.screens.discounts.DiscountsScreen
+import edu.gymtonic_app.ui.screens.friends.FriendsScreen
 import edu.gymtonic_app.ui.screens.groups.AddGroupRoutineScreen
 import edu.gymtonic_app.ui.screens.groups.GroupDetailScreen
 import edu.gymtonic_app.ui.screens.groups.GroupsListScreen
@@ -203,6 +204,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenClientArea = { navController.navigate(Routes.PROFILE) },
                 onOpenGroup = { navController.navigate(Routes.GROUPS) },
                 onOpenMissions = { navController.navigate(Routes.WEEK) },
+                onOpenFriends = { navController.navigate(Routes.FRIENDS) },
             )
         }
 
@@ -416,6 +418,16 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
 
         composable(Routes.DISCOUNTS) {
             DiscountsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenHome = onOpenHomeGlobal,
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            )
+        }
+
+        composable(Routes.FRIENDS) {
+            FriendsScreen(
                 onBack = { navController.popBackStack() },
                 onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,

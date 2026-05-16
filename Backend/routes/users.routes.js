@@ -29,8 +29,8 @@ router.post("/login", usersController.login)
 // LOGOUT
 router.get("/logout", jwtMW.authenticate, usersController.logout)
 
-// FIND ALL USERS
-router.get("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findAllUsers)
+// FIND ALL USERS (sanitiza la respuesta para no-admin dentro del controller)
+router.get("/", jwtMW.authenticate, usersController.findAllUsers)
 
 // #endregion
 

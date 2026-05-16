@@ -7,6 +7,9 @@ const rutasProtegidasMW = require("../middlewares/rutasProtegidas.mw")
 // FIND ALL
 router.get("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, friendRequestsController.findAllFriendRequests)
 
+// FIND BY USER ID (incoming + outgoing)
+router.get("/user/:userId", jwtMW.authenticate, friendRequestsController.findFriendRequestsByUserId)
+
 // CREATE
 router.post("/", jwtMW.authenticate, friendRequestsController.create)
 
@@ -16,7 +19,7 @@ router.patch("/accept/:id", jwtMW.authenticate, friendRequestsController.acceptF
 // REJECT FRIEND REQUEST
 router.patch("/reject/:id", jwtMW.authenticate, friendRequestsController.rejectFriendRequest)
 
-// DELETE
+// DELETE (admin o sender de la solicitud)
 router.delete("/:id", jwtMW.authenticate, friendRequestsController.deleteFrequestById)
 
 // FIND BY ID

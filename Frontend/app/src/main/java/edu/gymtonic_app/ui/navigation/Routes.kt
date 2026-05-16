@@ -34,4 +34,6 @@ object Routes {
     const val WEEK = "week_challenges"
 
     const val DISCOUNTS = "discounts"
+
+    const val FRIENDS = "friends"
 }

@@ -43,14 +43,23 @@ friend.findById = async function (id, result) {
 }
 
 /* <=============================== FIND FRIENDS BY USER ID ===============================> */
+// Devolvemos tambien friend_id (la PK de la tabla Friends) para que el front
+// pueda eliminar la amistad sin tener que consultarla aparte.
 friend.findByUserId = async function (userId, result) {
     try {
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("userId", sql.Int, userId)
             .query(`
-                SELECT u.* FROM Friends f JOIN Users u 
-                ON u.user_id = CASE 
+                SELECT
+                    f.friend_id,
+                    u.user_id,
+                    u.user_username,
+                    u.user_name,
+                    u.user_picture
+                FROM Friends f
+                JOIN Users u
+                ON u.user_id = CASE
                     WHEN f.friend_userid1 = @userId THEN f.friend_userid2
                     ELSE f.friend_userid1
                 END
@@ -58,10 +67,10 @@ friend.findByUserId = async function (userId, result) {
             `)
 
         result(null, response.recordset)
-        
+
     } catch (err) {
         result(err, null)
-        
+
     }
 }
 

@@ -13,3 +13,4 @@ class UsersRemoteDataSource {
 
     suspend fun deleteUser(id: Int) = api.deleteUser(id)
 }
+

@@ -21,6 +21,37 @@ fRequest.findAll = async (result) => {
     }
 }
 
+/* <=============================== FIND BY USER ID (incoming + outgoing) ===============================> */
+fRequest.findByUserId = async function (userId, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("userId", sql.Int, userId)
+            .query(`
+                SELECT
+                    fr.frequest_id,
+                    fr.frequest_sender,
+                    fr.frequest_receiver,
+                    fr.frequest_status,
+                    sender.user_username AS sender_username,
+                    sender.user_name     AS sender_name,
+                    sender.user_picture  AS sender_picture,
+                    receiver.user_username AS receiver_username,
+                    receiver.user_name     AS receiver_name,
+                    receiver.user_picture  AS receiver_picture
+                FROM Frequest fr
+                JOIN Users sender   ON sender.user_id   = fr.frequest_sender
+                JOIN Users receiver ON receiver.user_id = fr.frequest_receiver
+                WHERE (fr.frequest_sender = @userId OR fr.frequest_receiver = @userId)
+                  AND fr.frequest_status = 0
+            `)
+
+        result(null, response.recordset)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
 /* <=============================== FIND BY ID ===============================> */
 fRequest.findById = async function (id, result) {
     try {

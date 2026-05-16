@@ -17,11 +17,13 @@ import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.remote.remoteModel.social.FrequestDto
 import edu.gymtonic_app.data.remote.remoteModel.social.FriendDto
+import edu.gymtonic_app.data.remote.remoteModel.social.FriendRequestsByUserResponse
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionDto
+import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
@@ -114,7 +116,7 @@ interface ApiService {
     suspend fun logout(): Response<Unit>
 
     @GET("users")
-    suspend fun getUsers(): Response<List<UserDto>>
+    suspend fun getUsers(): Response<List<UserSummaryDto>>
 
     @GET("users/{id}")
     suspend fun getUserById(@Path("id") id: Int): Response<UserDto>
@@ -261,7 +263,7 @@ interface ApiService {
     suspend fun getFriendById(@Path("id") id: Int): Response<FriendDto>
 
     @GET("friends/user/{userId}")
-    suspend fun getFriendsByUserId(@Path("userId") userId: Int): Response<List<FriendDto>>
+    suspend fun getFriendsByUserId(@Path("userId") userId: Int): Response<List<UserSummaryDto>>
 
     @POST("friends")
     suspend fun createFriend(@Body request: Map<String, Any>): Response<FriendDto>
@@ -272,6 +274,11 @@ interface ApiService {
     // FRIEND REQUESTS
     @GET("friendRequests")
     suspend fun getFriendRequests(): Response<List<FrequestDto>>
+
+    @GET("friendRequests/user/{userId}")
+    suspend fun getFriendRequestsByUserId(
+        @Path("userId") userId: Int
+    ): Response<FriendRequestsByUserResponse>
 
     @GET("friendRequests/{id}")
     suspend fun getFriendRequestById(@Path("id") id: Int): Response<FrequestDto>
