@@ -20,17 +20,8 @@ const upload = multer({ storage: storage })
 
 // #region USERS
 
-// FIND ALL USERS
-router.get("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findAllUsers)
-
 // REGISTER
 router.post("/", upload.single('image'), usersController.register)
-
-// UPDATE USER BY ID
-router.patch("/:id", jwtMW.authenticate, upload.single('image'), usersController.updateUser)
-
-// DELETE USER BY ID
-router.delete("/:id", jwtMW.authenticate, usersController.deleteUser)
 
 // LOGIN
 router.post("/login", usersController.login)
@@ -38,8 +29,8 @@ router.post("/login", usersController.login)
 // LOGOUT
 router.get("/logout", jwtMW.authenticate, usersController.logout)
 
-// FIND BY ID
-router.get("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findUserById)
+// FIND ALL USERS
+router.get("/", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findAllUsers)
 
 // #endregion
 
@@ -54,17 +45,30 @@ router.get("/missions/user/:userId", jwtMW.authenticate, usersController.findUse
 // FIND BY MISSION ID
 router.get("/missions/mission/:missionId", jwtMW.authenticate, usersController.findUserMissionByMissionId)
 
+// CREATE USER MISSION
+router.post("/missions", jwtMW.authenticate, usersController.createUserMission)
+
 // UPDATE USER MISSION BY ID
 router.patch("/missions/:id", jwtMW.authenticate, usersController.updateUserMission)
 
 // DELETE USER MISSION BY ID
 router.delete("/missions/:id", jwtMW.authenticate, usersController.deleteUserMission)
 
-// CREATE USER MISSION
-router.post("/missions", jwtMW.authenticate, usersController.createUserMission)
-
 // FIND BY ID
 router.get("/missions/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findUserMissionById)
+
+// #endregion
+
+// #region USER DYNAMIC ROUTES
+
+// UPDATE USER BY ID
+router.patch("/:id", jwtMW.authenticate, upload.single('image'), usersController.updateUser)
+
+// DELETE USER BY ID
+router.delete("/:id", jwtMW.authenticate, usersController.deleteUser)
+
+// FIND BY ID
+router.get("/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findUserById)
 
 // #endregion
 
