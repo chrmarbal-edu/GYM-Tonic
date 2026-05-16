@@ -40,7 +40,7 @@ fun MainViewScreen(
     onOpenTechnogym: () -> Unit,
     onOpenDiscounts: () -> Unit,
     onOpenClientArea: () -> Unit,
-    onInviteFriend: () -> Unit,
+    onOpenGroup: () -> Unit,
     onOpenMissions: () -> Unit
 ) {
     val strings = LocalStrings.current
@@ -54,7 +54,7 @@ fun MainViewScreen(
         HomeAction(strings.homeDiscounts, Icons.Outlined.LocalOffer, onClick = onOpenDiscounts),
         HomeAction(strings.homeChallenges, Icons.Outlined.EventAvailable, onClick = onOpenMissions),
         HomeAction(strings.homeClientArea, Icons.Outlined.AccountCircle, onClick = onOpenClientArea),
-        HomeAction(strings.homeChat, Icons.Outlined.GroupAdd, onClick = onInviteFriend),
+        HomeAction(strings.homeGroup, Icons.Outlined.GroupAdd, onClick = onOpenGroup),
     )
 
     Column(

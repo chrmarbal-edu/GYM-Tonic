@@ -12,8 +12,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
-import edu.gymtonic_app.data.remote.remoteModel.auth.GoogleLoginResponse
 import edu.gymtonic_app.ui.viewmodel.LoginState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +35,6 @@ import edu.gymtonic_app.ui.screens.home.MainViewScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.login.GoogleAuthHelper
-import androidx.compose.runtime.rememberCoroutineScope
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.profile.AccountScreen
 import edu.gymtonic_app.ui.screens.profile.ProfileScreen
@@ -203,7 +200,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                 onOpenTechnogym = { },
                 onOpenDiscounts = { },
                 onOpenClientArea = { navController.navigate(Routes.PROFILE) },
-                onInviteFriend = { },
+                onOpenGroup = { navController.navigate(Routes.GROUPS) },
                 onOpenMissions = { navController.navigate(Routes.WEEK) },
             )
         }

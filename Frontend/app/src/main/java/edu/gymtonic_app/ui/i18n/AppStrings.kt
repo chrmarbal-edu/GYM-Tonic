@@ -52,7 +52,7 @@ data class AppStrings(
     val homeDiscounts: String,
     val homeChallenges: String,
     val homeClientArea: String,
-    val homeChat: String,
+    val homeGroup: String,
 
     // Training screen
     val trainingTitle: String,
@@ -254,7 +254,7 @@ val SpanishStrings = AppStrings(
     homeDiscounts = "Descuentos",
     homeChallenges = "Desafios",
     homeClientArea = "Mi espacio cliente",
-    homeChat = "Chat",
+    homeGroup = "Grupo",
 
     trainingTitle = "Entrenamientos",
     trainingEmpty = "Explora entrenamientos creados por la comunidad y el equipo",
@@ -447,7 +447,7 @@ val EnglishStrings = AppStrings(
     homeDiscounts = "Discounts",
     homeChallenges = "Challenges",
     homeClientArea = "My profile",
-    homeChat = "Chat",
+    homeGroup = "Team",
 
     trainingTitle = "Workouts",
     trainingEmpty = "Explore workouts created by the community and the team",
