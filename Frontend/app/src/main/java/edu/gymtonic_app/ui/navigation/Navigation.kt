@@ -6,13 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import edu.gymtonic_app.ui.screens.register.RegisterScreen
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import edu.gymtonic_app.ui.components.LocalAppSnackbarHostState
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.showAppToast
 import edu.gymtonic_app.ui.viewmodel.LoginState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,10 +61,11 @@ import androidx.compose.runtime.DisposableEffect
 import edu.gymtonic_app.ui.viewmodel.UserMissionsViewModel
 @Composable
 @Suppress("UNUSED_PARAMETER")
-fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHostState) {
+fun Navigation(navController: NavHostController) {
 
     val strings = LocalStrings.current
     val context = LocalContext.current
+    val snackbarHostState = LocalAppSnackbarHostState.current
     val sessionManager = remember { SessionManager(context.sessionDataStore) }
     val coroutineScope = rememberCoroutineScope()
     val googleAuthHelper = remember { GoogleAuthHelper(context) }
@@ -91,6 +94,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
             }
             override fun onError(error: FacebookException) {
                 Log.e("FacebookAuth", "Error: ${error.message}")
+                showAppToast(
+                    snackbarHostState,
+                    coroutineScope,
+                    error.message ?: "Error al iniciar sesión con Facebook"
+                )
             }
         })
         onDispose {
@@ -136,9 +144,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         googleAuthHelper.signOut(coroutineScope)
         homeViewModel.logout(
             onError = { message ->
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(message)
-                }
+                showAppToast(snackbarHostState, coroutineScope, message)
             }
         )
     }
@@ -196,7 +202,11 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                         navController.navigate(Routes.REGISTER)
                     }
                     is LoginState.Error -> {
-                        snackbarHostState.showSnackbar((loginState as LoginState.Error).message)
+                        showAppToast(
+                            snackbarHostState,
+                            coroutineScope,
+                            (loginState as LoginState.Error).message
+                        )
                     }
                     else -> {}
                 }
@@ -212,9 +222,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
                             loginViewModel.googleLogin(credential.idToken)
                         },
                         onError = { message ->
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Error Google: $message")
-                            }
+                            showAppToast(snackbarHostState, coroutineScope, "Error Google: $message")
                             Log.e("Navigation", "Google Sign In Error: $message")
                         }
                     )
@@ -260,6 +268,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
             val userMissionsViewModel: UserMissionsViewModel = viewModel()
             val weekUiState = userMissionsViewModel.uiState.collectAsState()
             val week = weekUiState.value
+            ObserveToastMessage(message = week.errorMessage)
             WeekChallengesScreen(
                 onBack = { navController.popBackStack() },
                 onOpenHome = {
@@ -285,6 +294,7 @@ fun Navigation(navController: NavHostController, snackbarHostState: SnackbarHost
         composable(Routes.TRAINING) {
             val trainingViewModel: TrainingScreenViewModel = viewModel()
             val trainingUiState = trainingViewModel.uiState.collectAsState()
+            ObserveToastMessage(message = trainingUiState.value.errorMessage)
             TrainingShellScreen(
                 title = strings.trainingTitle,
                 onBack = { navController.popBackStack() },

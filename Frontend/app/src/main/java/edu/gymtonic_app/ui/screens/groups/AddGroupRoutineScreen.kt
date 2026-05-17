@@ -23,8 +23,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -35,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,6 +46,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.LocalAppSnackbarHostState
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.showAppToast
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -79,19 +81,14 @@ fun AddGroupRoutineScreen(
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalAppSnackbarHostState.current
+    val scope = rememberCoroutineScope()
+
+    ObserveToastMessage(message = actionMessage, onConsumed = { groupViewModel.clearActionMessage() })
 
     LaunchedEffect(favoriteExercises) {
         selectedExerciseIds.retainAll(favoriteExercises.map { it.exercise_id }.toSet())
-    }
-
-    LaunchedEffect(actionMessage) {
-        actionMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            groupViewModel.clearActionMessage()
-        }
     }
 
     fun toggleSelection(exerciseId: Int) {
@@ -105,16 +102,15 @@ fun AddGroupRoutineScreen(
     fun saveRoutine() {
         val trimmedName = routineName.trim()
         if (trimmedName.isBlank()) {
-            errorMessage = strings.groupsRoutineNameRequired
+            showAppToast(snackbarHostState, scope, strings.groupsRoutineNameRequired)
             return
         }
         if (selectedExerciseIds.isEmpty()) {
-            errorMessage = strings.groupsSelectExercisesRequired
+            showAppToast(snackbarHostState, scope, strings.groupsSelectExercisesRequired)
             return
         }
 
         isSaving = true
-        errorMessage = null
         groupViewModel.addGroupRoutine(
             groupId = groupId,
             name = trimmedName,
@@ -125,7 +121,7 @@ fun AddGroupRoutineScreen(
             },
             onFailure = {
                 isSaving = false
-                errorMessage = it
+                showAppToast(snackbarHostState, scope, it)
             }
         )
     }
@@ -145,8 +141,6 @@ fun AddGroupRoutineScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            SnackbarHost(hostState = snackbarHostState)
-
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -205,15 +199,6 @@ fun AddGroupRoutineScreen(
                     }
                 }
 
-                if (errorMessage != null) {
-                    item {
-                        Text(
-                            text = errorMessage.orEmpty(),
-                            color = Color(0xFFD32F2F),
-                            fontSize = 13.sp
-                        )
-                    }
-                }
             }
 
             Button(

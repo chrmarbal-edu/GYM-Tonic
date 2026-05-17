@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import edu.gymtonic_app.ui.navigation.Routes
+import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.viewmodel.RegisterState
 import edu.gymtonic_app.ui.components.LanguageButton
 import edu.gymtonic_app.ui.components.ThemeButton
@@ -36,6 +37,10 @@ fun RegisterScreen(
     val strings = LocalStrings.current
     val colors = LocalColors.current
     val registerState by registerViewModel.registerState.collectAsState()
+
+    ObserveToastMessage(
+        message = (registerState as? RegisterState.Error)?.message
+    )
 
     // Datos iniciales desde registro social si existen
     val socialData = registerViewModel.socialUserData

@@ -10,7 +10,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,6 +26,7 @@ import edu.gymtonic_app.ui.i18n.EnglishStrings
 import edu.gymtonic_app.ui.i18n.LanguageManager
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.i18n.SpanishStrings
+import edu.gymtonic_app.ui.components.AppToastHost
 import edu.gymtonic_app.ui.navigation.Navigation
 import edu.gymtonic_app.ui.theme.AppTheme
 import edu.gymtonic_app.ui.theme.DarkColors
@@ -68,9 +68,10 @@ class MainActivity : ComponentActivity() {
                     LocalStrings provides strings,
                     LocalColors provides themeColors
                 ) {
-                    val navController = rememberNavController()
-                    val snackbarHostState = remember { SnackbarHostState() }
-                    Navigation(navController, snackbarHostState)
+                    AppToastHost {
+                        val navController = rememberNavController()
+                        Navigation(navController)
+                    }
                 }
             }
         }

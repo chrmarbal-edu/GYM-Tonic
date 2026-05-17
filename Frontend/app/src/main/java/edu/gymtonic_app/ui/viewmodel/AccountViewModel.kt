@@ -28,6 +28,13 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)
     val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
 
+    private val _toastMessage = MutableStateFlow<String?>(null)
+    val toastMessage: StateFlow<String?> = _toastMessage.asStateFlow()
+
+    fun clearToastMessage() {
+        _toastMessage.value = null
+    }
+
     init {
         loadUser()
     }
@@ -85,7 +92,6 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
             }
 
             result.onSuccess { loginResponse ->
-                // Actualizamos la sesión completa con el nuevo token y datos devueltos
                 loginResponse.data?.let { userData ->
                     sessionManager.saveSession(
                         token = loginResponse.token,
@@ -96,12 +102,12 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                     )
                     Log.d("AccountViewModel", "Perfil y sesión actualizados con éxito")
                 } ?: Log.e("AccountViewModel", "Error: La respuesta del servidor no contiene datos de usuario")
-                
-                // Convertir LoginUserData a UserDto para la UI del perfil si es necesario, 
-                // o recargar el usuario para asegurar consistencia total
+
+                _toastMessage.value = "Perfil actualizado correctamente"
                 loadUser()
             }.onFailure { e ->
                 Log.e("AccountViewModel", "Error al actualizar perfil", e)
+                _toastMessage.value = e.message ?: "No se pudo actualizar el perfil"
             }
         }
     }
@@ -114,6 +120,8 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
             userRepository.deleteUser(userId).onSuccess {
                 sessionManager.clearSession()
                 onDeleted()
+            }.onFailure { e ->
+                _toastMessage.value = e.message ?: "No se pudo eliminar la cuenta"
             }
         }
     }

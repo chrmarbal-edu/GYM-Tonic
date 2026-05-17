@@ -50,6 +50,8 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseUiState
@@ -102,6 +104,7 @@ fun ExerciseDetailScreen(
         }
 
         is ExerciseUiState.Error -> {
+            ObserveToastMessage(message = state.message)
             TrainingShellScreen(
                 title = strings.exerciseTitle,
                 onBack = onBack,
@@ -112,13 +115,9 @@ fun ExerciseDetailScreen(
                 onOpenChallenges = onOpenChallenges,
                 onOpenProfile = onOpenProfile
             ) {
-                Text(
-                    text = state.message,
-                    color = colors.textPrimary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 24.dp)
+                ToastErrorRetryContent(
+                    retryLabel = strings.discountsRetry,
+                    onRetry = { resolvedViewModel.loadSpecificExercise(exerciseId) }
                 )
             }
         }

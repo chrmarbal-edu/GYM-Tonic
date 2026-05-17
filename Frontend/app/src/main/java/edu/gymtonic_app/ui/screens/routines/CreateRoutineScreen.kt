@@ -23,8 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -48,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.LocalAppSnackbarHostState
+import edu.gymtonic_app.ui.components.showAppToast
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -79,10 +79,8 @@ fun CreateRoutineScreen(
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarHostState = LocalAppSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(favoriteExercises) {
@@ -104,17 +102,16 @@ fun CreateRoutineScreen(
         }
 
         if (trimmedName.isBlank()) {
-            errorMessage = "El nombre de la rutina no puede estar vacío"
+            showAppToast(snackbarHostState, scope, "El nombre de la rutina no puede estar vacío")
             return
         }
 
         if (selectedExercises.isEmpty()) {
-            errorMessage = "Debes seleccionar al menos un ejercicio"
+            showAppToast(snackbarHostState, scope, "Debes seleccionar al menos un ejercicio")
             return
         }
 
         isSaving = true
-        errorMessage = null
 
         val imageKey = selectedExercises.firstOrNull()?.exercise_image
 
@@ -128,10 +125,7 @@ fun CreateRoutineScreen(
             },
             onError = { message ->
                 isSaving = false
-                errorMessage = message
-                scope.launch {
-                    snackbarHostState.showSnackbar(message)
-                }
+                showAppToast(snackbarHostState, scope, message)
             }
         )
     }
@@ -151,8 +145,6 @@ fun CreateRoutineScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            SnackbarHost(hostState = snackbarHostState)
-
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -229,15 +221,6 @@ fun CreateRoutineScreen(
                     }
                 }
 
-                if (errorMessage != null) {
-                    item {
-                        Text(
-                            text = errorMessage.orEmpty(),
-                            color = Color(0xFFD32F2F),
-                            fontSize = 13.sp
-                        )
-                    }
-                }
             }
 
             Button(

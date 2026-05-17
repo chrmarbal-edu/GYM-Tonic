@@ -28,8 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -55,6 +53,8 @@ import coil.compose.AsyncImage
 import edu.gymtonic_app.data.remote.remoteModel.social.FriendRequestWithUserDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
 import edu.gymtonic_app.ui.i18n.AppStrings
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
@@ -76,18 +76,17 @@ fun FriendsScreen(
     val state by viewModel.uiState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
     val searchResults by viewModel.searchResults.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+
+    ObserveToastMessage(
+        message = actionMessage?.let { mapMessage(it, strings) },
+        onConsumed = { viewModel.clearActionMessage() }
+    )
+    ObserveToastMessage(message = state.error)
 
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.loadAll() }
-
-    LaunchedEffect(actionMessage) {
-        val raw = actionMessage ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(mapMessage(raw, strings))
-        viewModel.clearActionMessage()
-    }
 
     if (showAddDialog) {
         AddFriendDialog(
@@ -117,7 +116,6 @@ fun FriendsScreen(
         onOpenProfile = onOpenProfile
     ) {
         Scaffold(
-            snackbarHost = { SnackbarHost(snackbarHostState) },
             containerColor = Color.Transparent,
             floatingActionButton = {
                 ExtendedFloatingActionButton(
@@ -163,7 +161,10 @@ fun FriendsScreen(
 
                 when {
                     state.isLoading -> CenteredLoader()
-                    state.error != null -> CenteredText(state.error ?: strings.friendsLoadError)
+                    state.error != null -> ToastErrorRetryContent(
+                        retryLabel = strings.discountsRetry,
+                        onRetry = { viewModel.refresh() }
+                    )
                     else -> when (selectedTab) {
                         0 -> FriendsList(
                             friends = state.friends,

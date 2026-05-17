@@ -34,6 +34,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -55,7 +57,11 @@ fun AccountScreen(
     val strings = LocalStrings.current
     val colors = LocalColors.current
     val uiState by viewModel.uiState.collectAsState()
+    val toastMessage by viewModel.toastMessage.collectAsState()
     val context = LocalContext.current
+
+    ObserveToastMessage(message = toastMessage, onConsumed = { viewModel.clearToastMessage() })
+    ObserveToastMessage(message = (uiState as? AccountUiState.Error)?.message)
 
     TrainingShellScreen(
         title = strings.accountTitle,
@@ -74,9 +80,10 @@ fun AccountScreen(
                 }
             }
             is AccountUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = state.message, color = Color.Red)
-                }
+                ToastErrorRetryContent(
+                    retryLabel = strings.discountsRetry,
+                    onRetry = { viewModel.loadUser() }
+                )
             }
             is AccountUiState.Success -> {
                 val user = state.user

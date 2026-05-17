@@ -21,11 +21,15 @@ import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
 import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
 import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogUiState
-import android.widget.Toast
 import androidx.compose.material3.AlertDialog
+import edu.gymtonic_app.ui.components.LocalAppSnackbarHostState
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
+import edu.gymtonic_app.ui.components.showAppToast
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
 
 @Composable
@@ -47,6 +51,8 @@ fun RoutineCatalogScreen(
     val favoritesSet by exerciseViewModel.favoritesSet.collectAsState()
     val uiState by viewModel.catalogUiState.collectAsState()
     val showDeleteDialog = remember { mutableStateOf(false) }
+    val snackbarHostState = LocalAppSnackbarHostState.current
+    val scope = rememberCoroutineScope()
     val localRoutineId = routineId.toIntOrNull()
     val canDeleteRoutine = isLocal && localRoutineId != null
 
@@ -69,15 +75,12 @@ fun RoutineCatalogScreen(
                             routineId = id,
                             onSuccess = {
                                 showDeleteDialog.value = false
-                                Toast.makeText(
-                                    context,
-                                    strings.routineDeleted,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                showAppToast(snackbarHostState, scope, strings.routineDeleted)
                                 onBack()
                             },
-                            onError = {
+                            onError = { message ->
                                 showDeleteDialog.value = false
+                                showAppToast(snackbarHostState, scope, message)
                             }
                         )
                     }
@@ -207,9 +210,11 @@ fun RoutineCatalogScreen(
                         null
                     }
                 ) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = state.message, textAlign = TextAlign.Center)
-                    }
+                    ObserveToastMessage(message = state.message)
+                    ToastErrorRetryContent(
+                        retryLabel = strings.discountsRetry,
+                        onRetry = { viewModel.loadRoutine(routineId, isLocal) }
+                    )
                 }
             }
         }

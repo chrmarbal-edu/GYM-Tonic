@@ -42,14 +42,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.widget.Toast
 import kotlin.random.Random
+import edu.gymtonic_app.ui.components.LocalAppSnackbarHostState
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
+import edu.gymtonic_app.ui.components.showAppToast
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.components.BottomNavBar
 import edu.gymtonic_app.ui.components.BottomNavItem
@@ -87,6 +90,12 @@ fun DiscountsScreen(
     val bg = Brush.verticalGradient(colors.gradientColors)
     val uiState by viewModel.uiState.collectAsState()
 
+    val discountsErrorToast = when (val state = uiState) {
+        is DiscountsUiState.Error -> strings.discountsErrorGeneric
+        else -> null
+    }
+    ObserveToastMessage(message = discountsErrorToast)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -118,8 +127,7 @@ fun DiscountsScreen(
                 ) {
                     when (val state = uiState) {
                         is DiscountsUiState.Loading -> LoadingContent(label = strings.discountsLoading)
-                        is DiscountsUiState.Error -> ErrorContent(
-                            message = strings.discountsErrorGeneric,
+                        is DiscountsUiState.Error -> ToastErrorRetryContent(
                             retryLabel = strings.discountsRetry,
                             onRetry = { viewModel.loadPoints() }
                         )
@@ -187,34 +195,6 @@ private fun LoadingContent(label: String) {
         CircularProgressIndicator(color = colors.accent)
         Spacer(Modifier.height(12.dp))
         Text(text = label, color = colors.textSecondary, fontSize = 14.sp)
-    }
-}
-
-@Composable
-private fun ErrorContent(message: String, retryLabel: String, onRetry: () -> Unit) {
-    val colors = LocalColors.current
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = message,
-            color = colors.textPrimary,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(14.dp))
-        Button(
-            onClick = onRetry,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = colors.accent,
-                contentColor = Color.White
-            )
-        ) {
-            Text(text = retryLabel)
-        }
     }
 }
 
@@ -436,7 +416,8 @@ private fun DiscountCodeDialog(
 ) {
     val colors = LocalColors.current
     val clipboard = LocalClipboardManager.current
-    val context = LocalContext.current
+    val snackbarHostState = LocalAppSnackbarHostState.current
+    val scope = rememberCoroutineScope()
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -479,7 +460,7 @@ private fun DiscountCodeDialog(
         confirmButton = {
             TextButton(onClick = {
                 clipboard.setText(AnnotatedString(code))
-                Toast.makeText(context, strings.discountsCodeCopied, Toast.LENGTH_SHORT).show()
+                showAppToast(snackbarHostState, scope, strings.discountsCodeCopied)
             }) {
                 Text(text = strings.discountsCopyCode, color = colors.accent)
             }

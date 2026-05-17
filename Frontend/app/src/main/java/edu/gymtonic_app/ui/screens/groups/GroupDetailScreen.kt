@@ -19,8 +19,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,6 +40,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -65,18 +65,11 @@ fun GroupDetailScreen(
     val colors = LocalColors.current
     val detailState by viewModel.detailState.collectAsState()
     val actionMessage by viewModel.actionMessage.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
+    ObserveToastMessage(message = actionMessage, onConsumed = { viewModel.clearActionMessage() })
     var showLeaveDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(groupId) {
         viewModel.loadGroupDetail(groupId)
-    }
-
-    LaunchedEffect(actionMessage) {
-        actionMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearActionMessage()
-        }
     }
 
     if (showLeaveDialog) {
@@ -113,13 +106,7 @@ fun GroupDetailScreen(
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-
-            when (val state = detailState) {
+        when (val state = detailState) {
                 GroupDetailUiState.Loading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
@@ -127,14 +114,11 @@ fun GroupDetailScreen(
                 }
 
                 is GroupDetailUiState.Error -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(text = state.message, color = colors.textPrimary)
-                    }
+                    ObserveToastMessage(message = state.message)
+                    ToastErrorRetryContent(
+                        retryLabel = strings.discountsRetry,
+                        onRetry = { viewModel.loadGroupDetail(groupId) }
+                    )
                 }
 
                 is GroupDetailUiState.Success -> {
@@ -244,7 +228,6 @@ fun GroupDetailScreen(
                     }
                 }
             }
-        }
     }
 }
 

@@ -45,6 +45,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.ui.components.BottomNavItem
+import edu.gymtonic_app.ui.components.ObserveToastMessage
+import edu.gymtonic_app.ui.components.ToastErrorRetryContent
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -71,6 +73,7 @@ fun ProfileScreen(
 ) {
     val strings = LocalStrings.current
     val uiState by viewModel.uiState.collectAsState()
+    ObserveToastMessage(message = (uiState as? ProfileUiState.Error)?.message)
     val drawerState = rememberDrawerState(initialValue = androidx.compose.material3.DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -130,19 +133,10 @@ fun ProfileScreen(
                 }
 
                 is ProfileUiState.Error -> {
-                    val colors = LocalColors.current
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = state.message,
-                            textAlign = TextAlign.Center,
-                            color = colors.textPrimary
-                        )
-                    }
+                    ToastErrorRetryContent(
+                        retryLabel = strings.discountsRetry,
+                        onRetry = { viewModel.loadProfile() }
+                    )
                 }
 
                 is ProfileUiState.Success -> {

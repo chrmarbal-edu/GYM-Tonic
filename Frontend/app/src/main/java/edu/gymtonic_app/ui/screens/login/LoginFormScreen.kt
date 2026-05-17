@@ -38,6 +38,7 @@ import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.register.UnderlineTextField
 import edu.gymtonic_app.ui.theme.LocalColors
+import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.viewmodel.LoginState
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 
@@ -52,6 +53,10 @@ fun LoginFormScreen(
     val strings = LocalStrings.current
     val colors = LocalColors.current
     val loginState by loginViewModel.loginState.collectAsState()
+
+    ObserveToastMessage(
+        message = (loginState as? LoginState.Error)?.message
+    )
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -150,15 +155,6 @@ fun LoginFormScreen(
                 Text(strings.noAccount, fontSize = 11.sp, color = colors.textSecondary)
                 TextButton(onClick = onRegister) {
                     Text(strings.signUpLink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                }
-
-                if (loginState is LoginState.Error) {
-                    Text(
-                        text = (loginState as LoginState.Error).message,
-                        color = Color.Red,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
                 }
 
                 if (loginState is LoginState.Success) {
