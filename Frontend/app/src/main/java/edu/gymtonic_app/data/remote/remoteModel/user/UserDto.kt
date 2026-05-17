@@ -24,7 +24,9 @@ data class UserDto(
     @SerializedName("user_points")
     val userPoints: Int,
     @SerializedName("user_role")
-    val userRole: Int
+    val userRole: Int,
+    @SerializedName("user_oauth")
+    val userOauth: String? = null
 )
 
 data class RegisterRequest(

@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -90,9 +92,12 @@ fun AccountScreen(
                 
                 var username by remember(user.userId) { mutableStateOf(user.userUsername) }
                 var password by remember { mutableStateOf("") }
+                var confirmPassword by remember { mutableStateOf("") }
                 var height by remember(user.userId) { mutableStateOf(user.userHeight.toInt().toString()) }
                 var weight by remember(user.userId) { mutableStateOf(user.userWeight.toInt().toString()) }
                 
+                var passwordError by remember { mutableStateOf(false) }
+
                 var pictureBitmap by remember { mutableStateOf<Bitmap?>(null) }
                 var pictureUri by remember { mutableStateOf<Uri?>(null) }
                 // isDefaultPicture se activa si el usuario pulsa "Borrar"
@@ -195,7 +200,27 @@ fun AccountScreen(
                         AccountSectionCard(title = "Datos editables") {
                             EditableField(label = strings.usernameField, value = username, onValueChange = { username = it })
                             Spacer(Modifier.height(12.dp))
-                            EditableField(label = strings.password, value = password, onValueChange = { password = it }, isPassword = true)
+                            EditableField(
+                                label = strings.password, 
+                                value = password, 
+                                onValueChange = { 
+                                    password = it 
+                                    passwordError = confirmPassword.isNotBlank() && it != confirmPassword
+                                }, 
+                                isPassword = true
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            EditableField(
+                                label = strings.confirmPassword, 
+                                value = confirmPassword, 
+                                onValueChange = { 
+                                    confirmPassword = it 
+                                    passwordError = password.isNotBlank() && it != password
+                                }, 
+                                isPassword = true,
+                                isError = passwordError,
+                                errorText = strings.passwordsNoMatch
+                            )
                             Spacer(Modifier.height(12.dp))
                             EditableField(label = strings.height, value = height, onValueChange = { height = it }, isNumber = true)
                             Spacer(Modifier.height(12.dp))
@@ -205,6 +230,8 @@ fun AccountScreen(
                             
                             Button(
                                 onClick = {
+                                    if (passwordError) return@Button
+                                    
                                     val imgFile = when {
                                         pictureBitmap != null -> createTempFile(context, pictureBitmap!!)
                                         pictureUri != null -> uriToFile(context, pictureUri!!)
@@ -219,6 +246,7 @@ fun AccountScreen(
                                         isDefaultPicture = isDefaultPicture
                                     )
                                 },
+                                enabled = !passwordError,
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
@@ -365,25 +393,48 @@ fun AccountSectionCard(
 }
 
 @Composable
-private fun EditableField(label: String, value: String, onValueChange: (String) -> Unit, isPassword: Boolean = false, isNumber: Boolean = false) {
+private fun EditableField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    isPassword: Boolean = false,
+    isNumber: Boolean = false,
+    isError: Boolean = false,
+    errorText: String = ""
+) {
     val colors = LocalColors.current
+    var passwordVisible by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colors.textPrimary)
         TextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            isError = isError,
+            visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            trailingIcon = if (isPassword) {
+                {
+                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    val description = if (passwordVisible) "Ocultar" else "Mostrar"
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(imageVector = image, contentDescription = description, tint = colors.fieldIndicator)
+                    }
+                }
+            } else null,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                 keyboardType = if (isNumber) androidx.compose.ui.text.input.KeyboardType.Number else androidx.compose.ui.text.input.KeyboardType.Text
             ),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = Color.Transparent,
                 unfocusedContainerColor = Color.Transparent,
-                focusedIndicatorColor = colors.accent,
-                unfocusedIndicatorColor = colors.fieldIndicator.copy(alpha = 0.5f)
+                focusedIndicatorColor = if (isError) Color.Red else colors.accent,
+                unfocusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.5f)
             )
         )
+        if (isError) {
+            Text(text = errorText, color = Color.Red, fontSize = 11.sp, modifier = Modifier.padding(top = 4.dp))
+        }
     }
 }
 

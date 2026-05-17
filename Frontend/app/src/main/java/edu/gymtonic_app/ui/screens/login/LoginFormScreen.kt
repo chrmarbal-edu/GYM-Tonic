@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.LanguageButton
@@ -46,7 +45,7 @@ import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginFormScreen(
     loginViewModel: LoginViewModel,
-    onLoginSuccess: () -> Unit,
+    onLoginSuccess: (userRole: Int) -> Unit,
     onRegister: () -> Unit,
     onForgotPassword: () -> Unit
 ) {
@@ -119,7 +118,7 @@ fun LoginFormScreen(
                     value = password,
                     onValueChange = { password = it.trim() },
                     placeholder = "••••••••",
-                    visualTransformation = PasswordVisualTransformation()
+                    isPassword = true
                 )
 
                 Spacer(Modifier.height(14.dp))
@@ -158,8 +157,9 @@ fun LoginFormScreen(
                 }
 
                 if (loginState is LoginState.Success) {
-                    LaunchedEffect(Unit) {
-                        onLoginSuccess()
+                    val success = loginState as LoginState.Success
+                    LaunchedEffect(success) {
+                        onLoginSuccess(success.response.data?.user_role ?: 0)
                     }
                 }
             }

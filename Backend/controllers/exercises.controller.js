@@ -1,6 +1,14 @@
 /* <=============================== DEPENDENCIAS ===============================> */
 const exercisesModel = require("../models/exercises.model")
 const AppError = require("../utils/AppError")
+function applyUploadedMedia(target, files) {
+    if (files?.video?.[0]) {
+        target.video = `videos/exercises/${files.video[0].filename}`
+    }
+    if (files?.image?.[0]) {
+        target.image = `images/exercises/${files.image[0].filename}`
+    }
+}
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -96,15 +104,15 @@ exports.findExercisesByType = wrapAsync(async function(req, res, next) {
 exports.createExercise = wrapAsync(async function(req, res, next) {
     const { name, description, type, video, image } = req.body
 
-    let newExercise = {}
-
-    newExercise = {
+    let newExercise = {
         name: name,
         description: description,
-        type: type,
-        video: video,
-        image: image
+        type: Number(type),
+        video: video || null,
+        image: image || null
     }
+
+    applyUploadedMedia(newExercise, req.files)
 
     await exercisesModel.create(newExercise, function(err, datosEjercicioCreado){
         if(err){
@@ -145,16 +153,19 @@ exports.updateExerciseById = wrapAsync(async function (req, res, next) {
                 exerciseFounded.exercise_type = type
             }
 
-            // VIDEO
+            // VIDEO / IMAGE (texto o archivos subidos)
             if(video && video != ""){
                 exerciseFounded.exercise_video = video
             }
-
-            // IMAGE
             if(image && image != ""){
                 exerciseFounded.exercise_image = image
             }
-            
+
+            const mediaUpdate = {}
+            applyUploadedMedia(mediaUpdate, req.files)
+            if (mediaUpdate.video) exerciseFounded.exercise_video = mediaUpdate.video
+            if (mediaUpdate.image) exerciseFounded.exercise_image = mediaUpdate.image
+
             // ACTUALIZAMOS EJERCICIO
             await exercisesModel.updateById(id, exerciseFounded, function (err, datosEjercicioActualizado) {
                 if(err){

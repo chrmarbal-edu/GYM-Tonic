@@ -1,5 +1,7 @@
 package edu.gymtonic_app.ui.navigation
 
+import edu.gymtonic_app.core.UserRoles
+
 object Routes {
     const val WELCOME = "welcome"
     const val LOGIN_FORM = "login_form"
@@ -36,4 +38,31 @@ object Routes {
     const val DISCOUNTS = "discounts"
 
     const val FRIENDS = "friends"
+
+    // Admin dashboard
+    const val ADMIN_ROUTINES = "admin/routines"
+    const val ADMIN_ROUTINE_DETAIL = "admin/routine/{routineId}"
+    const val ADMIN_ROUTINE_EDIT = "admin/routine/{routineId}/edit"
+    const val ADMIN_EXERCISES = "admin/exercises"
+    const val ADMIN_EXERCISE_DETAIL = "admin/exercise/{exerciseId}/detail"
+    const val ADMIN_EXERCISE_EDIT = "admin/exercise/{exerciseId}/edit"
+    const val ADMIN_EXERCISE_NEW = "admin/exercise/new"
+    const val ADMIN_USERS = "admin/users"
+    const val ADMIN_USER_DETAIL = "admin/user/{userId}"
+    const val ADMIN_GROUPS = "admin/groups"
+    const val ADMIN_GROUP_DETAIL = "admin/group/{groupId}"
+    const val ADMIN_MISSIONS = "admin/missions"
+    const val ADMIN_MISSION_EDIT = "admin/mission/{missionId}"
+    const val ADMIN_MISSION_NEW = "admin/mission/new"
+
+    fun adminRoutineDetail(routineId: Int): String = "admin/routine/$routineId"
+    fun adminRoutineEdit(routineId: Int): String = "admin/routine/$routineId/edit"
+    fun adminExerciseDetail(exerciseId: Int): String = "admin/exercise/$exerciseId/detail"
+    fun adminExerciseEdit(exerciseId: Int): String = "admin/exercise/$exerciseId/edit"
+    fun adminUserDetail(userId: Int): String = "admin/user/$userId"
+    fun adminGroupDetail(groupId: Int): String = "admin/group/$groupId"
+    fun adminMissionEdit(missionId: Int): String = "admin/mission/$missionId"
+
+    fun postLoginDestination(role: Int?): String =
+        if (UserRoles.isAdmin(role)) HOME else TRAINING
 }

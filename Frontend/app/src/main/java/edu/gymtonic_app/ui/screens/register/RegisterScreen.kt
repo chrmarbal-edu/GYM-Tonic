@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,11 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import edu.gymtonic_app.core.UserRoles
 import edu.gymtonic_app.ui.navigation.Routes
 import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.viewmodel.RegisterState
@@ -50,7 +55,7 @@ fun RegisterScreen(
 
     LaunchedEffect(registerState) {
         if (registerState is RegisterState.Success) {
-            navController.navigate(Routes.HOME) {
+            navController.navigate(Routes.postLoginDestination(UserRoles.USER)) {
                 popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
@@ -194,7 +199,7 @@ fun RegisterScreen(
                         placeholder = "********",
                         isError = passwordError,
                         errorText = strings.requiredField,
-                        visualTransformation = PasswordVisualTransformation()
+                        isPassword = true
                     )
 
                     UnderlineLabeledField(
@@ -208,7 +213,7 @@ fun RegisterScreen(
                         placeholder = "********",
                         isError = confirmPasswordError || passwordsMatchError,
                         errorText = if (passwordsMatchError) strings.passwordsNoMatch else strings.requiredField,
-                        visualTransformation = PasswordVisualTransformation()
+                        isPassword = true
                     )
 
                     Spacer(Modifier.height(28.dp))
@@ -247,9 +252,13 @@ fun UnderlineLabeledField(
     placeholder: String,
     isError: Boolean = false,
     errorText: String? = null,
+    isPassword: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     val colors = LocalColors.current
+    var passwordVisible by remember { mutableStateOf(false) }
+
     Text(
         text = label,
         modifier = Modifier.fillMaxWidth(),
@@ -272,7 +281,18 @@ fun UnderlineLabeledField(
             )
         },
         singleLine = true,
-        visualTransformation = visualTransformation,
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else visualTransformation,
+        trailingIcon = if (isPassword) {
+            {
+                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description, tint = colors.fieldIndicator)
+                }
+            }
+        } else null,
         isError = isError,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,
@@ -302,9 +322,11 @@ fun UnderlineTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    isPassword: Boolean = false
 ) {
     val colors = LocalColors.current
+    var passwordVisible by remember { mutableStateOf(false) }
+
     TextField(
         value = value,
         onValueChange = onValueChange,
@@ -317,7 +339,17 @@ fun UnderlineTextField(
             )
         },
         singleLine = true,
-        visualTransformation = visualTransformation,
+        visualTransformation = if (isPassword && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
+        trailingIcon = if (isPassword) {
+            {
+                val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description, tint = colors.fieldIndicator)
+                }
+            }
+        } else null,
         colors = TextFieldDefaults.colors(
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,

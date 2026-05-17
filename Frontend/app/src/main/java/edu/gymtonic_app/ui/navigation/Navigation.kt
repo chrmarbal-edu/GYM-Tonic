@@ -33,7 +33,20 @@ import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.ExerciseDetailScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingScreen
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
-import edu.gymtonic_app.ui.screens.home.MainViewScreen
+import edu.gymtonic_app.core.UserRoles
+import edu.gymtonic_app.ui.screens.admin.AdminExerciseDetailScreen
+import edu.gymtonic_app.ui.screens.admin.AdminExerciseEditScreen
+import edu.gymtonic_app.ui.screens.admin.AdminExercisesListScreen
+import edu.gymtonic_app.ui.screens.admin.AdminGroupDetailScreen
+import edu.gymtonic_app.ui.screens.admin.AdminGroupsListScreen
+import edu.gymtonic_app.ui.screens.admin.AdminHomeScreen
+import edu.gymtonic_app.ui.screens.admin.AdminMissionEditScreen
+import edu.gymtonic_app.ui.screens.admin.AdminMissionsListScreen
+import edu.gymtonic_app.ui.screens.admin.AdminRoutineDetailScreen
+import edu.gymtonic_app.ui.screens.admin.AdminRoutineEditScreen
+import edu.gymtonic_app.ui.screens.admin.AdminRoutinesListScreen
+import edu.gymtonic_app.ui.screens.admin.AdminUserDetailScreen
+import edu.gymtonic_app.ui.screens.admin.AdminUsersListScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
 import edu.gymtonic_app.ui.screens.login.GoogleAuthHelper
@@ -75,6 +88,7 @@ fun Navigation(navController: NavHostController) {
     val homeViewModel: HomeViewModel = viewModel()
 
     val sessionState = sessionManager.sessionFlow.collectAsState(initial = null)
+    val isAdmin = UserRoles.isAdmin(sessionState.value?.role)
 
     // CONFIGURACIÓN DE FACEBOOK DIRECTA
     val callbackManager = remember { CallbackManager.Factory.create() }
@@ -107,9 +121,15 @@ fun Navigation(navController: NavHostController) {
     }
 
     val onOpenHomeGlobal = {
-        navController.navigate(Routes.HOME) {
-            popUpTo(Routes.HOME) { inclusive = false }
-            launchSingleTop = true
+        if (isAdmin) {
+            navController.navigate(Routes.HOME) {
+                popUpTo(Routes.HOME) { inclusive = false }
+                launchSingleTop = true
+            }
+        } else {
+            navController.navigate(Routes.TRAINING) {
+                launchSingleTop = true
+            }
         }
     }
 
@@ -133,8 +153,16 @@ fun Navigation(navController: NavHostController) {
 
     val startRoute = when {
         sessionState.value == null -> null
-        sessionState.value?.token != null -> Routes.HOME
+        sessionState.value?.token != null ->
+            Routes.postLoginDestination(sessionState.value?.role)
         else -> Routes.WELCOME
+    }
+
+    val navigateAfterLogin: (Int?) -> Unit = { role ->
+        navController.navigate(Routes.postLoginDestination(role ?: sessionState.value?.role)) {
+            popUpTo(Routes.WELCOME) { inclusive = true }
+            launchSingleTop = true
+        }
     }
 
     val authRoutes = setOf(Routes.WELCOME, Routes.LOGIN_FORM, Routes.REGISTER)
@@ -187,9 +215,8 @@ fun Navigation(navController: NavHostController) {
             LaunchedEffect(loginState) {
                 when (loginState) {
                     is LoginState.Success -> {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.WELCOME) { inclusive = true }
-                        }
+                        val role = (loginState as LoginState.Success).response.data?.user_role
+                        navigateAfterLogin(role)
                     }
                     is LoginState.NeedsRegistration -> {
                         val socialData = (loginState as LoginState.NeedsRegistration).socialData
@@ -238,7 +265,7 @@ fun Navigation(navController: NavHostController) {
                 onRegister = { navController.navigate(Routes.REGISTER) },
                 onForgotPassword = { },
                 loginViewModel = loginViewModel,
-                onLoginSuccess = { navController.navigate(Routes.HOME) }
+                onLoginSuccess = { role -> navigateAfterLogin(role) }
             )
         }
 
@@ -251,16 +278,160 @@ fun Navigation(navController: NavHostController) {
         }
 
         composable(Routes.HOME) {
-            MainViewScreen(
-                onLogout = onLogout,
-                onOpenTraining = { navController.navigate(Routes.TRAINING) },
-                onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
-                onOpenTechnogym = { },
-                onOpenDiscounts = { navController.navigate(Routes.DISCOUNTS) },
-                onOpenClientArea = { navController.navigate(Routes.PROFILE) },
-                onOpenGroup = { navController.navigate(Routes.GROUPS) },
-                onOpenMissions = { navController.navigate(Routes.WEEK) },
-                onOpenFriends = { navController.navigate(Routes.FRIENDS) },
+            if (isAdmin) {
+                AdminHomeScreen(
+                    onLogout = onLogout,
+                    onOpenRoutines = { navController.navigate(Routes.ADMIN_ROUTINES) },
+                    onOpenExercises = { navController.navigate(Routes.ADMIN_EXERCISES) },
+                    onOpenUsers = { navController.navigate(Routes.ADMIN_USERS) },
+                    onOpenGroups = { navController.navigate(Routes.ADMIN_GROUPS) },
+                    onOpenMissions = { navController.navigate(Routes.ADMIN_MISSIONS) }
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    navController.navigate(Routes.TRAINING) {
+                        popUpTo(Routes.HOME) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+
+        composable(Routes.ADMIN_ROUTINES) {
+            AdminRoutinesListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDetail = { id -> navController.navigate(Routes.adminRoutineDetail(id)) },
+                onCreate = { navController.navigate("admin/routine/new/edit") }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_ROUTINE_DETAIL,
+            arguments = listOf(navArgument("routineId") { type = NavType.IntType })
+        ) { entry ->
+            val id = entry.arguments?.getInt("routineId") ?: return@composable
+            AdminRoutineDetailScreen(
+                routineId = id,
+                onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(Routes.adminRoutineEdit(id)) },
+                onOpenExercise = { exerciseId ->
+                    navController.navigate(Routes.adminExerciseDetail(exerciseId))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_ROUTINE_EDIT,
+            arguments = listOf(navArgument("routineId") { type = NavType.StringType })
+        ) { entry ->
+            val raw = entry.arguments?.getString("routineId").orEmpty()
+            val id = raw.toIntOrNull()
+            AdminRoutineEditScreen(
+                routineId = id,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ADMIN_EXERCISES) {
+            AdminExercisesListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDetail = { id -> navController.navigate(Routes.adminExerciseDetail(id)) },
+                onCreate = { navController.navigate(Routes.ADMIN_EXERCISE_NEW) }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_EXERCISE_DETAIL,
+            arguments = listOf(navArgument("exerciseId") { type = NavType.IntType })
+        ) { entry ->
+            val id = entry.arguments?.getInt("exerciseId") ?: return@composable
+            AdminExerciseDetailScreen(
+                exerciseId = id,
+                onBack = { navController.popBackStack() },
+                onEdit = { navController.navigate(Routes.adminExerciseEdit(id)) }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_EXERCISE_EDIT,
+            arguments = listOf(navArgument("exerciseId") { type = NavType.IntType })
+        ) { entry ->
+            val id = entry.arguments?.getInt("exerciseId") ?: return@composable
+            AdminExerciseEditScreen(
+                exerciseId = id,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ADMIN_EXERCISE_NEW) {
+            AdminExerciseEditScreen(
+                exerciseId = null,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ADMIN_USERS) {
+            AdminUsersListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDetail = { id -> navController.navigate(Routes.adminUserDetail(id)) }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_USER_DETAIL,
+            arguments = listOf(navArgument("userId") { type = NavType.IntType })
+        ) { entry ->
+            val id = entry.arguments?.getInt("userId") ?: return@composable
+            AdminUserDetailScreen(userId = id, onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.ADMIN_GROUPS) {
+            AdminGroupsListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenDetail = { id -> navController.navigate(Routes.adminGroupDetail(id)) }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_GROUP_DETAIL,
+            arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+        ) { entry ->
+            val id = entry.arguments?.getInt("groupId") ?: return@composable
+            AdminGroupDetailScreen(
+                groupId = id,
+                onBack = { navController.popBackStack() },
+                onOpenUser = { userId -> navController.navigate(Routes.adminUserDetail(userId)) }
+            )
+        }
+
+        composable(Routes.ADMIN_MISSIONS) {
+            AdminMissionsListScreen(
+                onBack = { navController.popBackStack() },
+                onOpenEdit = { id -> navController.navigate(Routes.adminMissionEdit(id)) },
+                onCreate = { navController.navigate(Routes.ADMIN_MISSION_NEW) }
+            )
+        }
+
+        composable(
+            route = Routes.ADMIN_MISSION_EDIT,
+            arguments = listOf(navArgument("missionId") { type = NavType.IntType })
+        ) { entry ->
+            val id = entry.arguments?.getInt("missionId") ?: return@composable
+            AdminMissionEditScreen(
+                missionId = id,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.ADMIN_MISSION_NEW) {
+            AdminMissionEditScreen(
+                missionId = null,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
             )
         }
 
@@ -271,12 +442,7 @@ fun Navigation(navController: NavHostController) {
             ObserveToastMessage(message = week.errorMessage)
             WeekChallengesScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = false }
-                        launchSingleTop = true
-                    }
-                },
+                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = { navController.navigate(Routes.TRAINING) },
                 onOpenChallenges = { },
                 onOpenProfile = onOpenProfileGlobal,

@@ -138,6 +138,9 @@ interface ApiService {
     @GET("users")
     suspend fun getUsers(): Response<List<UserSummaryDto>>
 
+    @GET("users")
+    suspend fun getUsersFull(): Response<List<UserDto>>
+
     @GET("users/{id}")
     suspend fun getUserById(@Path("id") id: Int): Response<UserDto>
 
@@ -206,14 +209,47 @@ interface ApiService {
     @POST("exercises")
     suspend fun createExercise(@Body request: edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest): Response<Unit>
 
-    @PUT("exercises/{id}")
+    @Multipart
+    @POST("exercises")
+    suspend fun createExerciseMultipart(
+        @Part("name") name: okhttp3.RequestBody,
+        @Part("description") description: okhttp3.RequestBody,
+        @Part("type") type: okhttp3.RequestBody,
+        @Part video: okhttp3.MultipartBody.Part?,
+        @Part image: okhttp3.MultipartBody.Part?
+    ): Response<ExerciseDto>
+
+    @PATCH("exercises/{id}")
     suspend fun updateExercise(
         @Path("id") id: Int,
         @Body request: edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
     ): Response<Unit>
 
+    @Multipart
+    @PATCH("exercises/{id}")
+    suspend fun updateExerciseMultipart(
+        @Path("id") id: Int,
+        @Part("name") name: okhttp3.RequestBody?,
+        @Part("description") description: okhttp3.RequestBody?,
+        @Part("type") type: okhttp3.RequestBody?,
+        @Part video: okhttp3.MultipartBody.Part?,
+        @Part image: okhttp3.MultipartBody.Part?
+    ): Response<ExerciseDto>
+
     @DELETE("exercises/{id}")
     suspend fun deleteExercise(@Path("id") id: Int): Response<Unit>
+
+    @POST("missions/new")
+    suspend fun createMission(@Body request: @JvmSuppressWildcards Map<String, Any>): Response<MissionDto>
+
+    @PATCH("missions/{id}")
+    suspend fun updateMission(
+        @Path("id") id: Int,
+        @Body request: @JvmSuppressWildcards Map<String, Any?>
+    ): Response<MissionDto>
+
+    @DELETE("missions/{id}")
+    suspend fun deleteMission(@Path("id") id: Int): Response<Unit>
 
     // ROUTINES
     @GET("routines/routines")

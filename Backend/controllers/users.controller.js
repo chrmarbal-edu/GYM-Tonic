@@ -201,7 +201,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
                 } else{
                     // Si el usuario que está modificando datos es el mismo, actualizamos los datos de la sesión
                     if (req.userLogued && req.userLogued.user_id == id) {
-                        Object.assign(req.userLogued, userFounded)
+                        Object.assign(req.userLogued, datosUsuarioActualizado)
                         res.status(200).json(req.userLogued)
                     } else{
                         res.status(200).json(datosUsuarioActualizado)
@@ -246,7 +246,7 @@ exports.register = wrapAsync(async function (req, res, next) {
             fs.renameSync(req.file.path, targetPath)
 
             // Guardamos en DB la ruta empezando desde 'users' como solicitaste
-            userPicture = `users/${fileName}`
+            userPicture = `images/users/${fileName}`
         } else if (picture) {
             userPicture = picture
         }
