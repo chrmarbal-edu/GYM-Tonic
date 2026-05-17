@@ -18,6 +18,43 @@ function wrapAsync(fn) {
     }
 }
 
+function isDefaultProfilePicture(picturePath) {
+    if (!picturePath || typeof picturePath !== "string") {
+        return true
+    }
+    return picturePath.replace(/\\/g, "/").includes("default/user.jpg")
+}
+
+function resolveProfilePictureFilePath(picturePath) {
+    if (!picturePath || isDefaultProfilePicture(picturePath)) {
+        return null
+    }
+
+    let normalized = picturePath.replace(/\\/g, "/")
+    if (normalized.startsWith("public/")) {
+        return normalized
+    }
+    if (!normalized.startsWith("images/")) {
+        normalized = `images/${normalized}`
+    }
+    return path.join("public", normalized).replace(/\\/g, "/")
+}
+
+function deleteProfilePictureFile(picturePath) {
+    const filePath = resolveProfilePictureFilePath(picturePath)
+    if (!filePath) {
+        return
+    }
+
+    try {
+        if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath)
+        }
+    } catch (e) {
+        console.error(`No se pudo eliminar la foto de perfil: ${filePath}`, e)
+    }
+}
+
 // #region USERS
 
 /* <=============================== FIND ALL USERS ===============================> */
@@ -137,18 +174,24 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             
             // PICTURE
             if (picture === "default") {
+                deleteProfilePictureFile(userFounded.user_picture)
                 userFounded.user_picture = "images/users/default/user.jpg"
             } else if (req.file) {
                 // Obtenemos la extensión original del archivo (ej: .jpg, .png)
                 const extension = path.extname(req.file.originalname)
                 const fileName = `${userFounded.user_username}${extension}`
                 const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
+                const newPicturePath = `images/users/${fileName}`
+
+                if (userFounded.user_picture !== newPicturePath) {
+                    deleteProfilePictureFile(userFounded.user_picture)
+                }
 
                 // Renombramos el archivo físicamente al nombre del usuario en la carpeta destino
                 fs.renameSync(req.file.path, targetPath)
 
                 // Guardamos en DB la ruta empezando desde 'users' como solicitaste
-                userFounded.user_picture = `images/users/${fileName}`
+                userFounded.user_picture = newPicturePath
             }
 
             // ACTUALIZAMOS USUARIO
