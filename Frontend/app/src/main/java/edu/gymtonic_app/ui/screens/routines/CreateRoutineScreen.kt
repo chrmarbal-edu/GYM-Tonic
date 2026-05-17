@@ -29,7 +29,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -47,10 +46,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseUiState
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
 import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
@@ -75,18 +76,19 @@ fun CreateRoutineScreen(
     val exerciseViewModel: ExerciseViewModel =
         viewModel(factory = ExerciseViewModelFactory(application))
 
-    val favoriteExercises by exerciseViewModel.favoriteExercises.collectAsState()
+    val allExercises by exerciseViewModel.allExercises.collectAsState()
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
 
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(favoriteExercises) {
-        selectedExerciseIds.retainAll(favoriteExercises.map { it.exercise_id }.toSet())
+    val filteredExercises = remember(allExercises, searchQuery) {
+        allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
     }
 
     fun toggleSelection(exerciseId: Int) {
@@ -99,7 +101,7 @@ fun CreateRoutineScreen(
 
     fun saveRoutine() {
         val trimmedName = routineName.trim()
-        val selectedExercises = favoriteExercises.filter { exercise ->
+        val selectedDtoList = allExercises.filter { exercise ->
             selectedExerciseIds.contains(exercise.exercise_id)
         }
 
@@ -108,7 +110,7 @@ fun CreateRoutineScreen(
             return
         }
 
-        if (selectedExercises.isEmpty()) {
+        if (selectedDtoList.isEmpty()) {
             errorMessage = "Debes seleccionar al menos un ejercicio"
             return
         }
@@ -116,11 +118,23 @@ fun CreateRoutineScreen(
         isSaving = true
         errorMessage = null
 
-        val imageKey = selectedExercises.firstOrNull()?.exercise_image
+        val selectedEntities = selectedDtoList.map { dto ->
+            ExerciseEntity(
+                exercise_id = dto.exercise_id,
+                exercise_name = dto.exercise_name,
+                exercise_description = dto.exercise_description,
+                exercise_type = dto.exercise_type,
+                exercise_video = dto.exercise_video,
+                exercise_image = dto.exercise_image,
+                is_favorite = exerciseViewModel.isFavorite(dto.exercise_id)
+            )
+        }
+
+        val imageKey = selectedEntities.firstOrNull()?.exercise_image
 
         routineViewModel.createUserRoutineWithExercises(
             routineName = trimmedName,
-            exercises = selectedExercises,
+            exercises = selectedEntities,
             imageKey = imageKey,
             onSuccess = {
                 isSaving = false
@@ -182,46 +196,66 @@ fun CreateRoutineScreen(
                 }
 
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Column {
                         Text(
-                            text = "Ejercicios favoritos",
+                            text = strings.exercisesSection,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = colors.textPrimary,
-                            modifier = Modifier.weight(1f)
+                            color = colors.textPrimary
+                        )
+                        
+                        Spacer(Modifier.height(8.dp))
+                        
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text(strings.adminSearchHint) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.accent,
+                                unfocusedBorderColor = Color(0xFFC4C4C4)
+                            )
                         )
 
-                        Text(
-                            text = "${selectedExerciseIds.size}/${favoriteExercises.size}",
-                            fontSize = 12.sp,
-                            color = colors.textSecondary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                text = "${selectedExerciseIds.size}/${allExercises.size}",
+                                fontSize = 12.sp,
+                                color = colors.textSecondary
+                            )
+                        }
                     }
                 }
 
-                if (favoriteExercises.isEmpty()) {
+                if (allExercises.isEmpty()) {
                     item {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
                             color = colors.surfaceCard.copy(alpha = 0.5f)
                         ) {
-                            Text(
-                                text = "No tienes ejercicios favoritos guardados todavía",
-                                modifier = Modifier.padding(20.dp),
-                                color = colors.textSecondary
-                            )
+                            if (exerciseViewModel.uiState.collectAsState().value is ExerciseUiState.Loading) {
+                                CircularProgressIndicator(modifier = Modifier.padding(20.dp))
+                            } else {
+                                Text(
+                                    text = "No hay ejercicios disponibles",
+                                    modifier = Modifier.padding(20.dp),
+                                    color = colors.textSecondary
+                                )
+                            }
                         }
                     }
                 } else {
                     items(
-                        items = favoriteExercises,
+                        items = filteredExercises,
                         key = { it.exercise_id }
                     ) { exercise ->
-                        FavoriteExerciseRow(
+                        ExerciseSelectionRow(
                             exercise = exercise,
                             selected = selectedExerciseIds.contains(exercise.exercise_id),
                             onToggle = { toggleSelection(exercise.exercise_id) }
@@ -275,8 +309,8 @@ fun CreateRoutineScreen(
 }
 
 @Composable
-private fun FavoriteExerciseRow(
-    exercise: ExerciseEntity,
+private fun ExerciseSelectionRow(
+    exercise: ExerciseDto,
     selected: Boolean,
     onToggle: () -> Unit
 ) {
@@ -303,7 +337,8 @@ private fun FavoriteExerciseRow(
                 Text(
                     text = exercise.exercise_description,
                     fontSize = 11.sp,
-                    color = colors.textSecondary
+                    color = colors.textSecondary,
+                    maxLines = 2
                 )
             }
 

@@ -349,7 +349,8 @@ exports.findGroupMembersCSR = wrapAsync(async function (req, res, next) {
     }
 
     const isMember = await assertGroupMember(groupId, userLogued)
-    if (!isMember) {
+    const isAdmin = userLogued.user_role == 1
+    if (!isMember && !isAdmin) {
         return next(new AppError("Debes ser miembro del grupo para ver sus integrantes", 403))
     }
 

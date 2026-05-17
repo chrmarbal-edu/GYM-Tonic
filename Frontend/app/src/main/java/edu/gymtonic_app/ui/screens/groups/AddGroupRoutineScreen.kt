@@ -29,7 +29,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -46,11 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.GroupViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseUiState
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
 
@@ -74,20 +75,21 @@ fun AddGroupRoutineScreen(
     val exerciseViewModel: ExerciseViewModel =
         viewModel(factory = ExerciseViewModelFactory(application))
 
-    val favoriteExercises by exerciseViewModel.favoriteExercises.collectAsState()
+    val allExercises by exerciseViewModel.allExercises.collectAsState()
     val actionMessage by groupViewModel.actionMessage.collectAsState()
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(favoriteExercises) {
-        selectedExerciseIds.retainAll(favoriteExercises.map { it.exercise_id }.toSet())
+    val filteredExercises = remember(allExercises, searchQuery) {
+        allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
     }
 
-    LaunchedEffect(actionMessage) {
+    androidx.compose.runtime.LaunchedEffect(actionMessage) {
         actionMessage?.let {
             snackbarHostState.showSnackbar(it)
             groupViewModel.clearActionMessage()
@@ -173,30 +175,62 @@ fun AddGroupRoutineScreen(
                 }
 
                 item {
-                    Text(
-                        text = strings.groupsSelectExercises,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textPrimary
-                    )
+                    Column {
+                        Text(
+                            text = strings.groupsSelectExercises,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text(strings.adminSearchHint) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.accent,
+                                unfocusedBorderColor = Color(0xFFC4C4C4)
+                            )
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                text = "${selectedExerciseIds.size}/${allExercises.size}",
+                                fontSize = 12.sp,
+                                color = colors.textSecondary
+                            )
+                        }
+                    }
                 }
 
-                if (favoriteExercises.isEmpty()) {
+                if (allExercises.isEmpty()) {
                     item {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(14.dp),
                             color = colors.surfaceCard.copy(alpha = 0.5f)
                         ) {
-                            Text(
-                                text = strings.groupsNoFavoriteExercises,
-                                modifier = Modifier.padding(20.dp),
-                                color = colors.textSecondary
-                            )
+                            if (exerciseViewModel.uiState.collectAsState().value is ExerciseUiState.Loading) {
+                                CircularProgressIndicator(modifier = Modifier.padding(20.dp).align(Alignment.CenterHorizontally))
+                            } else {
+                                Text(
+                                    text = "No hay ejercicios disponibles",
+                                    modifier = Modifier.padding(20.dp),
+                                    color = colors.textSecondary
+                                )
+                            }
                         }
                     }
                 } else {
-                    items(favoriteExercises, key = { it.exercise_id }) { exercise ->
+                    items(filteredExercises, key = { it.exercise_id }) { exercise ->
                         GroupExerciseRow(
                             exercise = exercise,
                             selected = selectedExerciseIds.contains(exercise.exercise_id),
@@ -249,7 +283,7 @@ fun AddGroupRoutineScreen(
 
 @Composable
 private fun GroupExerciseRow(
-    exercise: ExerciseEntity,
+    exercise: ExerciseDto,
     selected: Boolean,
     onToggle: () -> Unit
 ) {
@@ -276,7 +310,8 @@ private fun GroupExerciseRow(
                 Text(
                     text = exercise.exercise_description,
                     fontSize = 11.sp,
-                    color = colors.textSecondary
+                    color = colors.textSecondary,
+                    maxLines = 2
                 )
             }
             TextButton(onClick = onToggle) {

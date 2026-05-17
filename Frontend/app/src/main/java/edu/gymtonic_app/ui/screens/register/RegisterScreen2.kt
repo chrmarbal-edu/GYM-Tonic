@@ -365,60 +365,6 @@ fun FechaNacimientoField(
     )
 }
 
-@Composable
-private fun UnderlineLabeledField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    isError: Boolean = false,
-    errorText: String = "",
-    keyboardType: KeyboardType = KeyboardType.Text
-) {
-    val colors = LocalColors.current
-    Text(
-        text = label,
-        modifier = Modifier.fillMaxWidth(),
-        color = colors.fieldIndicator,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.SemiBold
-    )
-    Spacer(Modifier.height(8.dp))
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = {
-            Text(
-                placeholder,
-                color = colors.fieldIndicator.copy(alpha = 0.45f)
-            )
-        },
-        visualTransformation = visualTransformation,
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = Color.Transparent,
-            unfocusedContainerColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent,
-            focusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.65f),
-            unfocusedIndicatorColor = if (isError) Color.Red else colors.fieldIndicator.copy(alpha = 0.35f),
-            focusedTextColor = colors.textPrimary,
-            unfocusedTextColor = colors.textPrimary,
-            cursorColor = if (isError) Color.Red else colors.fieldIndicator
-        )
-    )
-    if (isError) {
-        Text(
-            text = errorText,
-            color = Color.Red,
-            fontSize = 11.sp,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-    }
-}
-
 private fun createTempFile(context: android.content.Context, bitmap: Bitmap): File {
     val file = File(context.cacheDir, "profile_picture_${System.currentTimeMillis()}.jpg")
     val outputStream = ByteArrayOutputStream()

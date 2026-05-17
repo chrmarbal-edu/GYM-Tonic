@@ -1,6 +1,7 @@
 package edu.gymtonic_app.ui.screens.login
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -102,8 +103,9 @@ fun GymTonicLoginScreen(
             ) {
                 Text(
                     strings.registerButton,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
             }
 
@@ -123,6 +125,7 @@ fun GymTonicLoginScreen(
                 iconRes = R.drawable.google_logo,
                 containerColor = Color.White,
                 contentColor = Color(0xFF1F1F1F),
+                showBorder = true,
                 onClick = onGoogle
             )
 
@@ -145,33 +148,37 @@ private fun SocialSignInButton(
     iconRes: Int,
     containerColor: Color,
     contentColor: Color,
+    showBorder: Boolean = false,
     onClick: () -> Unit
 ) {
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
         color = containerColor,
+        border = if (showBorder) BorderStroke(1.dp, Color(0xFFDCDCDC)) else null,
         shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
             .height(54.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
         ) {
             Image(
                 painter = painterResource(iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier
+                    .size(24.dp)
+                    .align(Alignment.CenterStart)
             )
-            Spacer(Modifier.width(12.dp))
             Text(
                 text = text,
                 color = contentColor,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.align(Alignment.Center)
             )
         }
     }

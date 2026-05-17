@@ -47,6 +47,9 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     private val _favoriteExercises = MutableStateFlow<List<ExerciseEntity>>(emptyList())
     val favoriteExercises: StateFlow<List<ExerciseEntity>> = _favoriteExercises.asStateFlow()
 
+    private val _allExercises = MutableStateFlow<List<ExerciseDto>>(emptyList())
+    val allExercises: StateFlow<List<ExerciseDto>> = _allExercises.asStateFlow()
+
     init {
         val database = GymTonicDatabase.getInstance(application)
         val dao = database.exerciseDao()
@@ -56,6 +59,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         exerciseRepository = ExerciseRepository(exerciseRemoteDataSource, exerciseLocalDataSource)
 
         observeFavoritesFromRoom()
+        refreshExercises()
     }
 
     private fun observeFavoritesFromRoom() {
@@ -64,6 +68,18 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
                 _favoritesSet.value = favorites.map { it.exercise_id }.toSet()
                 _favoriteExercises.value = favorites
             }
+        }
+    }
+
+    fun refreshExercises() {
+        viewModelScope.launch {
+            exerciseRepository.getExercises()
+                .onSuccess { exercises ->
+                    _allExercises.value = exercises
+                }
+                .onFailure { error ->
+                    Log.e(TAG, "Error al cargar ejercicios", error)
+                }
         }
     }
 
