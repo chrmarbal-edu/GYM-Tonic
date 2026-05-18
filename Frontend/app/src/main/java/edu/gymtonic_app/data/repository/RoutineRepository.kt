@@ -33,14 +33,12 @@ class RoutineRepository(
                 defaultMessage = "No se pudieron obtener las categorías de rutinas"
             ).map { category ->
                 category.copy(
-                    // Usamos ?.map y elvis operator para evitar NullPointerException si routines es nulo
-                    routines = category.routines?.map { routine ->
+                    routines = category.routines.map { routine ->
                         routine.copy(
-                            // Aseguramos que el nombre no sea nulo ni vacío
                             routine_name = routine.routine_name?.takeIf { it.isNotBlank() }
                                 ?: "Rutina #${routine.routine_id}"
                         )
-                    } ?: emptyList()
+                    }
                 )
             }
         }

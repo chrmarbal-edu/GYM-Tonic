@@ -486,15 +486,9 @@ fun Navigation(navController: NavHostController) {
         }
 
         composable(Routes.CREATE_ROUTINE) {
-            val trainingViewModel: TrainingScreenViewModel = viewModel(
-                viewModelStoreOwner = navController.getBackStackEntry(Routes.TRAINING)
-            )
             CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
-                onRoutineCreated = {
-                    trainingViewModel.reloadCategoriesImmediately()
-                    navController.popBackStack()
-                },
+                onRoutineCreated = { navController.popBackStack() },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
@@ -674,19 +668,10 @@ fun Navigation(navController: NavHostController) {
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments?.getInt("groupId") ?: return@composable
 
-            val trainingViewModel: TrainingScreenViewModel? = remember(backStackEntry) {
-                runCatching { navController.getBackStackEntry(Routes.TRAINING) }.getOrNull()
-            }?.let { entry ->
-                viewModel(viewModelStoreOwner = entry)
-            }
-
             AddGroupRoutineScreen(
                 groupId = groupId,
                 onBack = { navController.popBackStack() },
-                onRoutineAdded = {
-                    trainingViewModel?.reloadCategoriesImmediately()
-                    navController.popBackStack()
-                },
+                onRoutineAdded = { navController.popBackStack() },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
