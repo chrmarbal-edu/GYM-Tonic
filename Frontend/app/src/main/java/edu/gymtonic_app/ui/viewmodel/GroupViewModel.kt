@@ -184,11 +184,12 @@ class GroupViewModel(application: Application) : AndroidViewModel(application) {
         groupId: Int,
         name: String,
         exerciseIds: List<Int>,
+        imageFile: java.io.File? = null,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val result = groupRepository.addGroupRoutine(groupId, name, exerciseIds)
+            val result = groupRepository.addGroupRoutine(groupId, name, exerciseIds, imageFile)
             result.fold(
                 onSuccess = {
                     _actionMessage.value = "Rutina compartida con el grupo"

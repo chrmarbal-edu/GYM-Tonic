@@ -26,6 +26,13 @@ class GroupRemoteDataSource {
     suspend fun addGroupRoutine(id: Int, request: CreateGroupRoutineRequest) =
         api.addGroupRoutine(id, request)
 
+    suspend fun addGroupRoutineMultipart(
+        id: Int,
+        name: okhttp3.RequestBody,
+        exerciseIds: okhttp3.RequestBody,
+        image: okhttp3.MultipartBody.Part?
+    ) = api.addGroupRoutineMultipart(id, name, exerciseIds, image)
+
     suspend fun updateGroup(id: Int, request: Map<String, Any?>) = api.updateGroup(id, request)
 
     suspend fun deleteGroup(id: Int) = api.deleteGroup(id)

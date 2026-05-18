@@ -16,6 +16,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,7 +56,9 @@ import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.screens.admin.uriToUploadFile
 import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
+import java.io.File
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,7 +85,15 @@ fun CreateRoutineScreen(
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
+    var routineImageFile by remember { mutableStateOf<File?>(null) }
+    var routineImageLabel by remember { mutableStateOf<String?>(null) }
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
+
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri ?: return@rememberLauncherForActivityResult
+        routineImageFile = uriToUploadFile(context, uri, "user_routine_image_")
+        routineImageLabel = routineImageFile?.name
+    }
     val snackbarHostState = LocalAppSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
@@ -114,12 +127,10 @@ fun CreateRoutineScreen(
 
         isSaving = true
 
-        val imageKey = selectedExercises.firstOrNull()?.exercise_image
-
         routineViewModel.createUserRoutineWithExercises(
             routineName = trimmedName,
-            exercises = selectedExercises,
-            imageKey = imageKey,
+            exerciseIds = selectedExercises.map { it.exercise_id },
+            imageFile = routineImageFile,
             onSuccess = {
                 isSaving = false
                 onRoutineCreated()
@@ -161,6 +172,17 @@ fun CreateRoutineScreen(
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = { imagePicker.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            routineImageLabel ?: strings.adminUploadImage
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     OutlinedTextField(
                         value = routineName,

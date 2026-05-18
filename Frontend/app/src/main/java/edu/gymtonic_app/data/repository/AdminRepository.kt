@@ -10,6 +10,7 @@ import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.core.UserRoles
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
 import edu.gymtonic_app.data.remote.services.RetrofitClient
+import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -51,16 +52,42 @@ class AdminRepository {
         else throw Exception(response.message() ?: "Rutina no encontrada")
     }
 
-    suspend fun createRoutine(name: String, exerciseIds: List<Int>): Result<RoutineDto> = runCatching {
-        val response = api.createRoutine(mapOf("name" to name, "exercise_ids" to exerciseIds))
-        if (response.isSuccessful && response.body() != null) response.body()!!
-        else throw Exception(response.message() ?: "No se pudo crear la rutina")
-    }
+    suspend fun saveRoutineWithFiles(
+        id: Int?,
+        name: String,
+        exerciseIds: List<Int>,
+        imageFile: File?
+    ): Result<RoutineDetailDto> = runCatching {
+        val gson = Gson()
+        val exerciseIdsBody = gson.toJson(exerciseIds).toRequestBody("application/json".toMediaTypeOrNull())
+        val imagePart = imageFile?.let {
+            MultipartBody.Part.createFormData(
+                "image",
+                it.name,
+                it.asRequestBody("image/*".toMediaTypeOrNull())
+            )
+        }
 
-    suspend fun updateRoutine(id: Int, name: String, exerciseIds: List<Int>): Result<RoutineDto> = runCatching {
-        val response = api.updateRoutine(id, mapOf("name" to name, "exercise_ids" to exerciseIds))
-        if (response.isSuccessful && response.body() != null) response.body()!!
-        else throw Exception(response.message() ?: "No se pudo actualizar")
+        if (id == null) {
+            val isPersonalBody = "0".toRequestBody("text/plain".toMediaTypeOrNull())
+            val response = api.createRoutineMultipart(
+                name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                exerciseIds = exerciseIdsBody,
+                isPersonal = isPersonalBody,
+                image = imagePart
+            )
+            if (response.isSuccessful && response.body() != null) response.body()!!
+            else throw Exception(response.message() ?: "No se pudo crear la rutina")
+        } else {
+            val response = api.updateRoutineMultipart(
+                routineId = id,
+                name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                exerciseIds = exerciseIdsBody,
+                image = imagePart
+            )
+            if (response.isSuccessful && response.body() != null) response.body()!!
+            else throw Exception(response.message() ?: "No se pudo actualizar")
+        }
     }
 
     suspend fun deleteRoutine(id: Int): Result<Unit> = runCatching {

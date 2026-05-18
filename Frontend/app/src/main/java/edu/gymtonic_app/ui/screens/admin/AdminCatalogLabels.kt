@@ -2,6 +2,25 @@ package edu.gymtonic_app.ui.screens.admin
 
 import edu.gymtonic_app.BuildConfig
 
+fun resolveRoutineImageUrl(imageKey: String?): String? {
+    if (imageKey.isNullOrBlank()) return null
+    if (imageKey.startsWith("http://") || imageKey.startsWith("https://")) return imageKey
+    if (imageKey.startsWith("file://")) return imageKey
+    val localFile = java.io.File(imageKey)
+    if (localFile.isFile) return localFile.toURI().toString()
+
+    var path = imageKey.trim().replace("\\", "/")
+    path = path.removePrefix("/").removePrefix("public/")
+    if (!path.startsWith("images/")) {
+        val fileName = path.substringAfterLast('/')
+        path = "images/routines/$fileName"
+    }
+    if (!path.contains('.')) {
+        path = "$path.png"
+    }
+    return resolveBackendMediaUrl(path)
+}
+
 fun resolveBackendMediaUrl(path: String?): String? {
     if (path.isNullOrBlank()) return null
     if (path.startsWith("http")) return path

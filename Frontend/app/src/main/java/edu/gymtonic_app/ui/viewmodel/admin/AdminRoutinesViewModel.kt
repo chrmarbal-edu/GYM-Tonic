@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 class AdminRoutinesViewModel : ViewModel() {
     private val repository = AdminRepository()
@@ -46,28 +47,25 @@ class AdminRoutinesViewModel : ViewModel() {
         }
     }
 
-    fun createRoutine(name: String, exerciseIds: List<Int>, onSuccess: () -> Unit) {
+    fun saveRoutine(
+        id: Int?,
+        name: String,
+        exerciseIds: List<Int>,
+        imageFile: File?,
+        onSuccess: () -> Unit
+    ) {
         viewModelScope.launch {
             _detailState.update { it.copy(isSaving = true, error = null) }
-            repository.createRoutine(name, exerciseIds)
-                .onSuccess {
-                    _detailState.update { it.copy(isSaving = false, message = "created") }
+            repository.saveRoutineWithFiles(id, name, exerciseIds, imageFile)
+                .onSuccess { routine ->
+                    _detailState.update {
+                        it.copy(
+                            item = routine,
+                            isSaving = false,
+                            message = if (id == null) "created" else "saved"
+                        )
+                    }
                     loadList()
-                    onSuccess()
-                }
-                .onFailure { e ->
-                    _detailState.update { it.copy(isSaving = false, error = e.message) }
-                }
-        }
-    }
-
-    fun updateRoutine(id: Int, name: String, exerciseIds: List<Int>, onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            _detailState.update { it.copy(isSaving = true, error = null) }
-            repository.updateRoutine(id, name, exerciseIds)
-                .onSuccess {
-                    _detailState.update { it.copy(isSaving = false, message = "saved") }
-                    loadDetail(id)
                     onSuccess()
                 }
                 .onFailure { e ->

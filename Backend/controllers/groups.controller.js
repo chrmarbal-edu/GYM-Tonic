@@ -13,6 +13,12 @@ const jwtMW = require("../middlewares/jwt.mw")
 const { log } = require("console")
 const sql = require("mssql")
 const dbConn = require("../utils/mssql.config")
+const {
+    buildRoutineImagePath,
+    normalizeRoutineImageForClient,
+    parseExerciseIds
+} = require("../utils/routineHelpers.js")
+const { isInvalidColumnError } = require("../utils/sqlErrors.js")
 
 
 function wrapAsync(fn) {
@@ -381,7 +387,13 @@ exports.findGroupRoutinesCSR = wrapAsync(async function (req, res, next) {
     }
 
     const routines = await fromCallback(routinesModel.findByGroupId, groupId)
-    return res.status(200).json(routines)
+    const normalized = Array.isArray(routines)
+        ? routines.map((routine) => ({
+              ...routine,
+              routine_image: normalizeRoutineImageForClient(routine.routine_image)
+          }))
+        : []
+    return res.status(200).json(normalized)
 })
 
 // #region ADD USER TO GROUP (creador del grupo)
@@ -492,7 +504,10 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
     }
 
     const groupId = Number(req.params.id)
-    const { name, exercise_ids: exerciseIds } = req.body
+    const { name, routine_image: routineImageBody, exercise_ids: exerciseIdsRaw } = req.body
+    const uploadedImage = buildRoutineImagePath(req.files)
+    const parsedExerciseIds = parseExerciseIds(exerciseIdsRaw)
+    const exerciseIds = parsedExerciseIds
 
     if (!Number.isFinite(groupId)) {
         return next(new AppError("group_id inválido", 400))
@@ -536,15 +551,43 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
     const transaction = new sql.Transaction(pool)
     await transaction.begin()
     try {
-        const rqIns = new sql.Request(transaction)
-        rqIns.input("name", sql.NVarChar(255), name.trim())
-        rqIns.input("groupId", sql.Int, groupId)
-        const insRoutine = await rqIns.query(`
-            INSERT INTO Routines (routine_name, routine_is_group_routine, routine_groupid)
-            OUTPUT INSERTED.*
-            VALUES (@name, 1, @groupId)
-        `)
-        const routineRow = insRoutine.recordset[0]
+        const routineImage =
+            uploadedImage ||
+            (typeof routineImageBody === "string" && routineImageBody.trim()
+                ? routineImageBody.trim()
+                : null)
+
+        let routineRow
+
+        try {
+            const rqIns = new sql.Request(transaction)
+            rqIns.input("name", sql.NVarChar(255), name.trim())
+            rqIns.input("image", sql.NVarChar(500), routineImage)
+            rqIns.input("creatorId", sql.Int, Number(userLogued.user_id))
+            rqIns.input("groupId", sql.Int, groupId)
+            const insRoutine = await rqIns.query(`
+                INSERT INTO Routines (
+                    routine_name, routine_image, routine_creator_id, routine_is_group_routine, routine_groupid
+                )
+                OUTPUT INSERTED.*
+                VALUES (@name, @image, @creatorId, 1, @groupId)
+            `)
+            routineRow = insRoutine.recordset[0]
+        } catch (insertErr) {
+            if (!isInvalidColumnError(insertErr)) {
+                throw insertErr
+            }
+
+            const rqLegacy = new sql.Request(transaction)
+            rqLegacy.input("name", sql.NVarChar(255), name.trim())
+            rqLegacy.input("groupId", sql.Int, groupId)
+            const insRoutine = await rqLegacy.query(`
+                INSERT INTO Routines (routine_name, routine_is_group_routine, routine_groupid)
+                OUTPUT INSERTED.*
+                VALUES (@name, 1, @groupId)
+            `)
+            routineRow = insRoutine.recordset[0]
+        }
         const routineId = routineRow.routine_id
 
         for (const eid of normalizedExerciseIds) {

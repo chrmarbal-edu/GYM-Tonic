@@ -1,12 +1,22 @@
 package edu.gymtonic_app.ui.screens.admin
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import java.io.File
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,7 +31,6 @@ import edu.gymtonic_app.ui.viewmodel.admin.AdminRoutinesViewModel
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -114,6 +123,18 @@ fun AdminRoutineDetailScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
+                val routineImageUrl = resolveRoutineImageUrl(routine.routine_image)
+                if (!routineImageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = routineImageUrl,
+                        contentDescription = routine.routine_name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .padding(bottom = 12.dp)
+                    )
+                }
                 AdminDetailRow(strings.routineName, routine.routine_name.orEmpty())
                 AdminDetailRow("ID", routine.routine_id.toString())
                 Text(
@@ -171,10 +192,19 @@ fun AdminRoutineEditScreen(
 ) {
     val strings = LocalStrings.current
     val colors = LocalColors.current
+    val context = LocalContext.current
     val state by viewModel.detailState.collectAsState()
     var name by remember { mutableStateOf("") }
     val selectedExercises = remember { mutableStateListOf<RoutineExerciseDto>() }
     var showSelection by remember { mutableStateOf(false) }
+    var imageFile by remember { mutableStateOf<File?>(null) }
+    var imageSelectedLabel by remember { mutableStateOf<String?>(null) }
+
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri ?: return@rememberLauncherForActivityResult
+        imageFile = uriToUploadFile(context, uri, "routine_image_")
+        imageSelectedLabel = imageFile?.name ?: strings.adminImageSelected
+    }
 
     LaunchedEffect(routineId) {
         if (routineId != null) viewModel.loadDetail(routineId)
@@ -218,7 +248,32 @@ fun AdminRoutineEditScreen(
         Column(Modifier.fillMaxSize()) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                 AdminField(strings.routineName, name, onValueChange = { name = it })
-                
+
+                val previewUrl = imageFile?.absolutePath?.let { "file://$it" }
+                    ?: resolveRoutineImageUrl(state.item?.routine_image)
+                if (!previewUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = previewUrl,
+                        contentDescription = name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .padding(vertical = 8.dp)
+                    )
+                }
+                Button(
+                    onClick = { imagePicker.launch("image/*") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                ) {
+                    Text(strings.adminUploadImage)
+                }
+                imageSelectedLabel?.let {
+                    Text(it, modifier = Modifier.padding(bottom = 4.dp), color = colors.textSecondary)
+                }
+
                 Row(
                     Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -254,11 +309,13 @@ fun AdminRoutineEditScreen(
                 loading = state.isSaving,
                 onClick = {
                     val ids = selectedExercises.map { it.exercise_id }
-                    if (isNew) {
-                        viewModel.createRoutine(name.trim(), ids, onSaved)
-                    } else {
-                        viewModel.updateRoutine(routineId!!, name.trim(), ids, onSaved)
-                    }
+                    viewModel.saveRoutine(
+                        id = routineId,
+                        name = name.trim(),
+                        exerciseIds = ids,
+                        imageFile = imageFile,
+                        onSuccess = onSaved
+                    )
                 }
             )
             state.error?.let { Text(it, modifier = Modifier.padding(top = 8.dp)) }

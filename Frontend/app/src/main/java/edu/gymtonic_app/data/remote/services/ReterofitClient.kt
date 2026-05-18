@@ -272,11 +272,29 @@ interface ApiService {
     @POST("routines/routine/new")
     suspend fun createRoutine(@Body request: @JvmSuppressWildcards Map<String, Any>): Response<RoutineDto>
 
+    @Multipart
+    @POST("routines/routine/new")
+    suspend fun createRoutineMultipart(
+        @Part("name") name: okhttp3.RequestBody,
+        @Part("exercise_ids") exerciseIds: okhttp3.RequestBody,
+        @Part("is_personal") isPersonal: okhttp3.RequestBody,
+        @Part image: okhttp3.MultipartBody.Part?
+    ): Response<RoutineDetailDto>
+
     @PATCH("routines/routine/{routineId}")
     suspend fun updateRoutine(
         @Path("routineId") routineId: Int,
         @Body request: @JvmSuppressWildcards Map<String, Any?>
     ): Response<RoutineDto>
+
+    @Multipart
+    @PATCH("routines/routine/{routineId}")
+    suspend fun updateRoutineMultipart(
+        @Path("routineId") routineId: Int,
+        @Part("name") name: okhttp3.RequestBody?,
+        @Part("exercise_ids") exerciseIds: okhttp3.RequestBody?,
+        @Part image: okhttp3.MultipartBody.Part?
+    ): Response<RoutineDetailDto>
 
     @DELETE("routines/routine/{routineId}")
     suspend fun deleteRoutine(@Path("routineId") routineId: Int): Response<Unit>
@@ -311,6 +329,15 @@ interface ApiService {
     suspend fun addGroupRoutine(
         @Path("id") id: Int,
         @Body request: CreateGroupRoutineRequest
+    ): Response<RoutineDto>
+
+    @Multipart
+    @POST("groups/{id}/routines")
+    suspend fun addGroupRoutineMultipart(
+        @Path("id") id: Int,
+        @Part("name") name: okhttp3.RequestBody,
+        @Part("exercise_ids") exerciseIds: okhttp3.RequestBody,
+        @Part image: okhttp3.MultipartBody.Part?
     ): Response<RoutineDto>
 
     @PATCH("groups/{id}")

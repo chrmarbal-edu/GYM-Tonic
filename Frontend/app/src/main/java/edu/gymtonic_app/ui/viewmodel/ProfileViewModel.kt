@@ -3,8 +3,6 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.local.GymTonicDatabase
-import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
@@ -40,7 +38,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 	private val routineRepository: RoutineRepository
 	private val routineRemoteDataSource: RoutineRemoteDataSource
 
-	private val routineLocalDataSource: RoutineLocalDataSource
 	private val groupRepository = GroupRepository()
 	private val sessionManager = SessionManager(application.sessionDataStore)
 
@@ -48,15 +45,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 	val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
 	init {
-		val database = GymTonicDatabase.getInstance(application)
-		val dao = database.routineDao()
-
 		userMissionsRemoteDataSource = UserMissionsRemoteDatasource()
 		userMissionsRepository = UserMissionsRepository(userMissionsRemoteDataSource)
 
 		routineRemoteDataSource = RoutineRemoteDataSource()
-		routineLocalDataSource = RoutineLocalDataSource(dao)
-		routineRepository = RoutineRepository(routineRemoteDataSource, routineLocalDataSource)
+		routineRepository = RoutineRepository(routineRemoteDataSource)
 
 		loadProfile()
 	}

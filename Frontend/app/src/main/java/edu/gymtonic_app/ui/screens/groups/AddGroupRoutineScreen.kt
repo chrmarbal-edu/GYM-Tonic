@@ -1,6 +1,9 @@
 package edu.gymtonic_app.ui.screens.groups
 
 import android.app.Application
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -54,7 +57,9 @@ import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.GroupViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
+import edu.gymtonic_app.ui.screens.admin.uriToUploadFile
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +87,15 @@ fun AddGroupRoutineScreen(
 
     var routineName by rememberSaveable { mutableStateOf("") }
     var isSaving by rememberSaveable { mutableStateOf(false) }
+    var routineImageFile by remember { mutableStateOf<File?>(null) }
+    var routineImageLabel by remember { mutableStateOf<String?>(null) }
     val selectedExerciseIds = remember { mutableStateListOf<Int>() }
+
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri ?: return@rememberLauncherForActivityResult
+        routineImageFile = uriToUploadFile(context, uri, "group_routine_image_")
+        routineImageLabel = routineImageFile?.name ?: strings.adminImageSelected
+    }
     val snackbarHostState = LocalAppSnackbarHostState.current
     val scope = rememberCoroutineScope()
 
@@ -116,6 +129,7 @@ fun AddGroupRoutineScreen(
             groupId = groupId,
             name = trimmedName,
             exerciseIds = selectedExerciseIds.toList(),
+            imageFile = routineImageFile,
             onSuccess = {
                 isSaving = false
                 onRoutineAdded()
@@ -166,6 +180,13 @@ fun AddGroupRoutineScreen(
                             unfocusedBorderColor = Color(0xFFC4C4C4)
                         )
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = { imagePicker.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(routineImageLabel ?: strings.adminUploadImage)
+                    }
                 }
 
                 item {

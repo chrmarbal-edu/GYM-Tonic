@@ -61,6 +61,7 @@ import edu.gymtonic_app.ui.screens.groups.GroupDetailScreen
 import edu.gymtonic_app.ui.screens.groups.GroupsListScreen
 import edu.gymtonic_app.ui.screens.routines.CreateRoutineScreen
 import edu.gymtonic_app.ui.screens.routines.RoutineCatalogScreen
+import edu.gymtonic_app.ui.screens.routines.RoutineEditScreen
 import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
@@ -485,9 +486,15 @@ fun Navigation(navController: NavHostController) {
         }
 
         composable(Routes.CREATE_ROUTINE) {
+            val trainingViewModel: TrainingScreenViewModel = viewModel(
+                viewModelStoreOwner = navController.getBackStackEntry(Routes.TRAINING)
+            )
             CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
-                onRoutineCreated = { navController.popBackStack() },
+                onRoutineCreated = {
+                    trainingViewModel.reloadCategoriesImmediately()
+                    navController.popBackStack()
+                },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
@@ -516,6 +523,35 @@ fun Navigation(navController: NavHostController) {
                 onExerciseClick = { exerciseId, reps ->
                     navController.navigate(Routes.exercise(exerciseId, reps))
                 },
+                onEdit = { id, local ->
+                    navController.navigate(Routes.editRoutine(id, local))
+                },
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal
+            )
+        }
+
+        composable(
+            route = Routes.EDIT_ROUTINE,
+            arguments = listOf(
+                navArgument("routineId") { type = NavType.IntType },
+                navArgument("local") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("routineId") ?: return@composable
+            val isLocal = backStackEntry.arguments?.getBoolean("local") ?: false
+
+            RoutineEditScreen(
+                routineId = id,
+                isLocal = isLocal,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
@@ -621,6 +657,9 @@ fun Navigation(navController: NavHostController) {
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
+                onEditRoutine = { routineId ->
+                    navController.navigate(Routes.editRoutine(routineId, isLocal = false))
+                },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
@@ -635,10 +674,19 @@ fun Navigation(navController: NavHostController) {
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments?.getInt("groupId") ?: return@composable
 
+            val trainingViewModel: TrainingScreenViewModel? = remember(backStackEntry) {
+                runCatching { navController.getBackStackEntry(Routes.TRAINING) }.getOrNull()
+            }?.let { entry ->
+                viewModel(viewModelStoreOwner = entry)
+            }
+
             AddGroupRoutineScreen(
                 groupId = groupId,
                 onBack = { navController.popBackStack() },
-                onRoutineAdded = { navController.popBackStack() },
+                onRoutineAdded = {
+                    trainingViewModel?.reloadCategoriesImmediately()
+                    navController.popBackStack()
+                },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,

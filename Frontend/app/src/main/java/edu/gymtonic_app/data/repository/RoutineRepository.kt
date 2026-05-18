@@ -1,70 +1,22 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
-import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import com.google.gson.Gson
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
-import kotlinx.coroutines.flow.Flow
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
+import java.io.File
 
 class RoutineRepository(
     private val routineRemoteDataSource: RoutineRemoteDataSource,
-    private val routineLocalDataSource: RoutineLocalDataSource
+    private val routineLocalDataSource: RoutineLocalDataSource? = null
 ) {
-    //region Room
-    fun getUserCreatedRoutines(): Flow<List<RoutineEntity>> {
-        return routineLocalDataSource.getAllUserRoutines()
-    }
-
-    suspend fun createUserRoutine(
-        routineName: String,
-        imageKey: String? = null
-    ): Result<Long> {
-        return runCatching {
-            val exists = routineLocalDataSource.existsRoutineWithName(routineName)
-            if (exists) {
-                throw IllegalArgumentException("Ya existe una rutina con ese nombre")
-            }
-
-            val routine = RoutineEntity(
-                routine_name = routineName,
-                routine_image = imageKey
-            )
-            routineLocalDataSource.createOrUpdateRoutine(routine)
-        }
-    }
-
-    suspend fun updateUserRoutine(
-        routineId: Int,
-        routineName: String,
-        imageKey: String? = null
-    ): Result<Int> {
-        return runCatching {
-            val routine = RoutineEntity(
-                routine_id = routineId,
-                routine_name = routineName,
-                routine_image = imageKey
-            )
-            routineLocalDataSource.updateRoutine(routine)
-        }
-    }
-
-    suspend fun deleteUserRoutine(routineId: Int): Result<Int> {
-        return runCatching {
-            routineLocalDataSource.deleteRoutineById(routineId)
-        }
-    }
-
-    suspend fun getUserRoutineWithExercises(routineId: Int): Result<RoutineEntity?> {
-        return runCatching {
-            routineLocalDataSource.getRoutineWithExercises(routineId)
-        }
-    }
-    //endregion
-
-    //region Retrofit
     suspend fun getRoutinesFromApi(): Result<List<RoutineDto>> {
         return runCatching {
             unwrapList(
@@ -79,7 +31,18 @@ class RoutineRepository(
             unwrapList(
                 response = routineRemoteDataSource.getRoutineCategories(),
                 defaultMessage = "No se pudieron obtener las categorías de rutinas"
-            )
+            ).map { category ->
+                category.copy(
+                    // Usamos ?.map y elvis operator para evitar NullPointerException si routines es nulo
+                    routines = category.routines?.map { routine ->
+                        routine.copy(
+                            // Aseguramos que el nombre no sea nulo ni vacío
+                            routine_name = routine.routine_name?.takeIf { it.isNotBlank() }
+                                ?: "Rutina #${routine.routine_id}"
+                        )
+                    } ?: emptyList()
+                )
+            }
         }
     }
 
@@ -119,15 +82,48 @@ class RoutineRepository(
         }
     }
 
-    suspend fun updateRoutineFromApi(
-        routineId: Int,
-        request: Map<String, Any?>
-    ): Result<RoutineDto> {
+    suspend fun saveRoutineWithFiles(
+        id: Int?,
+        name: String,
+        exerciseIds: List<Int>,
+        imageFile: File?,
+        isPersonal: Boolean = true
+    ): Result<RoutineDetailDto> {
         return runCatching {
-            unwrapOne(
-                response = routineRemoteDataSource.updateRoutine(routineId, request),
-                defaultMessage = "No se pudo actualizar la rutina con id=$routineId"
-            )
+            val gson = Gson()
+            val exerciseIdsBody =
+                gson.toJson(exerciseIds).toRequestBody("application/json".toMediaTypeOrNull())
+            val imagePart = imageFile?.let {
+                MultipartBody.Part.createFormData(
+                    "image",
+                    it.name,
+                    it.asRequestBody("image/*".toMediaTypeOrNull())
+                )
+            }
+            val isPersonalBody = (if (isPersonal) "1" else "0")
+                .toRequestBody("text/plain".toMediaTypeOrNull())
+
+            if (id == null) {
+                unwrapOne(
+                    response = routineRemoteDataSource.createRoutineMultipart(
+                        name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                        exerciseIds = exerciseIdsBody,
+                        isPersonal = isPersonalBody,
+                        image = imagePart
+                    ),
+                    defaultMessage = "No se pudo crear la rutina"
+                )
+            } else {
+                unwrapOne(
+                    response = routineRemoteDataSource.updateRoutineMultipart(
+                        routineId = id,
+                        name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                        exerciseIds = exerciseIdsBody,
+                        image = imagePart
+                    ),
+                    defaultMessage = "No se pudo actualizar la rutina con id=$id"
+                )
+            }
         }
     }
 
@@ -159,5 +155,4 @@ class RoutineRepository(
         val errorBody = response.errorBody()?.string().orEmpty()
         throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
     }
-    //endregion
 }

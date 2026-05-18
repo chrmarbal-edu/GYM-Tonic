@@ -334,7 +334,7 @@ private fun RoutineRow(
             )*/
             Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = routine.routine_name ?: "Sin nombre",
+                text = routine.displayName(),
                 color = colors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,

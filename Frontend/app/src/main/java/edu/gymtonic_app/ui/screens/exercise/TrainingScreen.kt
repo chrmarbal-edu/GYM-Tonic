@@ -1,7 +1,6 @@
 package edu.gymtonic_app.ui.screens.exercise
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,8 +33,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import coil.compose.AsyncImage
+import edu.gymtonic_app.ui.screens.admin.resolveRoutineImageUrl
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -125,7 +125,7 @@ fun TrainingScreen(
                             routinesLabel = strings.trainingRoutines,
                             tapToOpen = strings.trainingTapToOpen,
                             onSelect = onSelect,
-                            isLocal = category.id == "my_routines"
+                            isLocal = false
                         )
                     }
                 }
@@ -206,8 +206,8 @@ private fun TrainingCard(
     modifier: Modifier = Modifier
 ) {
 
-    Log.i("Routine ID", option.routine_id.toString())
     val colors = LocalColors.current
+    val imageUrl = resolveRoutineImageUrl(option.routine_image)
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
@@ -226,13 +226,14 @@ private fun TrainingCard(
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.White)
             ) {
-                /*
-                Image(
-                    painter = painterResource(option.imageRes),
-                    contentDescription = option.routine_name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )*/
+                if (!imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = option.displayName(),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 Box(
                     modifier = Modifier
@@ -248,7 +249,7 @@ private fun TrainingCard(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = option.routine_name ?: "",
+                text = option.displayName(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

@@ -2,7 +2,17 @@ package edu.gymtonic_app.ui.screens.routines
 
 import android.app.Application
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import edu.gymtonic_app.ui.screens.admin.resolveRoutineImageUrl
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +53,7 @@ fun RoutineCatalogScreen(
     onOpenFriends: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
+    onEdit: (Int, Boolean) -> Unit = { _, _ -> },
     viewModel: RoutineCatalogViewModel = viewModel()
 ) {
     val strings = LocalStrings.current
@@ -55,7 +66,21 @@ fun RoutineCatalogScreen(
     val snackbarHostState = LocalAppSnackbarHostState.current
     val scope = rememberCoroutineScope()
     val localRoutineId = routineId.toIntOrNull()
-    val canDeleteRoutine = isLocal && localRoutineId != null
+    val canDeleteRoutine = when (val state = uiState) {
+        is RoutineCatalogUiState.Success -> state.routine.can_edit == true && localRoutineId != null
+        else -> false
+    }
+    val canEditRoutine = when (val state = uiState) {
+        is RoutineCatalogUiState.Success -> state.routine.can_edit == true
+        else -> false
+    }
+    val editRoutineId = routineId.toIntOrNull()
+    val onEditClick =
+        if (canEditRoutine && editRoutineId != null) {
+            { onEdit(editRoutineId, isLocal) }
+        } else {
+            null
+        }
 
     //Carga de rutina al iniciar la pantalla, dependiendo si es local o remota
     LaunchedEffect(routineId, isLocal) {
@@ -116,7 +141,8 @@ fun RoutineCatalogScreen(
                     { showDeleteDialog.value = true }
                 } else {
                     null
-                }
+                },
+                onEditClick = onEditClick
             ) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -139,25 +165,41 @@ fun RoutineCatalogScreen(
                     { showDeleteDialog.value = true }
                 } else {
                     null
-                }
+                },
+                onEditClick = onEditClick
             ) {
-                RoutineTemplateScreen(
-                    exercises = state.routine.safeExercises(),
-                    onExerciseClick = onExerciseClick,
-                    favoritesSet = favoritesSet,
-                    onToggleFavorite = { routineExercise ->
-                        exerciseViewModel.onToggleFavorite(
-                            FavoriteExercisePayload(
-                                id = routineExercise.exercise_id,
-                                name = routineExercise.exercise_name ?: "Ejercicio",
-                                description = routineExercise.exercise_description ?: routineExercise.reps ?: "",
-                                type = routineExercise.exercise_type,
-                                video = routineExercise.exercise_video,
-                                image = routineExercise.exercise_image
-                            )
+                val routineImageUrl = resolveRoutineImageUrl(state.routine.routine_image)
+                Column(Modifier.fillMaxSize()) {
+                    if (!routineImageUrl.isNullOrBlank()) {
+                        AsyncImage(
+                            model = routineImageUrl,
+                            contentDescription = state.routine.routine_name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 8.dp)
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(14.dp))
                         )
                     }
-                )
+                    RoutineTemplateScreen(
+                        exercises = state.routine.safeExercises(),
+                        onExerciseClick = onExerciseClick,
+                        favoritesSet = favoritesSet,
+                        onToggleFavorite = { routineExercise ->
+                            exerciseViewModel.onToggleFavorite(
+                                FavoriteExercisePayload(
+                                    id = routineExercise.exercise_id,
+                                    name = routineExercise.exercise_name ?: "Ejercicio",
+                                    description = routineExercise.exercise_description ?: routineExercise.reps ?: "",
+                                    type = routineExercise.exercise_type,
+                                    video = routineExercise.exercise_video,
+                                    image = routineExercise.exercise_image
+                                )
+                            )
+                        }
+                    )
+                }
             }
         }
 
@@ -178,7 +220,8 @@ fun RoutineCatalogScreen(
                         { showDeleteDialog.value = true }
                     } else {
                         null
-                    }
+                    },
+                    onEditClick = onEditClick
                 ) {
                     RoutineTemplateScreen(
                         exercises = fallback.safeExercises(),
@@ -213,7 +256,8 @@ fun RoutineCatalogScreen(
                         { showDeleteDialog.value = true }
                     } else {
                         null
-                    }
+                    },
+                    onEditClick = onEditClick
                 ) {
                     ObserveToastMessage(message = state.message)
                     ToastErrorRetryContent(

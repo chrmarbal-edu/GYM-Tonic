@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,6 +48,7 @@ fun TrainingShellScreen(
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onDeleteClick: (() -> Unit)? = null,
+    onEditClick: (() -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     val colors = LocalColors.current
@@ -73,7 +75,8 @@ fun TrainingShellScreen(
                     title = title,
                     onBack = onBack,
                     showBack = showBack,
-                    onDeleteClick = onDeleteClick
+                    onDeleteClick = onDeleteClick,
+                    onEditClick = onEditClick
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -106,7 +109,8 @@ private fun TrainingShellHeader(
     title: String,
     onBack: () -> Unit,
     showBack: Boolean,
-    onDeleteClick: (() -> Unit)?
+    onDeleteClick: (() -> Unit)?,
+    onEditClick: (() -> Unit)?
 ) {
     val strings = LocalStrings.current
     val colors = LocalColors.current
@@ -141,6 +145,18 @@ private fun TrainingShellHeader(
         )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
+            if (onEditClick != null) {
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = strings.adminEdit,
+                        tint = colors.fieldIndicator
+                    )
+                }
+            }
             if (onDeleteClick != null) {
                 IconButton(
                     onClick = onDeleteClick,

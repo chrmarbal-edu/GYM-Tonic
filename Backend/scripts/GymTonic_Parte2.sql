@@ -16,7 +16,7 @@ CREATE TABLE dbo.Users (
     user_password  NVARCHAR(255)     NOT NULL,
     user_birthdate DATE              NOT NULL,
     user_email     NVARCHAR(255)     NOT NULL,
-    user_picture   NVARCHAR(500)     DEFAULT 'public/images/users/default/user.jpg' NOT NULL,
+    user_picture   NVARCHAR(500)     DEFAULT 'images/users/default/user.jpg' NOT NULL,
     user_height    FLOAT             NOT NULL,
     user_weight    FLOAT             NOT NULL,
     user_objective  INT               NOT NULL,
@@ -43,9 +43,13 @@ GO
 CREATE TABLE dbo.Routines (
     routine_id   INT IDENTITY(1,1) NOT NULL,
     routine_name NVARCHAR(255)     NOT NULL,
+    routine_image NVARCHAR(500)    NULL,
+    routine_creator_id INT         NULL,
+    routine_is_personal_routine INT NOT NULL CONSTRAINT DF_Routines_is_personal DEFAULT (0),
     routine_is_group_routine INT NOT NULL CONSTRAINT DF_Routines_is_group_routine DEFAULT (0),
     routine_groupid INT NULL,
-    CONSTRAINT PK_Routines PRIMARY KEY (routine_id)
+    CONSTRAINT PK_Routines PRIMARY KEY (routine_id),
+    CONSTRAINT FK_Routines_Creator FOREIGN KEY (routine_creator_id) REFERENCES dbo.Users(user_id) ON DELETE SET NULL
 );
 GO
 
@@ -206,14 +210,25 @@ VALUES
 GO
 
 -- Rutinas
-INSERT INTO dbo.Routines (routine_name)
+INSERT INTO dbo.Routines (routine_name, routine_image)
 VALUES
-    ('Full Body Principiante'),
-    ('Tren Superior Avanzado'),
-    ('Cardio Quema Grasa'),
-    ('Piernas y Glúteos'),
-    ('Flexibilidad y Movilidad');
+    ('Full Body Principiante', 'images/routines/rutina_fullbody.png'),
+    ('Tren Superior Avanzado', 'images/routines/rutina_tren_superior_avanzado.png'),
+    ('Cardio Quema Grasa', 'images/routines/rutina_cardio_quemagrasa.png'),
+    ('Piernas y Glúteos', 'images/routines/rutina_piernas_y_gluteos.png'),
+    ('Flexibilidad y Movilidad', 'images/routines/rutina_flexibilidad_y_mobilidad.png');
 GO
+
+-- Migración para bases de datos ya creadas (ejecutar solo si las columnas no existen):
+-- ALTER TABLE dbo.Routines ADD routine_image NVARCHAR(500) NULL;
+-- ALTER TABLE dbo.Routines ADD routine_is_personal_routine INT NOT NULL CONSTRAINT DF_Routines_is_personal DEFAULT (0);
+-- ALTER TABLE dbo.Routines ADD routine_creator_id INT NULL;
+-- ALTER TABLE dbo.Routines ADD CONSTRAINT FK_Routines_Creator FOREIGN KEY (routine_creator_id) REFERENCES dbo.Users(user_id) ON DELETE SET NULL;
+-- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_fullbody.png' WHERE routine_id = 1;
+-- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_tren_superior_avanzado.png' WHERE routine_id = 2;
+-- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_cardio_quemagrasa.png' WHERE routine_id = 3;
+-- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_piernas_y_gluteos.png' WHERE routine_id = 4;
+-- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_flexibilidad_y_mobilidad.png' WHERE routine_id = 5;
 
 -- Ejercicios por rutina
 INSERT INTO dbo.Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid)

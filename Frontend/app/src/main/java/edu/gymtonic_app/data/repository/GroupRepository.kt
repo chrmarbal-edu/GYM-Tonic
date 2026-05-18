@@ -6,7 +6,11 @@ import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupRoutineRequest
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Response
+import java.io.File
 
 class GroupRepository(
 	private val groupRemoteDataSource: GroupRemoteDataSource = GroupRemoteDataSource()
@@ -86,17 +90,38 @@ class GroupRepository(
 	suspend fun addGroupRoutine(
 		groupId: Int,
 		name: String,
-		exerciseIds: List<Int>
+		exerciseIds: List<Int>,
+		imageFile: File? = null
 	): Result<RoutineDto> {
 		return runCatching {
-			val request = CreateGroupRoutineRequest(
-				name = name.trim(),
-				exercise_ids = exerciseIds
-			)
-			unwrapOne(
-				groupRemoteDataSource.addGroupRoutine(groupId, request),
-				"No se pudo añadir la rutina al grupo"
-			)
+			if (imageFile == null) {
+				val request = CreateGroupRoutineRequest(
+					name = name.trim(),
+					exercise_ids = exerciseIds
+				)
+				unwrapOne(
+					groupRemoteDataSource.addGroupRoutine(groupId, request),
+					"No se pudo añadir la rutina al grupo"
+				)
+			} else {
+				val gson = com.google.gson.Gson()
+				val exerciseIdsBody = gson.toJson(exerciseIds)
+					.toRequestBody("application/json".toMediaTypeOrNull())
+				val imagePart = okhttp3.MultipartBody.Part.createFormData(
+					"image",
+					imageFile.name,
+					imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+				)
+				unwrapOne(
+					groupRemoteDataSource.addGroupRoutineMultipart(
+						id = groupId,
+						name = name.trim().toRequestBody("text/plain".toMediaTypeOrNull()),
+						exerciseIds = exerciseIdsBody,
+						image = imagePart
+					),
+					"No se pudo añadir la rutina al grupo"
+				)
+			}
 		}
 	}
 

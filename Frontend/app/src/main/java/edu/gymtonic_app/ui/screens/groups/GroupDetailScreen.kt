@@ -1,6 +1,11 @@
 package edu.gymtonic_app.ui.screens.groups
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import edu.gymtonic_app.ui.screens.admin.resolveRoutineImageUrl
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -55,6 +61,7 @@ fun GroupDetailScreen(
     onBack: () -> Unit,
     onAddRoutine: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
+    onEditRoutine: (Int) -> Unit = {},
     onOpenTraining: () -> Unit,
     onOpenGroups: () -> Unit,
     onOpenFriends: () -> Unit,
@@ -220,7 +227,10 @@ fun GroupDetailScreen(
                                     GroupRoutineRow(
                                         routine = routine,
                                         openLabel = strings.openLabel,
-                                        onClick = { onOpenRoutine(routine.routine_id) }
+                                        editLabel = strings.adminEdit,
+                                        showEdit = data.isCreator,
+                                        onClick = { onOpenRoutine(routine.routine_id) },
+                                        onEdit = { onEditRoutine(routine.routine_id) }
                                     )
                                 }
                             }
@@ -237,20 +247,33 @@ fun GroupDetailScreen(
 private fun GroupRoutineRow(
     routine: RoutineDto,
     openLabel: String,
-    onClick: () -> Unit
+    editLabel: String,
+    showEdit: Boolean,
+    onClick: () -> Unit,
+    onEdit: () -> Unit
 ) {
     val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = colors.surfaceCard,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val imageUrl = resolveRoutineImageUrl(routine.routine_image)
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = routine.routine_name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+            }
             Text(
                 text = routine.routine_name ?: "Rutina",
                 fontWeight = FontWeight.Bold,
@@ -258,12 +281,20 @@ private fun GroupRoutineRow(
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = onClick)
             )
+            if (showEdit) {
+                TextButton(onClick = onEdit) {
+                    Text(editLabel, fontSize = 11.sp)
+                }
+            }
             Text(
                 text = openLabel,
                 fontSize = 11.sp,
-                color = colors.textSecondary
+                color = colors.textSecondary,
+                modifier = Modifier.clickable(onClick = onClick)
             )
         }
     }
