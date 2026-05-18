@@ -18,11 +18,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -86,11 +84,7 @@ fun WeekChallengesScreen(
                     .fillMaxSize()
                     .padding(top = 25.dp)
             ) {
-                HeaderRow(
-                    title = strings.weekTitle,
-                    onBack = onBack,
-                    backLabel = strings.back
-                )
+                HeaderRow(title = strings.weekTitle)
 
                 PullToRefreshBox(
                     modifier = Modifier
@@ -175,7 +169,7 @@ fun WeekChallengesScreen(
 }
 
 @Composable
-private fun HeaderRow(title: String, onBack: () -> Unit, backLabel: String) {
+private fun HeaderRow(title: String) {
     val colors = LocalColors.current
     Row(
         modifier = Modifier
@@ -184,13 +178,7 @@ private fun HeaderRow(title: String, onBack: () -> Unit, backLabel: String) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(36.dp)) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
-                contentDescription = backLabel,
-                tint = colors.fieldIndicator
-            )
-        }
+        Spacer(modifier = Modifier.size(36.dp))
 
         Text(
             text = title,

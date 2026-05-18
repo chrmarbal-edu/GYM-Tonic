@@ -469,6 +469,7 @@ fun Navigation(navController: NavHostController) {
             TrainingShellScreen(
                 title = strings.trainingTitle,
                 onBack = { navController.popBackStack() },
+                showBack = false,
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
                 onOpenTraining = onOpenTrainingGlobal,

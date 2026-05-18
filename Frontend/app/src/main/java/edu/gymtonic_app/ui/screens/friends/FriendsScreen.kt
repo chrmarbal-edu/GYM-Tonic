@@ -109,6 +109,7 @@ fun FriendsScreen(
     TrainingShellScreen(
         title = strings.friendsTitle,
         onBack = onBack,
+        showBack = false,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.FRIENDS,
         onOpenTraining = onOpenTraining,
