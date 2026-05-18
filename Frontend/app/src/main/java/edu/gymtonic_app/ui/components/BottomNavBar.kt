@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Group
@@ -63,15 +63,15 @@ fun BottomNavBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(horizontal = 4.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomItem(strings.navTraining, Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenTraining)
-            BottomItem(strings.groupsTitle, Icons.Outlined.Group, selectedItem == BottomNavItem.GROUPS, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenGroups)
-            BottomItem(strings.friendsTitle, Icons.Outlined.People, selectedItem == BottomNavItem.FRIENDS, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenFriends)
-            BottomItem(strings.navChallenges, Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenChallenges)
-            BottomItem(strings.navProfile, Icons.Outlined.AccountCircle, selectedItem == BottomNavItem.PROFILE, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenProfile)
+            BottomItem(strings.navTraining, Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenTraining, Modifier.weight(1f))
+            BottomItem(strings.groupsTitle, Icons.Outlined.Group, selectedItem == BottomNavItem.GROUPS, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenGroups, Modifier.weight(1f))
+            BottomItem(strings.friendsTitle, Icons.Outlined.People, selectedItem == BottomNavItem.FRIENDS, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenFriends, Modifier.weight(1f))
+            BottomItem(strings.navChallenges, Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenChallenges, Modifier.weight(1f))
+            BottomItem(strings.navProfile, Icons.Outlined.Person, selectedItem == BottomNavItem.PROFILE, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenProfile, Modifier.weight(1f))
         }
     }
 }
@@ -84,32 +84,34 @@ private fun BottomItem(
     selectedTint: Color,
     unselectedTint: Color,
     selectedContainer: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val containerColor = if (selected) selectedContainer else Color.Transparent
     val tint = if (selected) selectedTint else unselectedTint
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clickable(onClick = onClick)
             .clip(RoundedCornerShape(16.dp))
             .background(containerColor)
-            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .padding(horizontal = 6.dp, vertical = 8.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             tint = tint,
-            modifier = Modifier.size(28.dp)
+            modifier = Modifier.size(24.dp)
         )
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(3.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
             color = tint,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-            fontSize = 11.sp
+            fontSize = 10.sp,
+            maxLines = 1
         )
     }
 }
