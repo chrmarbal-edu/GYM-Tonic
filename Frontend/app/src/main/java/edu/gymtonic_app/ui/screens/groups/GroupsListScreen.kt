@@ -119,6 +119,7 @@ fun GroupsListScreen(
     TrainingShellScreen(
         title = strings.groupsTitle,
         onBack = onBack,
+        showBack = false,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.GROUPS,
         onOpenTraining = onOpenTraining,
