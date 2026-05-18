@@ -61,8 +61,9 @@ import kotlinx.coroutines.launch
 fun CreateRoutineScreen(
     onBack: () -> Unit,
     onRoutineCreated: () -> Unit = {},
-    onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
+    onOpenGroups: () -> Unit = {},
+    onOpenFriends: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     routineViewModel: RoutineCatalogViewModel = viewModel()
@@ -135,8 +136,9 @@ fun CreateRoutineScreen(
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.TRAINING,
-        onOpenHome = onOpenHome,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

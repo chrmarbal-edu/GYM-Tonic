@@ -62,8 +62,9 @@ fun AddGroupRoutineScreen(
     groupId: Int,
     onBack: () -> Unit,
     onRoutineAdded: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     groupViewModel: GroupViewModel = viewModel()
@@ -130,9 +131,10 @@ fun AddGroupRoutineScreen(
         title = strings.groupsAddRoutineTitle,
         onBack = onBack,
         showBottomBar = true,
-        selectedBottomItem = BottomNavItem.PROFILE,
-        onOpenHome = onOpenHome,
+        selectedBottomItem = BottomNavItem.GROUPS,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

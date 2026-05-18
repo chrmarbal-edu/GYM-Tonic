@@ -51,8 +51,9 @@ import edu.gymtonic_app.ui.viewmodel.WeeklyGoalUi
 @OptIn(ExperimentalMaterial3Api::class)
 fun WeekChallengesScreen(
     onBack: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     onShowMoreCalendar: () -> Unit,
@@ -162,8 +163,9 @@ fun WeekChallengesScreen(
 
                 BottomNavBar(
                     selectedItem = BottomNavItem.CHALLENGES,
-                    onOpenHome = onOpenHome,
                     onOpenTraining = onOpenTraining,
+                    onOpenGroups = onOpenGroups,
+                    onOpenFriends = onOpenFriends,
                     onOpenChallenges = onOpenChallenges,
                     onOpenProfile = onOpenProfile
                 )

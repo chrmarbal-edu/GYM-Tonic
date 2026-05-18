@@ -51,8 +51,9 @@ import edu.gymtonic_app.ui.viewmodel.GroupsListUiState
 fun GroupsListScreen(
     onBack: () -> Unit,
     onOpenGroup: (Int) -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     viewModel: GroupViewModel = viewModel()
@@ -119,9 +120,10 @@ fun GroupsListScreen(
         title = strings.groupsTitle,
         onBack = onBack,
         showBottomBar = true,
-        selectedBottomItem = BottomNavItem.PROFILE,
-        onOpenHome = onOpenHome,
+        selectedBottomItem = BottomNavItem.GROUPS,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

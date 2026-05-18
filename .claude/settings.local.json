@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Juanan\\\\Desktop\\\\PROYECTO\\\\GYM-Tonic\\\\Frontend\\\\app\\\\src\\\\main\\\\res\" -Directory -Filter \"values*\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
+    ]
+  }
+}

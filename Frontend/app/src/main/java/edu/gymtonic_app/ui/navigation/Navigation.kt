@@ -120,21 +120,20 @@ fun Navigation(navController: NavHostController) {
         }
     }
 
-    val onOpenHomeGlobal = {
-        if (isAdmin) {
-            navController.navigate(Routes.HOME) {
-                popUpTo(Routes.HOME) { inclusive = false }
-                launchSingleTop = true
-            }
-        } else {
-            navController.navigate(Routes.TRAINING) {
-                launchSingleTop = true
-            }
+    val onOpenTrainingGlobal = {
+        navController.navigate(Routes.TRAINING) {
+            launchSingleTop = true
         }
     }
 
-    val onOpenTrainingGlobal = {
-        navController.navigate(Routes.TRAINING) {
+    val onOpenGroupsGlobal = {
+        navController.navigate(Routes.GROUPS) {
+            launchSingleTop = true
+        }
+    }
+
+    val onOpenFriendsGlobal = {
+        navController.navigate(Routes.FRIENDS) {
             launchSingleTop = true
         }
     }
@@ -442,8 +441,9 @@ fun Navigation(navController: NavHostController) {
             ObserveToastMessage(message = week.errorMessage)
             WeekChallengesScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
-                onOpenTraining = { navController.navigate(Routes.TRAINING) },
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = { },
                 onOpenProfile = onOpenProfileGlobal,
                 onShowMoreCalendar = { },
@@ -466,8 +466,9 @@ fun Navigation(navController: NavHostController) {
                 onBack = { navController.popBackStack() },
                 showBottomBar = true,
                 selectedBottomItem = BottomNavItem.TRAINING,
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             ) {
@@ -486,8 +487,9 @@ fun Navigation(navController: NavHostController) {
             CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
                 onRoutineCreated = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -513,8 +515,9 @@ fun Navigation(navController: NavHostController) {
                 onExerciseClick = { exerciseId, reps ->
                     navController.navigate(Routes.exercise(exerciseId, reps))
                 },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -537,8 +540,9 @@ fun Navigation(navController: NavHostController) {
                 exerciseId = exerciseId,
                 reps = reps,
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
                 showBottomBar = false
@@ -548,12 +552,12 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.PROFILE) {
             ProfileScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
                 onOpenWeek = { navController.navigate(Routes.WEEK) },
-                onOpenGroups = { navController.navigate(Routes.GROUPS) },
                 onOpenGroup = { groupId -> navController.navigate(Routes.groupDetail(groupId)) },
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
@@ -567,8 +571,9 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.ACCOUNT) {
             AccountScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
                 onDeleted = {
@@ -582,8 +587,9 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.SETTINGS) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -593,8 +599,9 @@ fun Navigation(navController: NavHostController) {
             GroupsListScreen(
                 onBack = { navController.popBackStack() },
                 onOpenGroup = { groupId -> navController.navigate(Routes.groupDetail(groupId)) },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -613,8 +620,9 @@ fun Navigation(navController: NavHostController) {
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -630,8 +638,9 @@ fun Navigation(navController: NavHostController) {
                 groupId = groupId,
                 onBack = { navController.popBackStack() },
                 onRoutineAdded = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -640,8 +649,9 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.DISCOUNTS) {
             DiscountsScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )
@@ -650,8 +660,9 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.FRIENDS) {
             FriendsScreen(
                 onBack = { navController.popBackStack() },
-                onOpenHome = onOpenHomeGlobal,
                 onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal
             )

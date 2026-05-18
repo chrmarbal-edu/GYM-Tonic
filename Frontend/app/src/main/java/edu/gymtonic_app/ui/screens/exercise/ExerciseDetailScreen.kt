@@ -65,8 +65,9 @@ fun ExerciseDetailScreen(
     exerciseId: String,
     reps: String = "N/A",
     onBack: () -> Unit,
-    onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
+    onOpenGroups: () -> Unit = {},
+    onOpenFriends: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     showBottomBar: Boolean = false,
@@ -92,8 +93,9 @@ fun ExerciseDetailScreen(
                 onBack = onBack,
                 showBottomBar = showBottomBar,
                 selectedBottomItem = BottomNavItem.TRAINING,
-                onOpenHome = onOpenHome,
                 onOpenTraining = onOpenTraining,
+                onOpenGroups = onOpenGroups,
+                onOpenFriends = onOpenFriends,
                 onOpenChallenges = onOpenChallenges,
                 onOpenProfile = onOpenProfile
             ) {
@@ -110,8 +112,9 @@ fun ExerciseDetailScreen(
                 onBack = onBack,
                 showBottomBar = showBottomBar,
                 selectedBottomItem = BottomNavItem.TRAINING,
-                onOpenHome = onOpenHome,
                 onOpenTraining = onOpenTraining,
+                onOpenGroups = onOpenGroups,
+                onOpenFriends = onOpenFriends,
                 onOpenChallenges = onOpenChallenges,
                 onOpenProfile = onOpenProfile
             ) {
@@ -131,8 +134,9 @@ fun ExerciseDetailScreen(
                 onBack = onBack,
                 showBottomBar = showBottomBar,
                 selectedBottomItem = BottomNavItem.TRAINING,
-                onOpenHome = onOpenHome,
                 onOpenTraining = onOpenTraining,
+                onOpenGroups = onOpenGroups,
+                onOpenFriends = onOpenFriends,
                 onOpenChallenges = onOpenChallenges,
                 onOpenProfile = onOpenProfile
             ) {

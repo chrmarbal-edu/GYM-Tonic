@@ -5,7 +5,6 @@ data class AppStrings(
     val back: String,
 
     // Bottom nav
-    val navHome: String,
     val navTraining: String,
     val navChallenges: String,
     val navProfile: String,
@@ -299,8 +298,7 @@ val SpanishStrings = AppStrings(
     language = "EN",
     back = "Volver",
 
-    navHome = "Inicio",
-    navTraining = "Entrenamiento",
+    navTraining = "Entrenamientos",
     navChallenges = "Desafios",
     navProfile = "Perfil",
 
@@ -576,8 +574,7 @@ val EnglishStrings = AppStrings(
     language = "ES",
     back = "Back",
 
-    navHome = "Home",
-    navTraining = "Training",
+    navTraining = "Workouts",
     navChallenges = "Challenges",
     navProfile = "Profile",
 

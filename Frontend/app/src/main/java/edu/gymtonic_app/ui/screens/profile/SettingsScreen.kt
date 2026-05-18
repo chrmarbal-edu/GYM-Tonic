@@ -27,8 +27,9 @@ import edu.gymtonic_app.ui.theme.ThemeManager
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
 ) {
@@ -42,8 +43,9 @@ fun SettingsScreen(
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.PROFILE,
-        onOpenHome = onOpenHome,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

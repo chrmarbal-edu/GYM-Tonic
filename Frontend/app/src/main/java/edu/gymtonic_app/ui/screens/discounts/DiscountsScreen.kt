@@ -79,8 +79,9 @@ private val discountTiers = listOf(
 @Composable
 fun DiscountsScreen(
     onBack: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     viewModel: DiscountsViewModel = viewModel()
@@ -139,9 +140,10 @@ fun DiscountsScreen(
                 }
 
                 BottomNavBar(
-                    selectedItem = BottomNavItem.HOME,
-                    onOpenHome = onOpenHome,
+                    selectedItem = BottomNavItem.TRAINING,
                     onOpenTraining = onOpenTraining,
+                    onOpenGroups = onOpenGroups,
+                    onOpenFriends = onOpenFriends,
                     onOpenChallenges = onOpenChallenges,
                     onOpenProfile = onOpenProfile
                 )
