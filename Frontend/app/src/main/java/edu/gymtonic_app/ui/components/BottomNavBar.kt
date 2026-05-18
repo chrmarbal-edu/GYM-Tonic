@@ -15,7 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.People
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -33,8 +34,9 @@ import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
 
 enum class BottomNavItem {
-    HOME,
     TRAINING,
+    GROUPS,
+    FRIENDS,
     CHALLENGES,
     PROFILE
 }
@@ -42,8 +44,9 @@ enum class BottomNavItem {
 @Composable
 fun BottomNavBar(
     selectedItem: BottomNavItem,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit
 ) {
@@ -64,8 +67,9 @@ fun BottomNavBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomItem(strings.navHome, Icons.Outlined.Home, selectedItem == BottomNavItem.HOME, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenHome)
             BottomItem(strings.navTraining, Icons.Outlined.FitnessCenter, selectedItem == BottomNavItem.TRAINING, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenTraining)
+            BottomItem(strings.groupsTitle, Icons.Outlined.Group, selectedItem == BottomNavItem.GROUPS, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenGroups)
+            BottomItem(strings.friendsTitle, Icons.Outlined.People, selectedItem == BottomNavItem.FRIENDS, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenFriends)
             BottomItem(strings.navChallenges, Icons.Outlined.EmojiEvents, selectedItem == BottomNavItem.CHALLENGES, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenChallenges)
             BottomItem(strings.navProfile, Icons.Outlined.AccountCircle, selectedItem == BottomNavItem.PROFILE, colors.navSelectedTint, colors.navUnselectedTint, colors.surfaceAccent, onOpenProfile)
         }

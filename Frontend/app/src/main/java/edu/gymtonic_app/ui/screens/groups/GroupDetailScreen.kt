@@ -55,8 +55,9 @@ fun GroupDetailScreen(
     onBack: () -> Unit,
     onAddRoutine: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     viewModel: GroupViewModel = viewModel()
@@ -100,9 +101,10 @@ fun GroupDetailScreen(
         title = strings.groupsDetailTitle,
         onBack = onBack,
         showBottomBar = true,
-        selectedBottomItem = BottomNavItem.PROFILE,
-        onOpenHome = onOpenHome,
+        selectedBottomItem = BottomNavItem.GROUPS,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

@@ -49,8 +49,9 @@ import java.io.File
 @Composable
 fun AccountScreen(
     onBack: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     onDeleted: () -> Unit,
@@ -70,8 +71,9 @@ fun AccountScreen(
         onBack = onBack,
         showBottomBar = true,
         selectedBottomItem = BottomNavItem.PROFILE,
-        onOpenHome = onOpenHome,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

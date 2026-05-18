@@ -65,8 +65,9 @@ import edu.gymtonic_app.ui.viewmodel.FriendsViewModel
 @Composable
 fun FriendsScreen(
     onBack: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     viewModel: FriendsViewModel = viewModel()
@@ -109,9 +110,10 @@ fun FriendsScreen(
         title = strings.friendsTitle,
         onBack = onBack,
         showBottomBar = true,
-        selectedBottomItem = BottomNavItem.PROFILE,
-        onOpenHome = onOpenHome,
+        selectedBottomItem = BottomNavItem.FRIENDS,
         onOpenTraining = onOpenTraining,
+        onOpenGroups = onOpenGroups,
+        onOpenFriends = onOpenFriends,
         onOpenChallenges = onOpenChallenges,
         onOpenProfile = onOpenProfile
     ) {

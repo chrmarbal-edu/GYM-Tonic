@@ -41,8 +41,9 @@ fun TrainingShellScreen(
     showBack: Boolean = true,
     showBottomBar: Boolean,
     selectedBottomItem: BottomNavItem? = null,
-    onOpenHome: () -> Unit = {},
     onOpenTraining: () -> Unit = {},
+    onOpenGroups: () -> Unit = {},
+    onOpenFriends: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
     onDeleteClick: (() -> Unit)? = null,
@@ -88,8 +89,9 @@ fun TrainingShellScreen(
                 if (showBottomBar && selectedBottomItem != null) {
                     BottomNavBar(
                         selectedItem = selectedBottomItem,
-                        onOpenHome = onOpenHome,
                         onOpenTraining = onOpenTraining,
+                        onOpenGroups = onOpenGroups,
+                        onOpenFriends = onOpenFriends,
                         onOpenChallenges = onOpenChallenges,
                         onOpenProfile = onOpenProfile
                     )

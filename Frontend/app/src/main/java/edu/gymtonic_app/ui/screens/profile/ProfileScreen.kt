@@ -58,12 +58,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 fun ProfileScreen(
     onBack: () -> Unit,
-    onOpenHome: () -> Unit,
     onOpenTraining: () -> Unit,
+    onOpenGroups: () -> Unit,
+    onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenWeek: () -> Unit,
-    onOpenGroups: () -> Unit,
     onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
     onLogout: () -> Unit,
@@ -120,8 +120,9 @@ fun ProfileScreen(
             showBack = false,
             showBottomBar = true,
             selectedBottomItem = BottomNavItem.PROFILE,
-            onOpenHome = onOpenHome,
             onOpenTraining = onOpenTraining,
+            onOpenGroups = onOpenGroups,
+            onOpenFriends = onOpenFriends,
             onOpenChallenges = onOpenChallenges,
             onOpenProfile = onOpenProfile
         ) {
