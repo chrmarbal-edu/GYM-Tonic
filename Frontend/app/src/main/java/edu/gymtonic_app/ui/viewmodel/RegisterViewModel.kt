@@ -81,8 +81,23 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
                 )
                 Log.i("register",response.toString())
                 val user = response.resolvedUser()
-                if(response.token != null && user != null){
-                    clearSocialData() // Limpiamos los datos tras el éxito
+                if(user != null){
+                    _registerState.value = RegisterState.AwaitingConfirmation(response)
+                } else {
+                    _registerState.value = RegisterState.Error("Usuario nulo en respuesta")
+                }
+            } catch (e: Exception){
+                _registerState.value = RegisterState.Error(e.message ?: "Error en el registro")
+            }
+        }
+    }
+
+    fun confirmCode(code: String, response: RegisterResponse) {
+        if (code == response.confirmationCode) {
+            viewModelScope.launch {
+                val user = response.resolvedUser()!!
+                if (response.token != null) {
+                    clearSocialData()
                     sessionManager.saveSession(
                         token = response.token,
                         userId = user.userId,
@@ -92,18 +107,34 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
                     )
                     _registerState.value = RegisterState.Success(response)
                 } else {
-                    _registerState.value = RegisterState.Error("Usuario o token nulo en respuesta")
+                    _registerState.value = RegisterState.Error("Token nulo en respuesta")
                 }
-            } catch (e: Exception){
-                _registerState.value = RegisterState.Error(e.message ?: "Error en el registro")
+            }
+        } else {
+            // Guardamos el estado actual para no perder los datos de la respuesta
+            val currentState = _registerState.value as? RegisterState.AwaitingConfirmation
+            _registerState.value = RegisterState.Error("Código de confirmación incorrecto")
+            
+            // Si teníamos una respuesta previa, volvemos al estado de espera tras mostrar el error
+            // El componente ObserveToastMessage mostrará el error mientras tanto
+            if (currentState != null) {
+                viewModelScope.launch {
+                    kotlinx.coroutines.delay(100) // Pequeña espera para asegurar que el estado de Error sea procesado
+                    _registerState.value = currentState
+                }
             }
         }
+    }
+
+    fun resetToIdle() {
+        _registerState.value = RegisterState.Idle
     }
 }
 
 sealed class RegisterState {
     object Idle : RegisterState()
     object Loading : RegisterState()
+    data class AwaitingConfirmation(val response: RegisterResponse) : RegisterState()
     data class Success(val response: RegisterResponse) : RegisterState()
     data class Error(val message: String) : RegisterState()
 }

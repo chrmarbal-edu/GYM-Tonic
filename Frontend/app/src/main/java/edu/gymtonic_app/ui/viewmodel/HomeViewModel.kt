@@ -27,17 +27,22 @@ class HomeViewModel(application: Application): AndroidViewModel(application){
         onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
+            // 1. Logout remoto primero para usar el token antes de limpiarlo localmente
+            val remoteResult = authRepository.logout()
+            if (remoteResult.isFailure) {
+                // Si falla (p.ej. 401), lo logueamos pero seguimos para limpiar localmente
+                val msg = remoteResult.exceptionOrNull()?.message ?: "Error en logout remoto"
+                android.util.Log.e("HomeViewModel", "Remote logout failed: $msg")
+            }
+
+            // 2. Limpiar sesión local (DataStore)
             val clearResult = runCatching { sessionManager.clearSession() }
             if (clearResult.isFailure) {
                 onError(clearResult.exceptionOrNull()?.message ?: "No se pudo limpiar la sesión local")
                 return@launch
             }
+            
             onLoggedOut()
-
-            val remoteResult = authRepository.logout()
-            if (remoteResult.isFailure) {
-                onError(remoteResult.exceptionOrNull()?.message ?: "No se pudo cerrar sesión en servidor")
-            }
         }
     }
 }

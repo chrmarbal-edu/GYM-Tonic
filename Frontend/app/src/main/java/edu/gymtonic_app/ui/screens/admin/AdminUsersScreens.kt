@@ -16,15 +16,26 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.admin.AdminUsersViewModel
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import edu.gymtonic_app.ui.theme.LocalColors
@@ -58,12 +69,16 @@ fun AdminUsersListScreen(
         ) {
             Column(Modifier.fillMaxSize()) {
                 AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
-                AdminSimpleList(
-                    items = filteredItems,
-                    titleFor = { it.userName ?: it.userUsername ?: "Usuario #${it.userId}" },
-                    subtitleFor = { it.userUsername },
-                    onItemClick = { onOpenDetail(it.userId) }
-                )
+                LazyColumn(Modifier.fillMaxSize()) {
+                    items(filteredItems) { user ->
+                        AdminUserListItem(
+                            title = user.userName ?: user.userUsername ?: "Usuario #${user.userId}",
+                            subtitle = user.userUsername,
+                            imageUrl = resolveUserPictureUrl(user.userPicture),
+                            onClick = { onOpenDetail(user.userId) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -77,8 +92,13 @@ fun AdminUserDetailScreen(
 ) {
     val strings = LocalStrings.current
     val state by viewModel.detailState.collectAsState()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId) { viewModel.loadDetail(userId) }
+
+    LaunchedEffect(state.deleted) {
+        if (state.deleted) onBack()
+    }
 
     AdminShellScreen(
         title = strings.adminUserDetail,
@@ -99,6 +119,7 @@ fun AdminUserDetailScreen(
                 Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
             ) {
                 // Profile Picture Section
                 Surface(
@@ -107,9 +128,10 @@ fun AdminUserDetailScreen(
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 16.dp),
                     shape = CircleShape,
-                    color = colors.surfaceCard
+                    color = colors.surfaceCard,
+                    shadowElevation = 4.dp
                 ) {
-                    val pictureUrl = resolveBackendMediaUrl(user.userPicture)
+                    val pictureUrl = resolveUserPictureUrl(user.userPicture)
                     AsyncImage(
                         model = pictureUrl,
                         contentDescription = user.userName,
@@ -129,7 +151,31 @@ fun AdminUserDetailScreen(
                 AdminDetailRow(strings.adminPoints, user.userPoints.toString())
                 AdminDetailRow(strings.height, "${user.userHeight} cm")
                 AdminDetailRow(strings.weight, "${user.userWeight} kg")
+
+                Spacer(Modifier.height(32.dp))
+
+                Button(
+                    onClick = { showDeleteDialog = true },
+                    modifier = Modifier.fillMaxWidth().height(54.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Spacer(Modifier.size(8.dp))
+                    Text(strings.adminDeleteConfirm, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
+
+    AdminDeleteDialog(
+        visible = showDeleteDialog,
+        title = strings.adminDeleteTitle,
+        message = strings.adminDeleteUserMessage,
+        onDismiss = { showDeleteDialog = false },
+        onConfirm = {
+            showDeleteDialog = false
+            viewModel.deleteUser(userId, onSuccess = onBack)
+        }
+    )
 }

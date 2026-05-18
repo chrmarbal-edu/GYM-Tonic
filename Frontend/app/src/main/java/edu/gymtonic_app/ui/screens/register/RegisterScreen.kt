@@ -93,154 +93,173 @@ fun RegisterScreen(
                 !passwordsMatchError
     }
 
-    if (showStep2) {
-        RegisterScreen2(
-            fullName,
-            username,
-            email,
-            password,
-            registerViewModel = registerViewModel,
-            onBack = { 
-                if (socialData != null) {
-                    registerViewModel.clearSocialData()
-                    onBack()
-                } else {
-                    showStep2 = false 
-                }
-            },
-            registerState
-        )
-    } else {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(bg)
-            .padding(horizontal = 18.dp, vertical = 18.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ThemeButton(tint = Color.White)
-            LanguageButton(tint = Color.White)
-        }
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text(
-                text = strings.createAccount,
-                color = Color.White,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(top = 55.dp, bottom = 20.dp)
+    when (val state = registerState) {
+        is RegisterState.AwaitingConfirmation -> {
+            EmailConfirmationScreen(
+                registerViewModel = registerViewModel,
+                response = state.response,
+                onBack = { registerViewModel.resetToIdle() }
             )
-
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(bottom = 80.dp),
-                shape = RoundedCornerShape(70.dp),
-                color = colors.surfaceMain,
-                shadowElevation = 10.dp
-            ) {
-                Column(
+        }
+        else -> {
+            if (showStep2) {
+                RegisterScreen2(
+                    fullName,
+                    username,
+                    email,
+                    password,
+                    registerViewModel = registerViewModel,
+                    onBack = {
+                        if (socialData != null) {
+                            registerViewModel.clearSocialData()
+                            onBack()
+                        } else {
+                            showStep2 = false
+                        }
+                    },
+                    onLogin = { navController.navigate(Routes.LOGIN_FORM) },
+                    registerState
+                )
+            } else {
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 36.dp, vertical = 46.dp)
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .background(bg)
+                        .padding(horizontal = 18.dp, vertical = 18.dp)
                 ) {
-                    UnderlineLabeledField(
-                        label = strings.fullName,
-                        value = fullName,
-                        onValueChange = { fullName = it; fullNameError = false },
-                        placeholder = "Jhon Andrés",
-                        isError = fullNameError,
-                        errorText = strings.requiredField
-                    )
-
-                    Spacer(Modifier.height(18.dp))
-
-                    UnderlineLabeledField(
-                        label = strings.usernameField,
-                        value = username,
-                        onValueChange = { username = it; usernameError = false },
-                        placeholder = "jhonandres_00",
-                        isError = usernameError,
-                        errorText = strings.requiredField
-                    )
-
-                    Spacer(Modifier.height(18.dp))
-
-                    UnderlineLabeledField(
-                        label = strings.email,
-                        value = email,
-                        onValueChange = { email = it; emailError = false },
-                        placeholder = "john@gmail.com",
-                        isError = emailError,
-                        errorText = strings.requiredField
-                    )
-
-                    Spacer(Modifier.height(22.dp))
-
-                    UnderlineLabeledField(
-                        label = strings.password,
-                        value = password,
-                        onValueChange = {
-                            password = it.trim()
-                            passwordError = false
-                            passwordsMatchError = false
-                        },
-                        placeholder = "********",
-                        isError = passwordError,
-                        errorText = strings.requiredField,
-                        isPassword = true
-                    )
-
-                    UnderlineLabeledField(
-                        label = strings.confirmPassword,
-                        value = confirmPassword,
-                        onValueChange = {
-                            confirmPassword = it.trim()
-                            confirmPasswordError = false
-                            passwordsMatchError = false
-                        },
-                        placeholder = "********",
-                        isError = confirmPasswordError || passwordsMatchError,
-                        errorText = if (passwordsMatchError) strings.passwordsNoMatch else strings.requiredField,
-                        isPassword = true
-                    )
-
-                    Spacer(Modifier.height(28.dp))
-
-                    Button(
-                        onClick = { if (validateForm()) showStep2 = true },
-                        modifier = Modifier.fillMaxWidth().height(58.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colors.accent,
-                            contentColor = Color.White
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = strings.nextButton,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.8.sp
-                        )
+                        ThemeButton(tint = Color.White)
+                        LanguageButton(tint = Color.White)
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Column(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Text(
+                            text = strings.createAccount,
+                            color = Color.White,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(top = 55.dp, bottom = 20.dp)
+                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .padding(bottom = 80.dp),
+                            shape = RoundedCornerShape(70.dp),
+                            color = colors.surfaceMain,
+                            shadowElevation = 10.dp
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 36.dp, vertical = 46.dp)
+                                    .verticalScroll(rememberScrollState()),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                UnderlineLabeledField(
+                                    label = strings.fullName,
+                                    value = fullName,
+                                    onValueChange = { fullName = it; fullNameError = false },
+                                    placeholder = "Jhon Andrés",
+                                    isError = fullNameError,
+                                    errorText = strings.requiredField
+                                )
+
+                                Spacer(Modifier.height(18.dp))
+
+                                UnderlineLabeledField(
+                                    label = strings.usernameField,
+                                    value = username,
+                                    onValueChange = { username = it; usernameError = false },
+                                    placeholder = "jhonandres_00",
+                                    isError = usernameError,
+                                    errorText = strings.requiredField
+                                )
+
+                                Spacer(Modifier.height(18.dp))
+
+                                UnderlineLabeledField(
+                                    label = strings.email,
+                                    value = email,
+                                    onValueChange = { email = it; emailError = false },
+                                    placeholder = "john@gmail.com",
+                                    isError = emailError,
+                                    errorText = strings.requiredField
+                                )
+
+                                Spacer(Modifier.height(22.dp))
+
+                                UnderlineLabeledField(
+                                    label = strings.password,
+                                    value = password,
+                                    onValueChange = {
+                                        password = it.trim()
+                                        passwordError = false
+                                        passwordsMatchError = false
+                                    },
+                                    placeholder = "********",
+                                    isError = passwordError,
+                                    errorText = strings.requiredField,
+                                    isPassword = true
+                                )
+
+                                UnderlineLabeledField(
+                                    label = strings.confirmPassword,
+                                    value = confirmPassword,
+                                    onValueChange = {
+                                        confirmPassword = it.trim()
+                                        confirmPasswordError = false
+                                        passwordsMatchError = false
+                                    },
+                                    placeholder = "********",
+                                    isError = confirmPasswordError || passwordsMatchError,
+                                    errorText = if (passwordsMatchError) strings.passwordsNoMatch else strings.requiredField,
+                                    isPassword = true
+                                )
+
+                                Spacer(Modifier.height(28.dp))
+
+                                Button(
+                                    onClick = { if (validateForm()) showStep2 = true },
+                                    modifier = Modifier.fillMaxWidth().height(58.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = colors.accent,
+                                        contentColor = Color.White
+                                    ),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Text(
+                                        text = strings.nextButton,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        letterSpacing = 0.8.sp
+                                    )
+                                }
+
+                                Spacer(Modifier.height(24.dp))
+
+                                Text(strings.alreadyHaveAccount, fontSize = 11.sp, color = colors.textSecondary)
+                                TextButton(onClick = { navController.navigate(Routes.LOGIN_FORM) }) {
+                                    Text(strings.loginLink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                }
+
+                                Spacer(Modifier.height(16.dp))
+                            }
+                        }
+                    }
                 }
             }
         }
-    }
     }
 }
 
@@ -273,6 +292,10 @@ fun UnderlineLabeledField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = colors.textPrimary,
+            fontSize = 16.sp
+        ),
         placeholder = {
             Text(
                 placeholder,
@@ -331,6 +354,10 @@ fun UnderlineTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.fillMaxWidth(),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = colors.textPrimary,
+            fontSize = 16.sp
+        ),
         placeholder = {
             Text(
                 text = placeholder,

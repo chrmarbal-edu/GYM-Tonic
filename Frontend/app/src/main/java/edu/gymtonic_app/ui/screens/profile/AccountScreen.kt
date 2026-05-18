@@ -169,18 +169,8 @@ fun AccountScreen(
                                         )
                                     }
                                     else -> {
-                                        val picPath = if (user.userPicture.isNullOrEmpty() || user.userPicture == "default") 
-                                                        "images/users/default/user.jpg" 
-                                                      else user.userPicture
-                                        
-                                        val fullUrl = when {
-                                            picPath.startsWith("http") -> picPath
-                                            picPath.startsWith("/") -> "${BuildConfig.BACKEND_BASE_URL}${picPath.removePrefix("/")}"
-                                            else -> "${BuildConfig.BACKEND_BASE_URL}$picPath"
-                                        }
-
                                         AsyncImage(
-                                            model = fullUrl,
+                                            model = edu.gymtonic_app.core.MediaUtils.resolveUserPictureUrl(user.userPicture),
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = ContentScale.Crop

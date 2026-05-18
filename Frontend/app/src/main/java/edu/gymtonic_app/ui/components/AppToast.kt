@@ -36,17 +36,16 @@ fun AppToastHost(
         Scaffold(
             modifier = modifier,
             containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             snackbarHost = {
                 SnackbarHost(
                     hostState = snackbarHostState,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
-        ) { padding ->
+        ) { _ ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
+                modifier = Modifier.fillMaxSize()
             ) {
                 content()
             }

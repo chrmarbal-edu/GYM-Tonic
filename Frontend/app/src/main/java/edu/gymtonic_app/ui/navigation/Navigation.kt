@@ -2,6 +2,7 @@ package edu.gymtonic_app.ui.navigation
 
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -195,11 +196,15 @@ fun Navigation(navController: NavHostController) {
     }
 
     if (startRoute == null) {
+        val colors = edu.gymtonic_app.ui.theme.LocalColors.current
+        val bg = androidx.compose.ui.graphics.Brush.verticalGradient(colors.gradientColors)
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(bg),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(color = androidx.compose.ui.graphics.Color.White)
         }
         return
     }

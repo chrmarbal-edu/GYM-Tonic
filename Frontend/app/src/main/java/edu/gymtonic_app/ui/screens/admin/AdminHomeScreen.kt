@@ -75,32 +75,41 @@ fun AdminHomeScreen(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "GYMTONIC",
+                    text = "GYM TONIC",
                     color = Color.White,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.ExtraBold
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1
                 )
                 Text(
                     text = strings.adminPanelSubtitle,
                     color = Color.White.copy(alpha = 0.85f),
-                    fontSize = 12.sp,
-                    letterSpacing = 1.5.sp
+                    fontSize = 11.sp,
+                    letterSpacing = 0.5.sp,
+                    maxLines = 1
                 )
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ThemeButton(tint = Color.White)
-                LanguageButton(tint = Color.White)
-                IconButton(onClick = onLogout) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.End
+            ) {
+                ThemeButton(tint = Color.White, modifier = Modifier.size(42.dp))
+                LanguageButton(tint = Color.White, modifier = Modifier.height(42.dp))
+                
+                // Botón de Logout compacto pero equilibrado
+                IconButton(
+                    onClick = onLogout,
+                    modifier = Modifier.size(42.dp)
+                ) {
                     Icon(
                         Icons.Outlined.Logout,
                         contentDescription = strings.profileSignOut,
                         tint = Color.White,
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }

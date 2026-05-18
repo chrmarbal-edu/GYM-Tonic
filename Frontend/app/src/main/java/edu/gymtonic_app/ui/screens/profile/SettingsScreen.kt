@@ -135,24 +135,6 @@ fun SettingsScreen(
             }
 
             item {
-                AccountSectionCard(title = strings.settingsDataSync) {
-                    var googleFitConnected by remember { mutableStateOf(false) }
-                    SettingsToggleRow(
-                        label = strings.settingsGoogleFit,
-                        checked = googleFitConnected,
-                        onCheckedChange = { googleFitConnected = it }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    var appleHealthConnected by remember { mutableStateOf(false) }
-                    SettingsToggleRow(
-                        label = strings.settingsAppleHealth,
-                        checked = appleHealthConnected,
-                        onCheckedChange = { appleHealthConnected = it }
-                    )
-                }
-            }
-
-            item {
                 AccountSectionCard(title = strings.settingsLanguage) {
                     val selectedLanguage = if (currentLanguage == AppLanguage.SPANISH)
                         strings.settingsLanguageSpanish
@@ -188,20 +170,6 @@ fun SettingsScreen(
                         fontSize = 14.sp,
                         color = colors2.textOnAccent,
                         fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = strings.settingsTerms,
-                        fontSize = 14.sp,
-                        color = colors2.accent,
-                        modifier = Modifier.clickable { }
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = strings.settingsPrivacy,
-                        fontSize = 14.sp,
-                        color = colors2.accent,
-                        modifier = Modifier.clickable { }
                     )
                 }
             }

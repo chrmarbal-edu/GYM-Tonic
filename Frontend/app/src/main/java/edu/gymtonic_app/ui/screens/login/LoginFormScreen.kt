@@ -78,23 +78,21 @@ fun LoginFormScreen(
 
         Surface(
             modifier = Modifier
-                .padding(12.dp)
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(670.dp),
+                .padding(horizontal = 24.dp)
+                .align(Alignment.Center)
+                .fillMaxWidth(),
             color = colors.surfaceMain,
-            shape = RoundedCornerShape(70.dp),
+            shape = RoundedCornerShape(50.dp),
             shadowElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 36.dp, vertical = 46.dp),
+                    .padding(horizontal = 32.dp, vertical = 40.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = strings.usernameLabel,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.textPrimary
                 )
@@ -105,11 +103,11 @@ fun LoginFormScreen(
                     placeholder = "client1"
                 )
 
-                Spacer(Modifier.height(26.dp))
+                Spacer(Modifier.height(24.dp))
 
                 Text(
                     text = strings.password,
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = colors.textPrimary
                 )
@@ -121,7 +119,7 @@ fun LoginFormScreen(
                     isPassword = true
                 )
 
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(10.dp))
 
                 TextButton(
                     onClick = onForgotPassword,
@@ -131,12 +129,12 @@ fun LoginFormScreen(
                     Text(strings.forgotPassword, fontSize = 11.sp)
                 }
 
-                Spacer(Modifier.height(18.dp))
+                Spacer(Modifier.height(24.dp))
 
                 OutlinedButton(
                     onClick = { loginViewModel.login(username, password) },
-                    modifier = Modifier.width(140.dp).height(38.dp),
-                    shape = RoundedCornerShape(10.dp)
+                    modifier = Modifier.width(160.dp).height(45.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     if (loginState is LoginState.Loading) {
                         CircularProgressIndicator(
@@ -149,7 +147,7 @@ fun LoginFormScreen(
                     }
                 }
 
-                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.height(32.dp))
 
                 Text(strings.noAccount, fontSize = 11.sp, color = colors.textSecondary)
                 TextButton(onClick = onRegister) {

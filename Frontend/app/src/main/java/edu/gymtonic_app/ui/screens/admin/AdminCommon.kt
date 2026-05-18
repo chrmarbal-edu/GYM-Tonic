@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -194,6 +195,56 @@ fun AdminSearchBar(
             unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
         )
     )
+}
+
+@Composable
+fun AdminUserListItem(
+    title: String,
+    subtitle: String,
+    imageUrl: String,
+    onClick: () -> Unit
+) {
+    val colors = LocalColors.current
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(14.dp),
+        color = colors.surfaceCard
+    ) {
+        Row(
+            Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = colors.surfaceMain
+            ) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            Column(Modifier.weight(1f)) {
+                Text(
+                    title,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textPrimary,
+                    fontSize = 16.sp
+                )
+                Text(
+                    subtitle,
+                    color = colors.textSecondary,
+                    fontSize = 13.sp
+                )
+            }
+        }
+    }
 }
 
 @Composable

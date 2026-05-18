@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GymTonic_App</string>
+    <string name="app_name">Gym Tonic</string>
     <string name="ejercicios_disponibles">%1$d Ejercicios disponibles</string>
     <string name="volver">Volver</string>
     <string name="series_y_repeticiones">Series y repeticiones</string>

@@ -45,7 +45,8 @@ data class RegisterRequest(
 data class RegisterResponse(
     val user: UserDto? = null,
     val data: UserDto? = null,
-    val token: String? = null
+    val token: String? = null,
+    val confirmationCode: String? = null
 ) {
     fun resolvedUser(): UserDto? = user ?: data
 }
