@@ -1,25 +1,9 @@
 package edu.gymtonic_app.ui.screens.admin
 
-import edu.gymtonic_app.BuildConfig
+import edu.gymtonic_app.core.MediaUtils
 
-fun resolveBackendMediaUrl(path: String?): String? {
-    if (path.isNullOrBlank()) return null
-    if (path.startsWith("http")) return path
-    
-    val base = BuildConfig.BACKEND_BASE_URL.trim().trimEnd('/')
-    // Normalizamos el path: quitar espacios al inicio/final, asegurar barra inicial, 
-    // y cambiar backslashes por slashes de URL
-    val normalizedPath = path.trim().replace("\\", "/")
-    val key = if (normalizedPath.startsWith("/")) normalizedPath else "/$normalizedPath"
-    
-    // Codificamos caracteres especiales (como acentos o espacios) que puedan venir en el nombre del archivo
-    // Usamos una aproximación segura para no romper las barras inclinadas /
-    val encodedPath = key.split("/").joinToString("/") { segment ->
-        java.net.URLEncoder.encode(segment, "UTF-8").replace("+", "%20")
-    }
-    
-    return "$base$encodedPath"
-}
+fun resolveBackendMediaUrl(path: String?): String? = MediaUtils.resolveBackendMediaUrl(path)
+fun resolveUserPictureUrl(path: String?): String = MediaUtils.resolveUserPictureUrl(path)
 
 fun exerciseTypeLabel(type: Int): String = when (type) {
     0 -> "Cardio"

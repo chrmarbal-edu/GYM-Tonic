@@ -49,6 +49,7 @@ fun RegisterScreen2(
     password: String,
     registerViewModel: RegisterViewModel,
     onBack: () -> Unit = {},
+    onLogin: () -> Unit = {},
     registerState: RegisterState
 ) {
     val strings = LocalStrings.current
@@ -328,6 +329,13 @@ fun RegisterScreen2(
                                 letterSpacing = 0.8.sp
                             )
                         }
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+
+                    Text(strings.alreadyHaveAccount, fontSize = 11.sp, color = colors.textSecondary)
+                    TextButton(onClick = onLogin) {
+                        Text(strings.loginLink, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     Spacer(Modifier.height(16.dp))

@@ -15,6 +15,8 @@ data class UserSummaryDto(
     val userName: String? = null,
     @SerializedName("user_picture")
     val userPicture: String? = null,
+    @SerializedName("user_role")
+    val userRole: Int? = null,
     @SerializedName("friend_id")
     val friendId: Int? = null
 )

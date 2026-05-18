@@ -8,8 +8,16 @@ import android.util.Log
 import java.security.MessageDigest
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -37,7 +45,10 @@ import edu.gymtonic_app.ui.theme.ThemeManager
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        
+        // Inicializar managers con persistencia
+        LanguageManager.init(this)
+        ThemeManager.init(this)
 
         val sessionManager = SessionManager(sessionDataStore)
         RetrofitClient.setSessionManager(sessionManager)
@@ -51,26 +62,61 @@ class MainActivity : ComponentActivity() {
             val currentTheme by ThemeManager.theme.collectAsState()
             val themeColors = if (currentTheme == AppTheme.LIGHT) LightColors else DarkColors
 
+            // Configurar Edge to Edge dinámicamente según el tema
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+                navigationBarStyle = if (themeColors.isDark) {
+                    SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
+                } else {
+                    SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+                }
+            )
+
             val view = LocalView.current
             if (!view.isInEditMode) {
                 SideEffect {
                     val window = (view.context as Activity).window
                     val controller = WindowCompat.getInsetsController(window, view)
-                    // El fondo superior siempre es degradado oscuro → iconos blancos siempre
+                    // Iconos de la barra de estado (arriba): siempre blancos porque el degradado es oscuro
                     controller.isAppearanceLightStatusBars = false
-                    // Barra de navegación inferior: clara en tema claro, oscura en tema oscuro
+                    // Iconos de la barra de navegación (abajo): según el tema
                     controller.isAppearanceLightNavigationBars = !themeColors.isDark
                 }
             }
 
-            MaterialTheme {
+            val materialColorScheme = if (currentTheme == AppTheme.LIGHT) {
+                lightColorScheme(
+                    primary = themeColors.accent,
+                    onPrimary = Color.White,
+                    surface = themeColors.surfaceMain,
+                    onSurface = themeColors.textPrimary,
+                    secondary = themeColors.accentDark,
+                    onSecondary = Color.White
+                )
+            } else {
+                darkColorScheme(
+                    primary = themeColors.accent,
+                    onPrimary = Color.White,
+                    surface = themeColors.surfaceMain,
+                    onSurface = themeColors.textPrimary,
+                    secondary = themeColors.accentDark,
+                    onSecondary = Color.White
+                )
+            }
+
+            MaterialTheme(colorScheme = materialColorScheme) {
                 CompositionLocalProvider(
                     LocalStrings provides strings,
                     LocalColors provides themeColors
                 ) {
-                    AppToastHost {
-                        val navController = rememberNavController()
-                        Navigation(navController)
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = themeColors.surfaceMain
+                    ) {
+                        AppToastHost {
+                            val navController = rememberNavController()
+                            Navigation(navController)
+                        }
                     }
                 }
             }

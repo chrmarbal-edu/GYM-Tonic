@@ -6,6 +6,7 @@ const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
 const { DateTime } = require("mssql")
 const crypto = require("crypto")
+const nodemailer = require("nodemailer")
 const fs = require("fs")
 const path = require("path")
 
@@ -16,6 +17,32 @@ function wrapAsync(fn) {
             next(e)
         })
     }
+}
+
+// Configuración Nodemailer
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.GOOGLE_APP_PASSWORD
+    }
+})
+
+// Función Para Enviar Correos Electrónicos
+async function sendEmail(to, subject, htmlBody) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: to,
+        subject: subject,
+        html: htmlBody,
+        attachments: [
+            {
+                filename: 'gymtonic_logo.png',
+                path: path.join(__dirname, '../public/images/gymtonic_logo.png'), 
+                cid: 'logo_gymtonic'
+            }
+        ]
+    });
 }
 
 function isDefaultProfilePicture(picturePath) {
@@ -65,8 +92,6 @@ exports.findAllUsers = wrapAsync(async function (req,res,next) {
         } else{
             const userLogued = req.userLogued
 
-            // Usuarios normales reciben datos publicos (sin password ni info sensible)
-            // para poder buscar amigos. Admin recibe todo.
             if(userLogued.user_role != 1){
                 const sanitized = (datosUser || []).map(u => ({
                     user_id: u.user_id,
@@ -219,75 +244,92 @@ exports.register = wrapAsync(async function (req, res, next) {
     // Si es un registro por OAuth, generamos una password aleatoria (UUID) y saltamos validaciones
     if (oauth) {
         password = crypto.randomUUID()
+    } else {
+        // VALIDACIONES DE CONTRASEÑA (solo para registros no-OAuth)
+        if(!password || password.length < 8){
+            return next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
+        } else if(!password.match(/[A-Z]/)){
+            return next(new AppError("La contraseña debe tener al menos una mayúscula",400))
+        } else if(!password.match(/[a-z]/)){
+            return next(new AppError("La contraseña debe tener al menos una minúscula",400))
+        } else if(!password.match(/[0-9]/)){ // Corregido el regex para números
+            return next(new AppError("La contraseña debe tener al menos un número",400))
+        } else if(!password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
+            return next(new AppError("La contraseña debe tener al menos un carácter especial",400))
+        }
+    }
+    
+    let confirmationCode = null;
+
+    // Solo generamos código y enviamos email si NO es un registro por OAuth
+    if (!oauth) {
+        confirmationCode = Math.floor(100000 + Math.random() * 900000).toString()
+        try {
+            // Ruta corregida para el template HTML
+            const templatePath = path.join(__dirname, '../public/html/confirmation_email.html');
+            let emailHtml = await fs.promises.readFile(templatePath, 'utf8');
+            emailHtml = emailHtml.replace('{{confirmationCode}}', confirmationCode);
+            await sendEmail(email, '¡Confirma tu cuenta en GymTonic!', emailHtml);
+        } catch (emailError) {
+            console.error("Error al enviar el correo de confirmación:", emailError);
+            return next(new AppError("Error al enviar el correo de confirmación. Por favor, inténtalo de nuevo.", 500));
+        }
     }
 
-    // VALIDACIONES DE CONTRASEÑA
-    if(!oauth && (!password || password.length<8)){
-        next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
-    } else if(!oauth && !password.match(/[A-Z]/)){
-        next(new AppError("La contraseña debe tener una mayúscula",400))
-    } else if(!oauth && !password.match(/[a-z]/)){
-        next(new AppError("La contraseña debe tener una minúscula",400))
-    } else if(!oauth && !password.match(/[/\d/]/)){
-        next(new AppError("La contraseña debe tener un número",400))
-    } else if(!oauth && !password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
-        next(new AppError("La contraseña debe tener un carácter especial",400))
-    } else{
-        // Gestión de la imagen de perfil
-        let userPicture = "users/default/user.jpg"
-        
-        if (req.file) {
-            // Obtenemos la extensión original del archivo (ej: .jpg, .png)
-            const extension = path.extname(req.file.originalname)
-            const fileName = `${username}${extension}`
-            const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
+    let userPicture = "images/users/default/user.jpg"
+    
+    if (req.file) {
+        const extension = path.extname(req.file.originalname)
+        const fileName = `${username}${extension}`
+        const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
 
-            // Renombramos el archivo físicamente al nombre del usuario en la carpeta destino
-            fs.renameSync(req.file.path, targetPath)
+        fs.renameSync(req.file.path, targetPath)
 
-            // Guardamos en DB la ruta empezando desde 'users' como solicitaste
-            userPicture = `images/users/${fileName}`
-        } else if (picture) {
-            userPicture = picture
-        }
+        userPicture = `images/users/${fileName}`
+    } else if (picture) {
+        userPicture = picture
+    }
 
-        let newUser = {
-            user_username: username,
-            user_name: name,
-            user_password: password,
-            user_birthdate: birthdate,
-            user_email: email,
-            user_height: height,
-            user_weight: weight,
-            user_objective: objective,
-            user_picture: userPicture,
-            user_oauth: oauth || null
-        }
+    let newUser = {
+        user_username: username,
+        user_name: name,
+        user_password: password,
+        user_birthdate: birthdate,
+        user_email: email,
+        user_height: height,
+        user_weight: weight,
+        user_objective: objective,
+        user_picture: userPicture,
+        user_oauth: oauth || null
+    }
 
-        newUser.user_password = await bcrypt.hashPassword(newUser.user_password)
+    newUser.user_password = await bcrypt.hashPassword(newUser.user_password)
 
-        if(!req.userLogued || (req.userLogued && req.userLogued.user_role == 1)){
-            await userModel.create(newUser,function(err,datosUsuarioCreado){
-                if(err){
-                    return next(new AppError(err, 500))
-                } else{
-                    if(req.userLogued && req.userLogued.user_role == 1){
-                        res.status(201).json({user: datosUsuarioCreado, token: null})
-                    } else if(!req.userLogued){
-                        const jwtToken = jwtMW.createJWT(req, res, next, datosUsuarioCreado)
-
-                        const userLogued = {
-                            data: datosUsuarioCreado,
-                            token: jwtToken
-                        }
-
-                        res.status(201).json(userLogued)
+    if(!req.userLogued || (req.userLogued && req.userLogued.user_role == 1)){
+        await userModel.create(newUser,function(err,datosUsuarioCreado){
+            if(err){
+                return next(new AppError(err, 500))
+            } else{
+                if(req.userLogued && req.userLogued.user_role == 1){
+                    const response = { user: datosUsuarioCreado, token: null }
+                    if (!oauth) response.confirmationCode = confirmationCode
+                    res.status(201).json(response)
+                } else if(!req.userLogued){
+                    const jwtToken = jwtMW.createJWT(req, res, next, datosUsuarioCreado)
+                    
+                    const userLogued = {
+                        data: datosUsuarioCreado,
+                        token: jwtToken
                     }
+
+                    if (!oauth) userLogued.confirmationCode = confirmationCode
+
+                    res.status(201).json(userLogued)
                 }
-            })
-        } else{
-            return next(new AppError("No tienes permisos para realizar esta petición", 403))
-        }
+            }
+        })
+    } else{
+        return next(new AppError("No tienes permisos para realizar esta petición", 403))
     }
 })
 

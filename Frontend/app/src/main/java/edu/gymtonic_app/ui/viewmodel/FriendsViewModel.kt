@@ -218,6 +218,7 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
 
             val filtered = all.asSequence()
                 .filter { it.userId !in excludeIds }
+                .filter { it.userRole != 1 } // Ocultar administradores (rol 1), mostrar el resto (0 o null)
                 .filter { user ->
                     if (q.isEmpty()) true
                     else (user.userUsername?.lowercase()?.contains(q) == true) ||

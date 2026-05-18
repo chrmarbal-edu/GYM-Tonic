@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GymTonic_App"
+rootProject.name = "Gym Tonic"
 include(":app")

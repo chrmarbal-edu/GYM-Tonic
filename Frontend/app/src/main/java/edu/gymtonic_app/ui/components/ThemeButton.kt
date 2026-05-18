@@ -1,5 +1,7 @@
 package edu.gymtonic_app.ui.components
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.NightsStay
 import androidx.compose.material.icons.outlined.WbSunny
@@ -16,11 +18,15 @@ import edu.gymtonic_app.ui.theme.ThemeManager
 @Composable
 fun ThemeButton(tint: Color = Color(0xFF2D2D2D), modifier: Modifier = Modifier) {
     val currentTheme by ThemeManager.theme.collectAsState()
-    IconButton(onClick = { ThemeManager.toggle() }, modifier = modifier) {
+    IconButton(
+        onClick = { ThemeManager.toggle() },
+        modifier = modifier
+    ) {
         Icon(
             imageVector = if (currentTheme == AppTheme.LIGHT) Icons.Outlined.NightsStay else Icons.Outlined.WbSunny,
             contentDescription = "Toggle theme",
-            tint = tint
+            tint = tint,
+            modifier = Modifier.size(24.dp)
         )
     }
 }
