@@ -196,7 +196,6 @@ user.findByUsername = async function (usernameParam, result) {
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("username", sql.VarChar, usernameParam)
-            .query("SELECT * FROM Users WHERE user_username = @username")
             .query("SELECT * FROM Users WHERE user_username = @username AND user_oauth IS NULL")
 
         if (response.recordset.length > 0) {

@@ -38,6 +38,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import edu.gymtonic_app.core.MediaUtils.resolveUserPictureUrl
 import edu.gymtonic_app.ui.theme.LocalColors
 
 @Composable

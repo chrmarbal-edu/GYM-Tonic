@@ -1,5 +1,6 @@
 package edu.gymtonic_app.ui.screens.admin
 
+import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.core.MediaUtils
 
 fun resolveRoutineImageUrl(imageKey: String?): String? {
