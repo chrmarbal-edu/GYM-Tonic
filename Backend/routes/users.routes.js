@@ -54,6 +54,12 @@ router.patch("/missions/:id", jwtMW.authenticate, usersController.updateUserMiss
 // DELETE USER MISSION BY ID
 router.delete("/missions/:id", jwtMW.authenticate, usersController.deleteUserMission)
 
+// COMPLETE MISSION BY ID
+router.patch("/missions/:id/complete", jwtMW.authenticate, usersController.completeMissionById)
+
+// UPDATE MISSION PROGRESS BY ID
+router.patch("/missions/:id/progress", jwtMW.authenticate, usersController.updateMissionProgress)
+
 // FIND BY ID
 router.get("/missions/:id", jwtMW.authenticate, rutasProtegidasMW.requireAdmin, usersController.findUserMissionById)
 

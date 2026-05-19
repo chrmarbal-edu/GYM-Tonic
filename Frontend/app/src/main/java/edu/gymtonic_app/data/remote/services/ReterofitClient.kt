@@ -24,6 +24,7 @@ import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionDto
+import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionsResponseDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -176,7 +177,7 @@ interface ApiService {
     suspend fun getUserMissions(): Response<List<UserMissionDto>>
 
     @GET("users/missions/user/{userId}")
-    suspend fun getUserMissionByUserId(@Path("userId") userId: Int): Response<List<UserMissionDto>>
+    suspend fun getUserMissionByUserId(@Path("userId") userId: Int): Response<UserMissionsResponseDto>
 
     @GET("users/missions/mission/{missionId}")
     suspend fun getUserMissionByMissionId(@Path("missionId") missionId: Int): Response<List<UserMissionDto>>
@@ -191,6 +192,15 @@ interface ApiService {
     suspend fun updateUserMission(
         @Path("id") id: Int,
         @Body request: @JvmSuppressWildcards Map<String, Any?>
+    ): Response<UserMissionDto>
+
+    @PATCH("users/missions/{id}/complete")
+    suspend fun completeMission(@Path("id") id: Int): Response<UserMissionDto>
+
+    @PATCH("users/missions/{id}/progress")
+    suspend fun updateMissionProgress(
+        @Path("id") id: Int,
+        @Body request: @JvmSuppressWildcards Map<String, Any>
     ): Response<UserMissionDto>
 
     @DELETE("users/missions/{id}")

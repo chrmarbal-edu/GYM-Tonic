@@ -4,11 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.repository.UserMissionsRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -18,7 +21,9 @@ data class WeeklyGoalUi(
 	val title: String,
 	val progressLabel: String,
 	val pointsLabel: String,
-	val progress: Float
+	val progress: Float,
+	val isExpired: Boolean = false,
+	val isCompleted: Boolean = false
 )
 
 enum class CalendarDayUiStatus {
@@ -34,20 +39,31 @@ data class CalendarDayUi(
 	val isToday: Boolean = false
 )
 
+data class NotificationUi(
+	val message: String,
+	val missionName: String,
+	val isExpired: Boolean
+)
+
 data class UserMissionsUiState(
 	val goals: List<WeeklyGoalUi> = emptyList(),
+	val expiredGoals: List<WeeklyGoalUi> = emptyList(),
+	val notifications: List<NotificationUi> = emptyList(),
 	val calendarDays: List<CalendarDayUi> = emptyList(),
 	val calendarYear: Int = 0,
 	val calendarMonth: Int = 0,
 	val achievedCount: Int = 0,
 	val totalCount: Int = 0,
 	val isRefreshing: Boolean = false,
+	val isLoadingAction: Boolean = false,
+	val actionError: String? = null,
 	val errorMessage: String? = null
 )
 
 class UserMissionsViewModel(application: Application) : AndroidViewModel(application) {
 	private val userMissionsRemoteDataSource : UserMissionsRemoteDatasource
 	private val userMissionsRepository : UserMissionsRepository
+	private val sessionManager = SessionManager(application.sessionDataStore)
 
 	private val _uiState = MutableStateFlow(UserMissionsUiState())
 	val uiState: StateFlow<UserMissionsUiState> = _uiState.asStateFlow()
@@ -68,11 +84,22 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 
 	private fun loadUserMissions() {
 		viewModelScope.launch {
-			val userMissionsResult = userMissionsRepository.getUserMissions()
+			val userId = sessionManager.sessionFlow.first().userId
+			if (userId == null) {
+				_uiState.update {
+					it.copy(
+						isRefreshing = false,
+						errorMessage = "No hay sesión activa"
+					)
+				}
+				return@launch
+			}
+
+			val userMissionsResult = userMissionsRepository.getUserMissionByUserId(userId)
 			val missionsDetailsResult = userMissionsRepository.getMissions()
 			val calendarResult = userMissionsRepository.getWeeklyCalendarDays()
 
-			// El calendario siempre se muestra, independientemente del resultado de las misiones
+			// El calendario siempre se muestra
 			val mappedCalendar = calendarResult.getOrElse { emptyList() }.map { day ->
 				CalendarDayUi(
 					dayIndex = day.dayIndex,
@@ -93,10 +120,11 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 			}
 
 			userMissionsResult
-				.onSuccess { userMissions ->
+				.onSuccess { userMissionsResponse ->
 					missionsDetailsResult
 						.onSuccess { missionDetails ->
-							val mappedGoals = userMissions.mapNotNull { userMission ->
+							// Procesar misiones activas
+							val mappedGoals = userMissionsResponse.missions.mapNotNull { userMission ->
 								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
 								if (missionDetail != null) {
 									val progressFloat = if (missionDetail.missionObjective > 0) {
@@ -111,18 +139,51 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 										title = missionDetail.missionName,
 										progressLabel = "${userMission.progress} de ${missionDetail.missionObjective}",
 										pointsLabel = "${missionDetail.missionPoints} pts",
-										progress = progressFloat
+										progress = progressFloat,
+										isExpired = userMission.expired,
+										isCompleted = userMission.completed
 									)
 								} else {
 									null
 								}
 							}
-							val achievedCount = mappedGoals.count { it.progress >= 1f }
+
+							// Procesar misiones expiradas
+							val mappedExpiredGoals = userMissionsResponse.expiredMissions.mapNotNull { userMission ->
+								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
+								if (missionDetail != null) {
+									WeeklyGoalUi(
+										userMissionId = userMission.userMissionId,
+										missionId = userMission.missionId,
+										title = missionDetail.missionName,
+										progressLabel = "${userMission.progress} de ${missionDetail.missionObjective}",
+										pointsLabel = "${missionDetail.missionPoints} pts",
+										progress = (userMission.progress.toFloat() / missionDetail.missionObjective.toFloat()).coerceIn(0f, 1f),
+										isExpired = true,
+										isCompleted = userMission.completed
+									)
+								} else {
+									null
+								}
+							}
+
+							// Convertir notificaciones
+							val notifications = userMissionsResponse.notifications.map { notif ->
+								NotificationUi(
+									message = notif.message,
+									missionName = notif.missionName,
+									isExpired = notif.expired
+								)
+							}
+
+							val achievedCount = mappedGoals.count { it.progress >= 1f && !it.isExpired }
 							_uiState.update {
 								it.copy(
-									goals = mappedGoals,
+									goals = mappedGoals.filter { !it.isExpired },
+									expiredGoals = mappedExpiredGoals,
+									notifications = notifications,
 									achievedCount = achievedCount,
-									totalCount = mappedGoals.size,
+									totalCount = mappedGoals.size + mappedExpiredGoals.size,
 									isRefreshing = false,
 									errorMessage = null
 								)
@@ -142,6 +203,52 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 						it.copy(
 							isRefreshing = false,
 							errorMessage = error.message ?: "No se pudieron cargar las misiones del usuario"
+						)
+					}
+				}
+		}
+	}
+
+	fun completeMission(userMissionId: Int) {
+		viewModelScope.launch {
+			_uiState.update { it.copy(isLoadingAction = true, actionError = null) }
+			
+			userMissionsRepository.completeMission(userMissionId)
+				.onSuccess {
+					_uiState.update { state ->
+						state.copy(isLoadingAction = false)
+					}
+					// Refrescar misiones
+					loadUserMissions()
+				}
+				.onFailure { error ->
+					_uiState.update {
+						it.copy(
+							isLoadingAction = false,
+							actionError = error.message ?: "Error al completar la misión"
+						)
+					}
+				}
+		}
+	}
+
+	fun updateMissionProgress(userMissionId: Int, progress: Int) {
+		viewModelScope.launch {
+			_uiState.update { it.copy(isLoadingAction = true, actionError = null) }
+			
+			userMissionsRepository.updateMissionProgress(userMissionId, progress)
+				.onSuccess {
+					_uiState.update { state ->
+						state.copy(isLoadingAction = false)
+					}
+					// Refrescar misiones
+					loadUserMissions()
+				}
+				.onFailure { error ->
+					_uiState.update {
+						it.copy(
+							isLoadingAction = false,
+							actionError = error.message ?: "Error al actualizar el progreso"
 						)
 					}
 				}

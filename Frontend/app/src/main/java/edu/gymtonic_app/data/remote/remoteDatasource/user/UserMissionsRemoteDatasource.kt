@@ -12,12 +12,14 @@ class UserMissionsRemoteDatasource {
 
     //Misiones del usuario
     suspend fun getUserMissions() = api.getUserMissions()
-    suspend fun getUserMissionByUserId( userId: Int) = api.getUserMissionByUserId(userId)
+    suspend fun getUserMissionByUserId(userId: Int) = api.getUserMissionByUserId(userId)
     suspend fun getUserMissionByMissionId(missionId: Int) = api.getUserMissionByMissionId(missionId)
     suspend fun getUserMissionById(id: Int) = api.getUserMissionById(id)
-    suspend fun createUserMission( request: Map<String, Any>) = api.createUserMission(request)
-    suspend fun updateUserMission(id: Int,request: Map<String, Any?>) = api.updateUserMission(id,request)
-    suspend fun deleteUserMission( id: Int) = api.deleteUserMission(id)
+    suspend fun createUserMission(request: Map<String, Any>) = api.createUserMission(request)
+    suspend fun updateUserMission(id: Int, request: Map<String, Any?>) = api.updateUserMission(id, request)
+    suspend fun deleteUserMission(id: Int) = api.deleteUserMission(id)
+    suspend fun completeMission(id: Int) = api.completeMission(id)
+    suspend fun updateMissionProgress(id: Int, request: Map<String, Any>) = api.updateMissionProgress(id, request)
 
     //hardcodeado de los dias
     suspend fun getWeeklyCalendarDays(): List<WeeklyCalendarDayDto> {

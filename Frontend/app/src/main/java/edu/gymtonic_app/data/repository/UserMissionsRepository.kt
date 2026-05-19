@@ -3,6 +3,7 @@ package edu.gymtonic_app.data.repository
 import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionDto
+import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionsResponseDto
 import edu.gymtonic_app.data.remote.remoteModel.week.WeeklyCalendarDayDto
 import retrofit2.Response
 
@@ -40,9 +41,9 @@ class UserMissionsRepository(
         }
     }
 
-    suspend fun getUserMissionByUserId(userId: Int): Result<List<UserMissionDto>> {
+    suspend fun getUserMissionByUserId(userId: Int): Result<UserMissionsResponseDto> {
         return runCatching {
-            unwrapList(
+            unwrapOne(
                 response = userMissionsRemoteDataSource.getUserMissionByUserId(userId),
                 defaultMessage = "No se pudieron obtener las misiones del usuario $userId"
             )
@@ -93,6 +94,24 @@ class UserMissionsRepository(
                 throw Exception("Error al eliminar misión de usuario (HTTP ${response.code()}): ${response.message()} $errorBody")
             }
             Unit
+        }
+    }
+
+    suspend fun completeMission(id: Int): Result<UserMissionDto> {
+        return runCatching {
+            unwrapOne(
+                response = userMissionsRemoteDataSource.completeMission(id),
+                defaultMessage = "No se pudo completar la misión con id=$id"
+            )
+        }
+    }
+
+    suspend fun updateMissionProgress(id: Int, progress: Int): Result<UserMissionDto> {
+        return runCatching {
+            unwrapOne(
+                response = userMissionsRemoteDataSource.updateMissionProgress(id, mapOf("progress" to progress)),
+                defaultMessage = "No se pudo actualizar el progreso de la misión con id=$id"
+            )
         }
     }
 

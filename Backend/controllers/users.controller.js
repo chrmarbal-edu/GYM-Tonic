@@ -453,35 +453,42 @@ exports.findUserMissionByUserId = wrapAsync(async function (req,res,next){
             } 
 
             if(!datosUserMission || datosUserMission.length == 0) {
-                return res.status(200).json({ missions: [], notifications: [] })
+                return res.status(200).json({ missions: [], expiredMissions: [], notifications: [] })
             }
 
             const hoy = new Date();
             const misionesActivas = [];
+            const misionesExpiradas = [];
             const notifications = [];
 
-            // Procesamos cada misión para comprobar caducidad
+            // Procesamos cada misión para verificar caducidad
             for (const mision of datosUserMission) {
                 const fechaExpiracion = new Date(mision.user_x_mission_expiration);
 
                 if (fechaExpiracion < hoy && !mision.user_x_mission_completed) {
-                    // Si ha caducado y no está completada: Notificar y Borrar
+                    // Misión expirada y no completada - NO BORRAR, solo notificar
+                    misionesExpiradas.push({
+                        ...mision,
+                        expired: true
+                    });
+                    
                     notifications.push({
                         message: `La misión "${mision.mission_name}" ha caducado.`,
                         mission_name: mision.mission_name,
                         expired: true
                     });
-
-                    await new Promise((resolve) => {
-                        userMissionsModel.delete(mision.user_x_mission_id, resolve);
-                    });
                 } else {
-                    misionesActivas.push(mision);
+                    // Misión activa o completada
+                    misionesActivas.push({
+                        ...mision,
+                        expired: fechaExpiracion < hoy ? true : false
+                    });
                 }
             }
 
             res.status(200).json({
                 missions: misionesActivas,
+                expiredMissions: misionesExpiradas,
                 notifications: notifications
             });
         })
@@ -594,31 +601,109 @@ exports.completeMissionById = wrapAsync(async function (req,res,next){
     const {id} = req.params
     const userLogued = req.userLogued
     
-    const missionFound = await userMissionsModel.findById(id)
-
-    if(!missionFound || missionFound.length == 0){
-        return next(new AppError("Misión no encontrada", 404))
-    } else{
-        if(userLogued && userLogued.user_id == missionFound.user_x_mission_userid){
-            const today = new Date()
-            const expirationDate = new Date(missionFound.user_x_mission_expiration)
-
-            if(expirationDate < today){
-                return next(new AppError("Misión Expirada", 400))
-            } else{
-                await userMissionsModel.completeMission(id, function(err, datosUserMissionActualizada) {
-                    if(err){
-                        return next(new AppError(err, 500))
-                    } else{
-                        res.status(200).json(datosUserMissionActualizada)
-                    }
-                })
-            }
-        } else{
-            return next(new AppError("No estás autorizado para realizar esta petición", 403))
-        }
+    if(!userLogued){
+        return next(new AppError("No autorizado", 403))
     }
 
+    const missionFound = await new Promise((resolve, reject) => {
+        userMissionsModel.findById(id, (err, data) => {
+            if(err) reject(err)
+            else resolve(data)
+        })
+    }).catch(err => null)
+
+    if(!missionFound){
+        return next(new AppError("Misión no encontrada", 404))
+    }
+
+    // Validar ownership
+    if(userLogued.user_id !== missionFound.user_x_mission_userid){
+        return next(new AppError("No estás autorizado para completar esta misión", 403))
+    }
+
+    // Validar si ya completada
+    if(missionFound.user_x_mission_completed){
+        return next(new AppError("La misión ya ha sido completada", 400))
+    }
+
+    // Validar expiración
+    const today = new Date()
+    const expirationDate = new Date(missionFound.user_x_mission_expiration)
+    
+    if(expirationDate < today){
+        return next(new AppError("La misión ha expirado", 400))
+    }
+
+    // Marcar como completada
+    await userMissionsModel.completeMission(id, function(err, datosUserMissionActualizada) {
+        if(err){
+            return next(new AppError(err, 500))
+        } else{
+            res.status(200).json(datosUserMissionActualizada)
+        }
+    })
+})
+
+/* <=============================== UPDATE MISSION PROGRESS ===============================> */
+exports.updateMissionProgress = wrapAsync(async function (req,res,next){
+    const {id} = req.params
+    const {progress} = req.body
+    const userLogued = req.userLogued
+    
+    if(!userLogued){
+        return next(new AppError("No autorizado", 403))
+    }
+
+    if(progress === undefined || progress === null || typeof progress !== 'number'){
+        return next(new AppError("Progress debe ser un número", 400))
+    }
+
+    if(progress < 0){
+        return next(new AppError("Progress no puede ser negativo", 400))
+    }
+
+    const missionFound = await new Promise((resolve, reject) => {
+        userMissionsModel.findById(id, (err, data) => {
+            if(err) reject(err)
+            else resolve(data)
+        })
+    }).catch(err => null)
+
+    if(!missionFound){
+        return next(new AppError("Misión no encontrada", 404))
+    }
+
+    // Validar ownership
+    if(userLogued.user_id !== missionFound.user_x_mission_userid){
+        return next(new AppError("No estás autorizado para actualizar esta misión", 403))
+    }
+
+    // Validar expiración
+    const today = new Date()
+    const expirationDate = new Date(missionFound.user_x_mission_expiration)
+    
+    if(expirationDate < today){
+        return next(new AppError("La misión ha expirado", 400))
+    }
+
+    // Validar si ya completada
+    if(missionFound.user_x_mission_completed){
+        return next(new AppError("La misión ya ha sido completada", 400))
+    }
+
+    // Actualizar progreso (y auto-completar si llega al target)
+    const updatedData = {
+        ...missionFound,
+        user_x_mission_progress: progress
+    }
+
+    await userMissionsModel.updateById(id, updatedData, function(err, datosActualizado) {
+        if(err){
+            return next(new AppError(err, 500))
+        } else{
+            res.status(200).json(datosActualizado)
+        }
+    })
 })
 
 /* <=============================== DELETE USER MISSION ===============================> */
