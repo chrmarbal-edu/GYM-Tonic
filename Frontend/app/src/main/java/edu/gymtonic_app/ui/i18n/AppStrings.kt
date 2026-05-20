@@ -1,30 +1,49 @@
 package edu.gymtonic_app.ui.i18n
 
-data class AppStrings(
+data class CommonStrings(
     val language: String,
     val back: String,
-
-    // Bottom nav
     val navTraining: String,
     val navChallenges: String,
     val navProfile: String,
+    val homeSlogan: String,
+    val homePresetWorkouts: String,
+    val homeCreateRoutines: String,
+    val homeTechnogym: String,
+    val homeDiscounts: String,
+    val homeChallenges: String,
+    val homeClientArea: String,
+    val homeGroup: String,
+    val homeFriends: String,
+    val weekTitle: String,
+    val weeklyGoals: String,
+    val myCalendar: String,
+    val showMore: String,
+    val achieved: String,
+    val calendarDayNames: List<String>,
+    val calendarMonthNames: List<String>
+)
 
-    // Login screen
+data class LoginStrings(
     val loginButton: String,
     val registerButton: String,
     val continueWith: String,
     val continueWithGoogle: String,
     val continueWithFacebook: String,
-
-    // Login form
     val usernameLabel: String,
     val password: String,
     val forgotPassword: String,
     val enterButton: String,
     val noAccount: String,
     val signUpLink: String,
+    val recoverTitle: String,
+    val recoverEmailSent: String,
+    val enterCode: String,
+    val changePassSuccess: String,
+    val errorExpired: String
+)
 
-    // Register step 1
+data class RegisterStrings(
     val createAccount: String,
     val fullName: String,
     val usernameField: String,
@@ -35,8 +54,6 @@ data class AppStrings(
     val nextButton: String,
     val alreadyHaveAccount: String,
     val loginLink: String,
-
-    // Register step 2
     val birthDate: String,
     val birthDateFormat: String,
     val height: String,
@@ -46,40 +63,24 @@ data class AppStrings(
     val goalLoseWeight: String,
     val goalBuildMuscle: String,
     val goalPerformance: String,
-    val signUpButton: String,
+    val signUpButton: String
+)
 
-    // Main / Home
-    val homeSlogan: String,
-    val homePresetWorkouts: String,
-    val homeCreateRoutines: String,
-    val homeTechnogym: String,
-    val homeDiscounts: String,
-    val homeChallenges: String,
-    val homeClientArea: String,
-    val homeGroup: String,
-    val homeFriends: String,
-
-    // Training screen
+data class TrainingStrings(
     val trainingTitle: String,
     val trainingEmpty: String,
     val trainingCategoriesAvailable: (Int) -> String,
     val trainingRoutines: (Int) -> String,
     val trainingTapToOpen: String,
     val trainingNoWorkouts: String,
-
-    // Routine catalog
     val routineLoading: String,
     val routineWorkoutsTitle: String,
-
-    // Exercise / routine template
     val exercisesAvailable: (Int) -> String,
     val setsAndReps: String,
     val removeFavorite: String,
     val markFavorite: String,
     val exerciseTitle: String,
     val seconds: (Int) -> String,
-
-    // Create routine
     val createRoutineTitle: String,
     val basicInfo: String,
     val routineName: String,
@@ -91,8 +92,15 @@ data class AppStrings(
     val saveRoutine: String,
     val customizeSetsReps: String,
     val deleteExercise: String,
+    val deleteRoutine: String,
+    val deleteRoutineTitle: String,
+    val deleteRoutineMessage: String,
+    val deleteRoutineConfirm: String,
+    val deleteRoutineCancel: String,
+    val routineDeleted: String
+)
 
-    // Profile
+data class ProfileStrings(
     val profileTitle: String,
     val profileGreeting: (String) -> String,
     val profileDrawerTitle: String,
@@ -106,9 +114,10 @@ data class AppStrings(
     val noRecentRoutines: String,
     val myGroups: String,
     val noGroups: String,
-    val openLabel: String,
+    val openLabel: String
+)
 
-    // Groups
+data class GroupsStrings(
     val groupsTitle: String,
     val groupsDetailTitle: String,
     val groupsCreateTitle: String,
@@ -140,9 +149,10 @@ data class AppStrings(
     val groupsRoutineNameRequired: String,
     val groupsSelectExercisesRequired: String,
     val groupsMembersCount: (Int) -> String,
-    val groupsPoints: (Int) -> String,
+    val groupsPoints: (Int) -> String
+)
 
-    // Settings
+data class SettingsStrings(
     val settingsTitle: String,
     val settingsNotifications: String,
     val settingsCompletedRoutines: String,
@@ -163,9 +173,10 @@ data class AppStrings(
     val settingsLanguageEnglish: String,
     val settingsAbout: String,
     val settingsVersion: String,
-    val settingsSelectOption: String,
+    val settingsSelectOption: String
+)
 
-    // Account
+data class AccountStrings(
     val accountTitle: String,
     val changePassword: String,
     val currentPassword: String,
@@ -188,26 +199,10 @@ data class AppStrings(
     val deleteAccountWarning: String,
     val typeDeleteConfirmWord: String,
     val typeDeleteConfirmLabel: String,
-    val deleteAccountButton: String,
+    val deleteAccountButton: String
+)
 
-    // Week challenges
-    val weekTitle: String,
-    val weeklyGoals: String,
-    val myCalendar: String,
-    val showMore: String,
-    val achieved: String,
-    val calendarDayNames: List<String>,
-    val calendarMonthNames: List<String>,
-
-    // Routine deletion
-    val deleteRoutine: String,
-    val deleteRoutineTitle: String,
-    val deleteRoutineMessage: String,
-    val deleteRoutineConfirm: String,
-    val deleteRoutineCancel: String,
-    val routineDeleted: String,
-
-    // Discounts
+data class DiscountStrings(
     val discountsTitle: String,
     val discountsYourPoints: String,
     val discountsPointsSuffix: String,
@@ -224,9 +219,10 @@ data class AppStrings(
     val discountsCodeMessage: String,
     val discountsCopyCode: String,
     val discountsCodeCopied: String,
-    val discountsClose: String,
+    val discountsClose: String
+)
 
-    // Friends
+data class FriendsStrings(
     val friendsTitle: String,
     val friendsTabFriends: String,
     val friendsTabIncoming: String,
@@ -250,9 +246,10 @@ data class AppStrings(
     val friendsRejectedMsg: String,
     val friendsCancelledMsg: String,
     val friendsRemovedMsg: String,
-    val friendsLoadError: String,
+    val friendsLoadError: String
+)
 
-    // Admin dashboard
+data class AdminStrings(
     val adminPanelSubtitle: String,
     val adminRoutines: String,
     val adminExercises: String,
@@ -288,551 +285,286 @@ data class AppStrings(
     val adminImageSelected: String,
     val adminExerciseName: String,
     val adminSearchHint: String,
-    val adminAll: String,
+    val adminAll: String
 )
 
-val SpanishStrings = AppStrings(
-    language = "EN",
-    back = "Volver",
+data class AppStrings(
+    val common: CommonStrings,
+    val login: LoginStrings,
+    val register: RegisterStrings,
+    val training: TrainingStrings,
+    val profile: ProfileStrings,
+    val groups: GroupsStrings,
+    val settings: SettingsStrings,
+    val account: AccountStrings,
+    val discounts: DiscountStrings,
+    val friends: FriendsStrings,
+    val admin: AdminStrings
+) {
+    // Delegation getters to keep the old API
+    val language get() = common.language
+    val back get() = common.back
+    val navTraining get() = common.navTraining
+    val navChallenges get() = common.navChallenges
+    val navProfile get() = common.navProfile
+    val homeSlogan get() = common.homeSlogan
+    val homePresetWorkouts get() = common.homePresetWorkouts
+    val homeCreateRoutines get() = common.homeCreateRoutines
+    val homeTechnogym get() = common.homeTechnogym
+    val homeDiscounts get() = common.homeDiscounts
+    val homeChallenges get() = common.homeChallenges
+    val homeClientArea get() = common.homeClientArea
+    val homeGroup get() = common.homeGroup
+    val homeFriends get() = common.homeFriends
+    val weekTitle get() = common.weekTitle
+    val weeklyGoals get() = common.weeklyGoals
+    val myCalendar get() = common.myCalendar
+    val showMore get() = common.showMore
+    val achieved get() = common.achieved
+    val calendarDayNames get() = common.calendarDayNames
+    val calendarMonthNames get() = common.calendarMonthNames
 
-    navTraining = "Entrenamientos",
-    navChallenges = "Desafios",
-    navProfile = "Perfil",
+    val loginButton get() = login.loginButton
+    val registerButton get() = login.registerButton
+    val continueWith get() = login.continueWith
+    val continueWithGoogle get() = login.continueWithGoogle
+    val continueWithFacebook get() = login.continueWithFacebook
+    val usernameLabel get() = login.usernameLabel
+    val password get() = login.password
+    val forgotPassword get() = login.forgotPassword
+    val enterButton get() = login.enterButton
+    val noAccount get() = login.noAccount
+    val signUpLink get() = login.signUpLink
+    val recoverTitle get() = login.recoverTitle
+    val recoverEmailSent get() = login.recoverEmailSent
+    val enterCode get() = login.enterCode
+    val changePassSuccess get() = login.changePassSuccess
+    val errorExpired get() = login.errorExpired
 
-    loginButton = "ENTRAR",
-    registerButton = "Registrarse",
-    continueWith = "Continúa con",
-    continueWithGoogle = "Continúa con Google",
-    continueWithFacebook = "Continúa con Facebook",
+    val createAccount get() = register.createAccount
+    val fullName get() = register.fullName
+    val usernameField get() = register.usernameField
+    val email get() = register.email
+    val confirmPassword get() = register.confirmPassword
+    val requiredField get() = register.requiredField
+    val passwordsNoMatch get() = register.passwordsNoMatch
+    val nextButton get() = register.nextButton
+    val alreadyHaveAccount get() = register.alreadyHaveAccount
+    val loginLink get() = register.loginLink
+    val birthDate get() = register.birthDate
+    val birthDateFormat get() = register.birthDateFormat
+    val height get() = register.height
+    val weight get() = register.weight
+    val selectGoal get() = register.selectGoal
+    val goalMaintenance get() = register.goalMaintenance
+    val goalLoseWeight get() = register.goalLoseWeight
+    val goalBuildMuscle get() = register.goalBuildMuscle
+    val goalPerformance get() = register.goalPerformance
+    val signUpButton get() = register.signUpButton
 
-    usernameLabel = "Usuario",
-    password = "Contraseña",
-    forgotPassword = "¿Has olvidado la contraseña?",
-    enterButton = "ENTRAR",
-    noAccount = "¿No tienes cuenta?",
-    signUpLink = "¡Regístrate!",
+    val trainingTitle get() = training.trainingTitle
+    val trainingEmpty get() = training.trainingEmpty
+    val trainingCategoriesAvailable get() = training.trainingCategoriesAvailable
+    val trainingRoutines get() = training.trainingRoutines
+    val trainingTapToOpen get() = training.trainingTapToOpen
+    val trainingNoWorkouts get() = training.trainingNoWorkouts
+    val routineLoading get() = training.routineLoading
+    val routineWorkoutsTitle get() = training.routineWorkoutsTitle
+    val exercisesAvailable get() = training.exercisesAvailable
+    val setsAndReps get() = training.setsAndReps
+    val removeFavorite get() = training.removeFavorite
+    val markFavorite get() = training.markFavorite
+    val exerciseTitle get() = training.exerciseTitle
+    val seconds get() = training.seconds
+    val createRoutineTitle get() = training.createRoutineTitle
+    val basicInfo get() = training.basicInfo
+    val routineName get() = training.routineName
+    val routineDescription get() = training.routineDescription
+    val exercisesSection get() = training.exercisesSection
+    val newExercise get() = training.newExercise
+    val addExercise get() = training.addExercise
+    val noExercisesAdded get() = training.noExercisesAdded
+    val saveRoutine get() = training.saveRoutine
+    val customizeSetsReps get() = training.customizeSetsReps
+    val deleteExercise get() = training.deleteExercise
+    val deleteRoutine get() = training.deleteRoutine
+    val deleteRoutineTitle get() = training.deleteRoutineTitle
+    val deleteRoutineMessage get() = training.deleteRoutineMessage
+    val deleteRoutineConfirm get() = training.deleteRoutineConfirm
+    val deleteRoutineCancel get() = training.deleteRoutineCancel
+    val routineDeleted get() = training.routineDeleted
 
-    createAccount = "Crea tu cuenta",
-    fullName = "Nombre completo",
-    usernameField = "Nombre de usuario",
-    email = "Email",
-    confirmPassword = "Confirmar contraseña",
-    requiredField = "Campo obligatorio",
-    passwordsNoMatch = "Las contraseñas no coinciden",
-    nextButton = "SIGUIENTE",
-    alreadyHaveAccount = "¿Ya tienes cuenta?",
-    loginLink = "¡Inicia sesión!",
+    val profileTitle get() = profile.profileTitle
+    val profileGreeting get() = profile.profileGreeting
+    val profileDrawerTitle get() = profile.profileDrawerTitle
+    val profileAccount get() = profile.profileAccount
+    val profileAdjustes get() = profile.profileAdjustes
+    val profileSignOut get() = profile.profileSignOut
+    val profileOpenSettings get() = profile.profileOpenSettings
+    val weeklyStreak get() = profile.weeklyStreak
+    val viewWeek get() = profile.viewWeek
+    val recentRoutines get() = profile.recentRoutines
+    val noRecentRoutines get() = profile.noRecentRoutines
+    val myGroups get() = profile.myGroups
+    val noGroups get() = profile.noGroups
+    val openLabel get() = profile.openLabel
 
-    birthDate = "Fecha de nacimiento",
-    birthDateFormat = "Formato: yyyy-MM-dd",
-    height = "Altura (cm)",
-    weight = "Peso (kg)",
-    selectGoal = "Selecciona un objetivo",
-    goalMaintenance = "Mantenimiento",
-    goalLoseWeight = "Pérdida de peso",
-    goalBuildMuscle = "Ganancia muscular",
-    goalPerformance = "Rendimiento / Resistencia",
-    signUpButton = "ENTRAR",
+    val groupsTitle get() = groups.groupsTitle
+    val groupsDetailTitle get() = groups.groupsDetailTitle
+    val groupsCreateTitle get() = groups.groupsCreateTitle
+    val groupsCreateButton get() = groups.groupsCreateButton
+    val groupsCreateConfirm get() = groups.groupsCreateConfirm
+    val groupsCancel get() = groups.groupsCancel
+    val groupsNameLabel get() = groups.groupsNameLabel
+    val groupsDescriptionLabel get() = groups.groupsDescriptionLabel
+    val groupsMySection get() = groups.groupsMySection
+    val groupsExploreSection get() = groups.groupsExploreSection
+    val groupsNoMoreToJoin get() = groups.groupsNoMoreToJoin
+    val groupsJoin get() = groups.groupsJoin
+    val groupsOpen get() = groups.groupsOpen
+    val groupsLeave get() = groups.groupsLeave
+    val groupsLeaveTitle get() = groups.groupsLeaveTitle
+    val groupsLeaveMessage get() = groups.groupsLeaveMessage
+    val groupsLeaveConfirm get() = groups.groupsLeaveConfirm
+    val groupsAddRoutine get() = groups.groupsAddRoutine
+    val groupsAddRoutineTitle get() = groups.groupsAddRoutineTitle
+    val groupsAddRoutineHint get() = groups.groupsAddRoutineHint
+    val groupsRoutinesSection get() = groups.groupsRoutinesSection
+    val groupsNoRoutines get() = groups.groupsNoRoutines
+    val groupsManage get() = groups.groupsManage
+    val groupsSelectExercises get() = groups.groupsSelectExercises
+    val groupsNoFavoriteExercises get() = groups.groupsNoFavoriteExercises
+    val groupsShareRoutine get() = groups.groupsShareRoutine
+    val groupsAdded get() = groups.groupsAdded
+    val groupsAdd get() = groups.groupsAdd
+    val groupsRoutineNameRequired get() = groups.groupsRoutineNameRequired
+    val groupsSelectExercisesRequired get() = groups.groupsSelectExercisesRequired
+    val groupsMembersCount get() = groups.groupsMembersCount
+    val groupsPoints get() = groups.groupsPoints
 
-    homeSlogan = "DESAFÍATE · SUPÉRATE",
-    homePresetWorkouts = "Entrenamientos Predefinidos",
-    homeCreateRoutines = "Crear Rutinas",
-    homeTechnogym = "Technogym App",
-    homeDiscounts = "Descuentos",
-    homeChallenges = "Desafios",
-    homeClientArea = "Mi espacio cliente",
-    homeGroup = "Grupo",
-    homeFriends = "Amigos",
+    val settingsTitle get() = settings.settingsTitle
+    val settingsNotifications get() = settings.settingsNotifications
+    val settingsCompletedRoutines get() = settings.settingsCompletedRoutines
+    val settingsWorkoutReminders get() = settings.settingsWorkoutReminders
+    val settingsNewChallenges get() = settings.settingsNewChallenges
+    val settingsAppearance get() = settings.settingsAppearance
+    val settingsTheme get() = settings.settingsTheme
+    val settingsThemeSystem get() = settings.settingsThemeSystem
+    val settingsThemeLight get() = settings.settingsThemeLight
+    val settingsThemeDark get() = settings.settingsThemeDark
+    val settingsUnits get() = settings.settingsUnits
+    val settingsWeight get() = settings.settingsWeight
+    val settingsDistance get() = settings.settingsDistance
+    val settingsMiles get() = settings.settingsMiles
+    val settingsLanguage get() = settings.settingsLanguage
+    val settingsAppLanguage get() = settings.settingsAppLanguage
+    val settingsLanguageSpanish get() = settings.settingsLanguageSpanish
+    val settingsLanguageEnglish get() = settings.settingsLanguageEnglish
+    val settingsAbout get() = settings.settingsAbout
+    val settingsVersion get() = settings.settingsVersion
+    val settingsSelectOption get() = settings.settingsSelectOption
 
-    trainingTitle = "Entrenamientos",
-    trainingEmpty = "Explora entrenamientos creados por la comunidad y el equipo",
-    trainingCategoriesAvailable = { n -> "$n categorias disponibles para hoy" },
-    trainingRoutines = { n -> "$n rutinas" },
-    trainingTapToOpen = "Toca para abrir",
-    trainingNoWorkouts = "Aun no hay entrenamientos para mostrar.\nDesliza hacia abajo para recargar.",
+    val accountTitle get() = account.accountTitle
+    val changePassword get() = account.changePassword
+    val currentPassword get() = account.currentPassword
+    val newPassword get() = account.newPassword
+    val confirmNewPassword get() = account.confirmNewPassword
+    val saveChanges get() = account.saveChanges
+    val changeEmail get() = account.changeEmail
+    val newEmail get() = account.newEmail
+    val saveEmail get() = account.saveEmail
+    val twoFactorAuth get() = account.twoFactorAuth
+    val twoFaEnabled get() = account.twoFaEnabled
+    val twoFaDisabled get() = account.twoFaDisabled
+    val twoFaDescription get() = account.twoFaDescription
+    val connectedAccounts get() = account.connectedAccounts
+    val accountConnected get() = account.accountConnected
+    val accountDisconnected get() = account.accountDisconnected
+    val connectButton get() = account.connectButton
+    val disconnectButton get() = account.disconnectButton
+    val deleteAccount get() = account.deleteAccount
+    val deleteAccountWarning get() = account.deleteAccountWarning
+    val typeDeleteConfirmWord get() = account.typeDeleteConfirmWord
+    val typeDeleteConfirmLabel get() = account.typeDeleteConfirmLabel
+    val deleteAccountButton get() = account.deleteAccountButton
 
-    routineLoading = "Cargando rutina...",
-    routineWorkoutsTitle = "Entrenamientos",
+    val discountsTitle get() = discounts.discountsTitle
+    val discountsYourPoints get() = discounts.discountsYourPoints
+    val discountsPointsSuffix get() = discounts.discountsPointsSuffix
+    val discountsLoading get() = discounts.discountsLoading
+    val discountsErrorGeneric get() = discounts.discountsErrorGeneric
+    val discountsRetry get() = discounts.discountsRetry
+    val discountsAvailableTitle get() = discounts.discountsAvailableTitle
+    val discountsTierLabel get() = discounts.discountsTierLabel
+    val discountsRequiredPoints get() = discounts.discountsRequiredPoints
+    val discountsPointsToUnlock get() = discounts.discountsPointsToUnlock
+    val discountsUnlocked get() = discounts.discountsUnlocked
+    val discountsClaim get() = discounts.discountsClaim
+    val discountsCodeTitle get() = discounts.discountsCodeTitle
+    val discountsCodeMessage get() = discounts.discountsCodeMessage
+    val discountsCopyCode get() = discounts.discountsCopyCode
+    val discountsCodeCopied get() = discounts.discountsCodeCopied
+    val discountsClose get() = discounts.discountsClose
 
-    exercisesAvailable = { n -> "$n Ejercicios disponibles" },
-    setsAndReps = "Series y repeticiones",
-    removeFavorite = "Quitar favorito",
-    markFavorite = "Marcar favorito",
-    exerciseTitle = "Ejercicio",
-    seconds = { n -> "$n segundos" },
+    val friendsTitle get() = friends.friendsTitle
+    val friendsTabFriends get() = friends.friendsTabFriends
+    val friendsTabIncoming get() = friends.friendsTabIncoming
+    val friendsTabOutgoing get() = friends.friendsTabOutgoing
+    val friendsEmptyFriends get() = friends.friendsEmptyFriends
+    val friendsEmptyIncoming get() = friends.friendsEmptyIncoming
+    val friendsEmptyOutgoing get() = friends.friendsEmptyOutgoing
+    val friendsAcceptAction get() = friends.friendsAcceptAction
+    val friendsRejectAction get() = friends.friendsRejectAction
+    val friendsCancelAction get() = friends.friendsCancelAction
+    val friendsRemoveAction get() = friends.friendsRemoveAction
+    val friendsAddTitle get() = friends.friendsAddTitle
+    val friendsAddFab get() = friends.friendsAddFab
+    val friendsSearchHint get() = friends.friendsSearchHint
+    val friendsSendRequest get() = friends.friendsSendRequest
+    val friendsSearchEmpty get() = friends.friendsSearchEmpty
+    val friendsRequestSent get() = friends.friendsRequestSent
+    val friendsRequestAlready get() = friends.friendsRequestAlready
+    val friendsAlreadyFriend get() = friends.friendsAlreadyFriend
+    val friendsAcceptedMsg get() = friends.friendsAcceptedMsg
+    val friendsRejectedMsg get() = friends.friendsRejectedMsg
+    val friendsCancelledMsg get() = friends.friendsCancelledMsg
+    val friendsRemovedMsg get() = friends.friendsRemovedMsg
+    val friendsLoadError get() = friends.friendsLoadError
 
-    createRoutineTitle = "Crear Rutina",
-    basicInfo = "Información básica",
-    routineName = "Nombre de la rutina",
-    routineDescription = "Descripción (opcional)",
-    exercisesSection = "Ejercicios",
-    newExercise = { n -> "Nuevo Ejercicio $n" },
-    addExercise = "Añadir ejercicio",
-    noExercisesAdded = "No has añadido ejercicios todavía",
-    saveRoutine = "GUARDAR RUTINA",
-    customizeSetsReps = "Personaliza tus series y reps",
-    deleteExercise = "Eliminar",
-
-    profileTitle = "Perfil",
-    profileGreeting = { name -> "Hola, $name" },
-    profileDrawerTitle = "Configuracion",
-    profileAccount = "Cuenta",
-    profileAdjustes = "Ajustes",
-    profileSignOut = "Cerrar sesion",
-    profileOpenSettings = "Abrir configuracion",
-    weeklyStreak = "Racha semanal",
-    viewWeek = "Ver semana",
-    recentRoutines = "Ultimas rutinas",
-    noRecentRoutines = "Sin rutinas recientes",
-    myGroups = "Mis grupos",
-    noGroups = "Aun no perteneces a grupos",
-    openLabel = "Abrir",
-
-    groupsTitle = "Grupos",
-    groupsDetailTitle = "Detalle del grupo",
-    groupsCreateTitle = "Crear grupo",
-    groupsCreateButton = "Crear nuevo grupo",
-    groupsCreateConfirm = "Crear",
-    groupsCancel = "Cancelar",
-    groupsNameLabel = "Nombre del grupo",
-    groupsDescriptionLabel = "Descripcion",
-    groupsMySection = "Mis grupos",
-    groupsExploreSection = "Explorar grupos",
-    groupsNoMoreToJoin = "No hay mas grupos disponibles",
-    groupsJoin = "Unirse",
-    groupsOpen = "Abrir",
-    groupsLeave = "Salir",
-    groupsLeaveTitle = "Salir del grupo",
-    groupsLeaveMessage = "Dejaras de ver las rutinas compartidas de este grupo.",
-    groupsLeaveConfirm = "Salir",
-    groupsAddRoutine = "Anadir rutina",
-    groupsAddRoutineTitle = "Rutina para el grupo",
-    groupsAddRoutineHint = "La rutina se compartira con todos los miembros del grupo.",
-    groupsRoutinesSection = "Rutinas del grupo",
-    groupsNoRoutines = "Este grupo aun no tiene rutinas compartidas",
-    groupsManage = "Gestionar",
-    groupsSelectExercises = "Selecciona ejercicios",
-    groupsNoFavoriteExercises = "Marca ejercicios como favoritos para usarlos aqui",
-    groupsShareRoutine = "COMPARTIR RUTINA",
-    groupsAdded = "Añadido",
-    groupsAdd = "Añadir",
-    groupsRoutineNameRequired = "El nombre de la rutina es obligatorio",
-    groupsSelectExercisesRequired = "Selecciona al menos un ejercicio",
-    groupsMembersCount = { n -> "$n miembros" },
-    groupsPoints = { p -> "$p puntos" },
-
-    settingsTitle = "Ajustes",
-    settingsNotifications = "Notificaciones",
-    settingsCompletedRoutines = "Rutinas completadas",
-    settingsWorkoutReminders = "Recordatorios de entrenamiento",
-    settingsNewChallenges = "Nuevos retos disponibles",
-    settingsAppearance = "Apariencia",
-    settingsTheme = "Tema",
-    settingsThemeSystem = "Sistema",
-    settingsThemeLight = "Claro",
-    settingsThemeDark = "Oscuro",
-    settingsUnits = "Unidades de Medida",
-    settingsWeight = "Peso",
-    settingsDistance = "Distancia",
-    settingsMiles = "millas",
-    settingsLanguage = "Idioma",
-    settingsAppLanguage = "Idioma de la app",
-    settingsLanguageSpanish = "Español",
-    settingsLanguageEnglish = "Inglés",
-    settingsAbout = "Acerca de",
-    settingsVersion = "Versión: 1.0.0",
-    settingsSelectOption = "Seleccionar opción",
-
-    accountTitle = "Mi Cuenta",
-    changePassword = "Cambiar Contraseña",
-    currentPassword = "Contraseña actual",
-    newPassword = "Nueva contraseña",
-    confirmNewPassword = "Confirmar nueva contraseña",
-    saveChanges = "GUARDAR CAMBIOS",
-    changeEmail = "Cambiar Email",
-    newEmail = "Nuevo email",
-    saveEmail = "GUARDAR EMAIL",
-    twoFactorAuth = "Autenticación de Dos Factores",
-    twoFaEnabled = "Activada",
-    twoFaDisabled = "Desactivada",
-    twoFaDescription = "Protege tu cuenta con una capa extra de seguridad.",
-    connectedAccounts = "Cuentas Conectadas",
-    accountConnected = "Conectada",
-    accountDisconnected = "Desconectada",
-    connectButton = "Conectar",
-    disconnectButton = "Desconectar",
-    deleteAccount = "Eliminar Cuenta",
-    deleteAccountWarning = "Esta acción es irreversible y eliminará todos tus datos. Escribe 'ELIMINAR' para confirmar.",
-    typeDeleteConfirmWord = "ELIMINAR",
-    typeDeleteConfirmLabel = "Escribe ELIMINAR",
-    deleteAccountButton = "ELIMINAR CUENTA",
-
-    weekTitle = "Semana",
-    weeklyGoals = "Objetivos semanales",
-    myCalendar = "Mi Calendario",
-    showMore = "Mostrar mas",
-    achieved = "Logrados",
-    calendarDayNames = listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"),
-    calendarMonthNames = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"),
-
-    deleteRoutine = "Eliminar rutina",
-    deleteRoutineTitle = "Eliminar rutina",
-    deleteRoutineMessage = "Se eliminará la rutina y su relación con los ejercicios. Los ejercicios no se borrarán.",
-    deleteRoutineConfirm = "Eliminar",
-    deleteRoutineCancel = "Cancelar",
-    routineDeleted = "Rutina eliminada",
-
-    discountsTitle = "Descuentos",
-    discountsYourPoints = "Tus puntos",
-    discountsPointsSuffix = "pts",
-    discountsLoading = "Cargando puntos...",
-    discountsErrorGeneric = "No se pudieron cargar tus puntos",
-    discountsRetry = "Reintentar",
-    discountsAvailableTitle = "Recompensas disponibles",
-    discountsTierLabel = { percent -> "$percent% de descuento" },
-    discountsRequiredPoints = { points -> "$points pts" },
-    discountsPointsToUnlock = { remaining -> "Te faltan $remaining pts" },
-    discountsUnlocked = "Desbloqueado",
-    discountsClaim = "Obtener descuento",
-    discountsCodeTitle = "Tu codigo de descuento",
-    discountsCodeMessage = "Presenta este codigo en recepcion para canjear tu descuento.",
-    discountsCopyCode = "Copiar codigo",
-    discountsCodeCopied = "Codigo copiado",
-    discountsClose = "Cerrar",
-
-    friendsTitle = "Amigos",
-    friendsTabFriends = "Amigos",
-    friendsTabIncoming = "Recibidas",
-    friendsTabOutgoing = "Enviadas",
-    friendsEmptyFriends = "Todavia no tienes amigos. Anade alguno con el boton +.",
-    friendsEmptyIncoming = "No tienes solicitudes pendientes.",
-    friendsEmptyOutgoing = "No has enviado solicitudes.",
-    friendsAcceptAction = "Aceptar",
-    friendsRejectAction = "Rechazar",
-    friendsCancelAction = "Cancelar",
-    friendsRemoveAction = "Eliminar",
-    friendsAddTitle = "Anadir amigo",
-    friendsAddFab = "Anadir",
-    friendsSearchHint = "Busca por nombre o usuario",
-    friendsSendRequest = "Enviar",
-    friendsSearchEmpty = "Sin resultados",
-    friendsRequestSent = "Solicitud enviada",
-    friendsRequestAlready = "Ya tienes una solicitud con este usuario",
-    friendsAlreadyFriend = "Ya sois amigos",
-    friendsAcceptedMsg = "Solicitud aceptada",
-    friendsRejectedMsg = "Solicitud rechazada",
-    friendsCancelledMsg = "Solicitud cancelada",
-    friendsRemovedMsg = "Amistad eliminada",
-    friendsLoadError = "No se pudieron cargar tus amigos",
-
-    adminPanelSubtitle = "PANEL DE ADMINISTRACIÓN",
-    adminRoutines = "Rutinas",
-    adminExercises = "Ejercicios",
-    adminUsers = "Usuarios",
-    adminGroups = "Grupos",
-    adminMissions = "Misiones",
-    adminEmptyList = "No hay elementos",
-    adminRetry = "Reintentar",
-    adminEdit = "Editar",
-    adminCreate = "Crear",
-    adminCancel = "Cancelar",
-    adminDeleteConfirm = "Eliminar",
-    adminDeleteTitle = "Confirmar eliminación",
-    adminRoutineDetail = "Detalle de rutina",
-    adminUserDetail = "Detalle de usuario",
-    adminRole = "Rol",
-    adminPoints = "Puntos",
-    adminExerciseType = "Tipo de ejercicio",
-    adminMissionName = "Nombre de misión",
-    adminMissionType = "Tipo de misión",
-    adminMissionObjective = "Objetivo",
-    adminDeleteUserMessage = "Se eliminará este usuario y sus datos asociados.",
-    adminDeleteExerciseMessage = "Se eliminará este ejercicio del catálogo.",
-    adminDeleteGroupMessage = "Se disolverá este grupo.",
-    adminDeleteMissionMessage = "Se eliminará esta misión global.",
-    adminExerciseDetail = "Detalle de ejercicio",
-    adminMembersSection = "Miembros del grupo",
-    adminUploadVideo = "Subir vídeo",
-    adminUploadImage = "Subir imagen",
-    adminOAuthProvider = "Proveedor OAuth",
-    adminSelectType = "Seleccionar tipo",
-    adminVideoSelected = "Vídeo seleccionado",
-    adminImageSelected = "Imagen seleccionada",
-    adminExerciseName = "Nombre del ejercicio",
-    adminSearchHint = "Buscar por nombre...",
-    adminAll = "Todo",
-)
-
-val EnglishStrings = AppStrings(
-    language = "ES",
-    back = "Back",
-
-    navTraining = "Workouts",
-    navChallenges = "Challenges",
-    navProfile = "Profile",
-
-    loginButton = "LOG IN",
-    registerButton = "Register",
-    continueWith = "Continue with",
-    continueWithGoogle = "Continue with Google",
-    continueWithFacebook = "Continue with Facebook",
-
-    usernameLabel = "Username",
-    password = "Password",
-    forgotPassword = "Forgot your password?",
-    enterButton = "LOG IN",
-    noAccount = "Don't have an account?",
-    signUpLink = "Sign up!",
-
-    createAccount = "Create your account",
-    fullName = "Full name",
-    usernameField = "Username",
-    email = "Email",
-    confirmPassword = "Confirm password",
-    requiredField = "Required field",
-    passwordsNoMatch = "Passwords don't match",
-    nextButton = "NEXT",
-    alreadyHaveAccount = "Already have an account?",
-    loginLink = "Log in!",
-
-    birthDate = "Date of birth",
-    birthDateFormat = "Format: yyyy-MM-dd",
-    height = "Height (cm)",
-    weight = "Weight (kg)",
-    selectGoal = "Select a goal",
-    goalMaintenance = "Maintenance",
-    goalLoseWeight = "Weight loss",
-    goalBuildMuscle = "Muscle gain",
-    goalPerformance = "Performance / Endurance",
-    signUpButton = "SIGN UP",
-
-    homeSlogan = "CHALLENGE · SURPASS",
-    homePresetWorkouts = "Preset Workouts",
-    homeCreateRoutines = "Create Routines",
-    homeTechnogym = "Technogym App",
-    homeDiscounts = "Discounts",
-    homeChallenges = "Challenges",
-    homeClientArea = "My profile",
-    homeGroup = "Team",
-    homeFriends = "Friends",
-
-    trainingTitle = "Workouts",
-    trainingEmpty = "Explore workouts created by the community and the team",
-    trainingCategoriesAvailable = { n -> "$n categories available today" },
-    trainingRoutines = { n -> "$n routines" },
-    trainingTapToOpen = "Tap to open",
-    trainingNoWorkouts = "No workouts to show yet.\nPull down to refresh.",
-
-    routineLoading = "Loading routine...",
-    routineWorkoutsTitle = "Workouts",
-
-    exercisesAvailable = { n -> "$n Exercises available" },
-    setsAndReps = "Sets and repetitions",
-    removeFavorite = "Remove favorite",
-    markFavorite = "Mark as favorite",
-    exerciseTitle = "Exercise",
-    seconds = { n -> "$n seconds" },
-
-    createRoutineTitle = "Create Routine",
-    basicInfo = "Basic information",
-    routineName = "Routine name",
-    routineDescription = "Description (optional)",
-    exercisesSection = "Exercises",
-    newExercise = { n -> "New Exercise $n" },
-    addExercise = "Add exercise",
-    noExercisesAdded = "You haven't added exercises yet",
-    saveRoutine = "SAVE ROUTINE",
-    customizeSetsReps = "Customize your sets and reps",
-    deleteExercise = "Delete",
-
-    profileTitle = "Profile",
-    profileGreeting = { name -> "Hi, $name" },
-    profileDrawerTitle = "Settings",
-    profileAccount = "Account",
-    profileAdjustes = "Settings",
-    profileSignOut = "Sign out",
-    profileOpenSettings = "Open settings",
-    weeklyStreak = "Weekly streak",
-    viewWeek = "View week",
-    recentRoutines = "Recent routines",
-    noRecentRoutines = "No recent routines",
-    myGroups = "My groups",
-    noGroups = "You don't belong to any groups yet",
-    openLabel = "Open",
-
-    groupsTitle = "Groups",
-    groupsDetailTitle = "Group details",
-    groupsCreateTitle = "Create group",
-    groupsCreateButton = "Create new group",
-    groupsCreateConfirm = "Create",
-    groupsCancel = "Cancel",
-    groupsNameLabel = "Group name",
-    groupsDescriptionLabel = "Description",
-    groupsMySection = "My groups",
-    groupsExploreSection = "Explore groups",
-    groupsNoMoreToJoin = "No more groups available",
-    groupsJoin = "Join",
-    groupsOpen = "Open",
-    groupsLeave = "Leave",
-    groupsLeaveTitle = "Leave group",
-    groupsLeaveMessage = "You will no longer see routines shared in this group.",
-    groupsLeaveConfirm = "Leave",
-    groupsAddRoutine = "Add routine",
-    groupsAddRoutineTitle = "Group routine",
-    groupsAddRoutineHint = "This routine will be shared with all group members.",
-    groupsRoutinesSection = "Group routines",
-    groupsNoRoutines = "This group has no shared routines yet",
-    groupsManage = "Manage",
-    groupsSelectExercises = "Select exercises",
-    groupsNoFavoriteExercises = "Mark exercises as favorites to use them here",
-    groupsShareRoutine = "SHARE ROUTINE",
-    groupsAdded = "Added",
-    groupsAdd = "Add",
-    groupsRoutineNameRequired = "Routine name is required",
-    groupsSelectExercisesRequired = "Select at least one exercise",
-    groupsMembersCount = { n -> "$n members" },
-    groupsPoints = { p -> "$p points" },
-
-    settingsTitle = "Settings",
-    settingsNotifications = "Notifications",
-    settingsCompletedRoutines = "Completed routines",
-    settingsWorkoutReminders = "Workout reminders",
-    settingsNewChallenges = "New challenges available",
-    settingsAppearance = "Appearance",
-    settingsTheme = "Theme",
-    settingsThemeSystem = "System",
-    settingsThemeLight = "Light",
-    settingsThemeDark = "Dark",
-    settingsUnits = "Units of Measurement",
-    settingsWeight = "Weight",
-    settingsDistance = "Distance",
-    settingsMiles = "miles",
-    settingsLanguage = "Language",
-    settingsAppLanguage = "App language",
-    settingsLanguageSpanish = "Spanish",
-    settingsLanguageEnglish = "English",
-    settingsAbout = "About",
-    settingsVersion = "Version: 1.0.0",
-    settingsSelectOption = "Select option",
-
-    accountTitle = "My Account",
-    changePassword = "Change Password",
-    currentPassword = "Current password",
-    newPassword = "New password",
-    confirmNewPassword = "Confirm new password",
-    saveChanges = "SAVE CHANGES",
-    changeEmail = "Change Email",
-    newEmail = "New email",
-    saveEmail = "SAVE EMAIL",
-    twoFactorAuth = "Two-Factor Authentication",
-    twoFaEnabled = "Enabled",
-    twoFaDisabled = "Disabled",
-    twoFaDescription = "Protect your account with an extra layer of security.",
-    connectedAccounts = "Connected Accounts",
-    accountConnected = "Connected",
-    accountDisconnected = "Disconnected",
-    connectButton = "Connect",
-    disconnectButton = "Disconnect",
-    deleteAccount = "Delete Account",
-    deleteAccountWarning = "This action is irreversible and will delete all your data. Type 'DELETE' to confirm.",
-    typeDeleteConfirmWord = "DELETE",
-    typeDeleteConfirmLabel = "Type DELETE",
-    deleteAccountButton = "DELETE ACCOUNT",
-
-    weekTitle = "Week",
-    weeklyGoals = "Weekly goals",
-    myCalendar = "My Calendar",
-    showMore = "Show more",
-    achieved = "Achieved",
-    calendarDayNames = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
-    calendarMonthNames = listOf("January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"),
-
-    deleteRoutine = "Delete routine",
-    deleteRoutineTitle = "Delete routine",
-    deleteRoutineMessage = "The routine and its links to exercises will be removed. The exercises will not be deleted.",
-    deleteRoutineConfirm = "Delete",
-    deleteRoutineCancel = "Cancel",
-    routineDeleted = "Routine deleted",
-
-    discountsTitle = "Discounts",
-    discountsYourPoints = "Your points",
-    discountsPointsSuffix = "pts",
-    discountsLoading = "Loading points...",
-    discountsErrorGeneric = "Could not load your points",
-    discountsRetry = "Retry",
-    discountsAvailableTitle = "Available rewards",
-    discountsTierLabel = { percent -> "$percent% off" },
-    discountsRequiredPoints = { points -> "$points pts" },
-    discountsPointsToUnlock = { remaining -> "$remaining pts to unlock" },
-    discountsUnlocked = "Unlocked",
-    discountsClaim = "Claim discount",
-    discountsCodeTitle = "Your discount code",
-    discountsCodeMessage = "Show this code at reception to redeem your discount.",
-    discountsCopyCode = "Copy code",
-    discountsCodeCopied = "Code copied",
-    discountsClose = "Close",
-
-    friendsTitle = "Friends",
-    friendsTabFriends = "Friends",
-    friendsTabIncoming = "Incoming",
-    friendsTabOutgoing = "Sent",
-    friendsEmptyFriends = "No friends yet. Add someone with the + button.",
-    friendsEmptyIncoming = "No pending requests.",
-    friendsEmptyOutgoing = "You haven't sent any requests.",
-    friendsAcceptAction = "Accept",
-    friendsRejectAction = "Reject",
-    friendsCancelAction = "Cancel",
-    friendsRemoveAction = "Remove",
-    friendsAddTitle = "Add friend",
-    friendsAddFab = "Add",
-    friendsSearchHint = "Search by name or username",
-    friendsSendRequest = "Send",
-    friendsSearchEmpty = "No results",
-    friendsRequestSent = "Request sent",
-    friendsRequestAlready = "You already have a request with this user",
-    friendsAlreadyFriend = "You are already friends",
-    friendsAcceptedMsg = "Request accepted",
-    friendsRejectedMsg = "Request rejected",
-    friendsCancelledMsg = "Request cancelled",
-    friendsRemovedMsg = "Friend removed",
-    friendsLoadError = "Could not load your friends",
-
-    adminPanelSubtitle = "ADMIN DASHBOARD",
-    adminRoutines = "Routines",
-    adminExercises = "Exercises",
-    adminUsers = "Users",
-    adminGroups = "Groups",
-    adminMissions = "Missions",
-    adminEmptyList = "No items",
-    adminRetry = "Retry",
-    adminEdit = "Edit",
-    adminCreate = "Create",
-    adminCancel = "Cancel",
-    adminDeleteConfirm = "Delete",
-    adminDeleteTitle = "Confirm deletion",
-    adminRoutineDetail = "Routine detail",
-    adminUserDetail = "User detail",
-    adminRole = "Role",
-    adminPoints = "Points",
-    adminExerciseType = "Exercise type",
-    adminMissionName = "Mission name",
-    adminMissionType = "Mission type",
-    adminMissionObjective = "Objective",
-    adminDeleteUserMessage = "This user and associated data will be removed.",
-    adminDeleteExerciseMessage = "This exercise will be removed from the catalog.",
-    adminDeleteGroupMessage = "This group will be dissolved.",
-    adminDeleteMissionMessage = "This global mission will be removed.",
-    adminExerciseDetail = "Exercise detail",
-    adminMembersSection = "Group members",
-    adminUploadVideo = "Upload video",
-    adminUploadImage = "Upload image",
-    adminOAuthProvider = "OAuth provider",
-    adminSelectType = "Select type",
-    adminVideoSelected = "Video selected",
-    adminImageSelected = "Image selected",
-    adminExerciseName = "Exercise name",
-    adminSearchHint = "Search by name...",
-    adminAll = "All",
-)
+    val adminPanelSubtitle get() = admin.adminPanelSubtitle
+    val adminRoutines get() = admin.adminRoutines
+    val adminExercises get() = admin.adminExercises
+    val adminUsers get() = admin.adminUsers
+    val adminGroups get() = admin.adminGroups
+    val adminMissions get() = admin.adminMissions
+    val adminEmptyList get() = admin.adminEmptyList
+    val adminRetry get() = admin.adminRetry
+    val adminEdit get() = admin.adminEdit
+    val adminCreate get() = admin.adminCreate
+    val adminCancel get() = admin.adminCancel
+    val adminDeleteConfirm get() = admin.adminDeleteConfirm
+    val adminDeleteTitle get() = admin.adminDeleteTitle
+    val adminRoutineDetail get() = admin.adminRoutineDetail
+    val adminUserDetail get() = admin.adminUserDetail
+    val adminRole get() = admin.adminRole
+    val adminPoints get() = admin.adminPoints
+    val adminExerciseType get() = admin.adminExerciseType
+    val adminMissionName get() = admin.adminMissionName
+    val adminMissionType get() = admin.adminMissionType
+    val adminMissionObjective get() = admin.adminMissionObjective
+    val adminDeleteUserMessage get() = admin.adminDeleteUserMessage
+    val adminDeleteExerciseMessage get() = admin.adminDeleteExerciseMessage
+    val adminDeleteGroupMessage get() = admin.adminDeleteGroupMessage
+    val adminDeleteMissionMessage get() = admin.adminDeleteMissionMessage
+    val adminExerciseDetail get() = admin.adminExerciseDetail
+    val adminMembersSection get() = admin.adminMembersSection
+    val adminUploadVideo get() = admin.adminUploadVideo
+    val adminUploadImage get() = admin.adminUploadImage
+    val adminOAuthProvider get() = admin.adminOAuthProvider
+    val adminSelectType get() = admin.adminSelectType
+    val adminVideoSelected get() = admin.adminVideoSelected
+    val adminImageSelected get() = admin.adminImageSelected
+    val adminExerciseName get() = admin.adminExerciseName
+    val adminSearchHint get() = admin.adminSearchHint
+    val adminAll get() = admin.adminAll
+}

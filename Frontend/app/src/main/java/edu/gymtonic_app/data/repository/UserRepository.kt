@@ -14,8 +14,8 @@ class UserRepository(
         else throw Exception("Error al obtener usuario: ${response.code()}")
     }
 
-    suspend fun updateUser(id: Int, data: Map<String, Any?>): Result<LoginResponse> = runCatching {
-        val response = usersRemoteDataSource.updateUser(id, data)
+    suspend fun updateUser(id: Int, data: Map<String, Any?>, token: String? = null): Result<LoginResponse> = runCatching {
+        val response = usersRemoteDataSource.updateUser(id, data, token)
         if (response.isSuccessful) response.body()!!
         else throw Exception("Error al actualizar usuario: ${response.code()}")
     }

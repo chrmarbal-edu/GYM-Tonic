@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import edu.gymtonic_app.BuildConfig
+import edu.gymtonic_app.ui.components.LanguageButton
+import edu.gymtonic_app.ui.components.ThemeButton
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.RegisterState
@@ -108,6 +110,16 @@ fun RegisterScreen2(
             .background(bg)
             .padding(horizontal = 18.dp, vertical = 18.dp)
     ) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ThemeButton(tint = Color.White)
+            LanguageButton(tint = Color.White)
+        }
+
         Column(
             modifier = Modifier.fillMaxSize()
         ) {

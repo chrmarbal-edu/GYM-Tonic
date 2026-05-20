@@ -50,6 +50,8 @@ import edu.gymtonic_app.ui.screens.admin.AdminUserDetailScreen
 import edu.gymtonic_app.ui.screens.admin.AdminUsersListScreen
 import edu.gymtonic_app.ui.screens.login.GymTonicLoginScreen
 import edu.gymtonic_app.ui.screens.login.LoginFormScreen
+import edu.gymtonic_app.ui.screens.login.ForgotPasswordScreen
+import edu.gymtonic_app.ui.screens.login.ResetPasswordScreen
 import edu.gymtonic_app.ui.screens.login.GoogleAuthHelper
 import edu.gymtonic_app.ui.screens.missions.WeekChallengesScreen
 import edu.gymtonic_app.ui.screens.profile.AccountScreen
@@ -268,9 +270,36 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.LOGIN_FORM) {
             LoginFormScreen(
                 onRegister = { navController.navigate(Routes.REGISTER) },
-                onForgotPassword = { },
+                onForgotPassword = { navController.navigate(Routes.FORGOT_PASSWORD) },
                 loginViewModel = loginViewModel,
                 onLoginSuccess = { role -> navigateAfterLogin(role) }
+            )
+        }
+
+        composable(Routes.FORGOT_PASSWORD) {
+            ForgotPasswordScreen(
+                onBack = { navController.popBackStack() },
+                onContinue = { email ->
+                    navController.navigate(Routes.resetPassword(email))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.RESET_PASSWORD,
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { entry ->
+            val email = entry.arguments?.getString("email") ?: ""
+            ResetPasswordScreen(
+                email = email,
+                loginViewModel = loginViewModel,
+                onBack = { navController.popBackStack() },
+                onSuccess = {
+                    showAppToast(snackbarHostState, coroutineScope, "Contraseña actualizada correctamente")
+                    navController.navigate(Routes.LOGIN_FORM) {
+                        popUpTo(Routes.WELCOME) { inclusive = false }
+                    }
+                }
             )
         }
 

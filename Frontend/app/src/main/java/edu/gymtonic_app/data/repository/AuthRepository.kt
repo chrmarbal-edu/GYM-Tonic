@@ -39,6 +39,18 @@ class AuthRepository(
 		)
 	}
 
+	suspend fun recoverAccount(email: String, newPassword: String): Result<edu.gymtonic_app.data.remote.remoteModel.user.RecoverResponse> {
+		return runCatching {
+			authRemoteDataSource.recoverAccount(email, newPassword)
+		}
+	}
+
+	suspend fun changePassword(code: String, recoveryToken: String): Result<Unit> {
+		return runCatching {
+			authRemoteDataSource.changePassword(code, recoveryToken)
+		}
+	}
+
 	suspend fun logout(): Result<Unit> {
 		return runCatching {
 			authRemoteDataSource.logout()

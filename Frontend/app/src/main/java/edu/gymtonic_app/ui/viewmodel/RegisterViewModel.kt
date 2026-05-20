@@ -93,6 +93,11 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
     }
 
     fun confirmCode(code: String, response: RegisterResponse) {
+        if (response.isCodeExpired()) {
+            _registerState.value = RegisterState.Error("El código ha expirado. Por favor, solicita uno nuevo.")
+            return
+        }
+
         if (code == response.confirmationCode) {
             viewModelScope.launch {
                 val user = response.resolvedUser()!!

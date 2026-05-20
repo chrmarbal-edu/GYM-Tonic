@@ -13,6 +13,7 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.SocialLoginResponse
 import com.google.gson.Gson
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
+import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -99,6 +100,40 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
         _loginState.value = LoginState.Idle
     }
 
+    fun resetPassword(email: String, password: String, onSuccess: () -> Unit) {
+        val trimmedPassword = password.trim()
+        viewModelScope.launch {
+            _loginState.value = LoginState.Loading
+            authRepository.recoverAccount(email, trimmedPassword)
+                .onSuccess { response ->
+                    _loginState.value = LoginState.AwaitingRecoveryConfirmation(
+                        recoveryToken = response.recoveryToken,
+                        expiresAt = response.expiresAt,
+                        email = email
+                    )
+                    onSuccess()
+                }
+                .onFailure { e ->
+                    _loginState.value = LoginState.Error(e.message ?: "Error al iniciar recuperación")
+                }
+        }
+    }
+
+    fun confirmRecoveryCode(code: String, recoveryToken: String, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            _loginState.value = LoginState.Loading
+            authRepository.changePassword(code, recoveryToken)
+                .onSuccess {
+                    _loginState.value = LoginState.Idle
+                    onSuccess()
+                }
+                .onFailure { e ->
+                    Log.e("LoginViewModel", "Error al cambiar contraseña", e)
+                    _loginState.value = LoginState.Error(e.message ?: "Código incorrecto o expirado")
+                }
+        }
+    }
+
     private suspend fun handleLoginResponse(response: LoginResponse) {
         Log.i("login", response.toString())
         val userData = response.data
@@ -122,5 +157,10 @@ sealed class LoginState {
     object Loading : LoginState()
     data class Success(val response: LoginResponse) : LoginState()
     data class NeedsRegistration(val socialData: SocialLoginResponse) : LoginState()
+    data class AwaitingRecoveryConfirmation(
+        val recoveryToken: String,
+        val expiresAt: String,
+        val email: String
+    ) : LoginState()
     data class Error(val message: String) : LoginState()
 }

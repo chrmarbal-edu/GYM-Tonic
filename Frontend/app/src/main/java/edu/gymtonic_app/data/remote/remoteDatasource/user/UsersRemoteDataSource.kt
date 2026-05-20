@@ -14,7 +14,7 @@ class UsersRemoteDataSource {
 
     suspend fun getUserById(id: Int) = api.getUserById(id)
 
-    suspend fun updateUser(id: Int, request: Map<String, Any?>) = api.updateUser(id, request)
+    suspend fun updateUser(id: Int, request: Map<String, Any?>, token: String? = null) = api.updateUser(id, request, token)
 
     suspend fun updateUserWithFile(
         id: Int,

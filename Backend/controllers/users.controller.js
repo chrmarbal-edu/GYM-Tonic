@@ -9,6 +9,7 @@ const crypto = require("crypto")
 const nodemailer = require("nodemailer")
 const fs = require("fs")
 const path = require("path")
+const jwt = require("jsonwebtoken")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -260,10 +261,12 @@ exports.register = wrapAsync(async function (req, res, next) {
     }
     
     let confirmationCode = null;
+    let codeExpiration = null;
 
     // Solo generamos código y enviamos email si NO es un registro por OAuth
     if (!oauth) {
         confirmationCode = Math.floor(100000 + Math.random() * 900000).toString()
+        codeExpiration = new Date(Date.now() + 10 * 60 * 1000);
         try {
             // Ruta corregida para el template HTML
             const templatePath = path.join(__dirname, '../public/html/confirmation_email.html');
@@ -312,7 +315,10 @@ exports.register = wrapAsync(async function (req, res, next) {
             } else{
                 if(req.userLogued && req.userLogued.user_role == 1){
                     const response = { user: datosUsuarioCreado, token: null }
-                    if (!oauth) response.confirmationCode = confirmationCode
+                    if (!oauth) {
+                        response.confirmationCode = confirmationCode;
+                        response.codeExpiration = codeExpiration;
+                    }
                     res.status(201).json(response)
                 } else if(!req.userLogued){
                     const jwtToken = jwtMW.createJWT(req, res, next, datosUsuarioCreado)
@@ -322,7 +328,10 @@ exports.register = wrapAsync(async function (req, res, next) {
                         token: jwtToken
                     }
 
-                    if (!oauth) userLogued.confirmationCode = confirmationCode
+                    if (!oauth) {
+                        userLogued.confirmationCode = confirmationCode;
+                        userLogued.codeExpiration = codeExpiration;
+                    }
 
                     res.status(201).json(userLogued)
                 }
@@ -330,6 +339,92 @@ exports.register = wrapAsync(async function (req, res, next) {
         })
     } else{
         return next(new AppError("No tienes permisos para realizar esta petición", 403))
+    }
+})
+
+/* <=============================== RECOVER ACCOUNT ===============================> */
+exports.recoverAccount = wrapAsync(async function (req, res, next) {
+    const { email, newPassword } = req.body
+
+    if (!email || !newPassword) {
+        return next(new AppError("El email y la nueva contraseña son obligatorios", 400))
+    }
+
+    await userModel.findByEmail(email, async function(err, userFound) {
+        if (err) {
+            return next(new AppError(err, 404))
+        }
+
+        const isSamePassword = await bcrypt.compareLogin(newPassword, userFound.user_password)
+        if (isSamePassword) {
+            return next(new AppError("La nueva contraseña no puede ser igual a la contraseña actual", 400))
+        }
+
+        if (newPassword.length < 8 || !newPassword.match(/[A-Z]/) || !newPassword.match(/[a-z]/) || !newPassword.match(/[0-9]/) || !newPassword.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)) {
+            return next(new AppError("La nueva contraseña no cumple con los requisitos de seguridad", 400))
+        }
+
+        const code = Math.floor(100000 + Math.random() * 900000).toString()
+
+        // Generamos un token de recuperación con el código y la nueva password (expira en 10 min)
+        const recoveryToken = jwt.sign(
+            { userId: userFound.user_id, code, newPassword },
+            process.env.SECRET_JWT,
+            { expiresIn: '10m' }
+        )
+
+        try {
+            const templatePath = path.join(__dirname, '../public/html/recover_account.html')
+            let emailHtml = await fs.promises.readFile(templatePath, 'utf8')
+            
+            emailHtml = emailHtml.replace('{{confirmationCode}}', code)
+            
+            await sendEmail(email, 'Recuperación de cuenta - GymTonic', emailHtml)
+
+            res.status(200).json({ 
+                msg: "Código de recuperación enviado al email",
+                recoveryToken,
+                expiresAt: new Date(Date.now() + 10 * 60 * 1000)
+            })
+        } catch (emailError) {
+            console.error("Error al enviar email de recuperación:", emailError)
+            return next(new AppError("Error al enviar el correo de recuperación", 500))
+        }
+    })
+})
+
+/* <=============================== CHANGE PASSWORD ===============================> */
+exports.changePassword = wrapAsync(async function (req, res, next) {
+    const { code, recoveryToken } = req.body
+
+    if (!code || !recoveryToken) {
+        return next(new AppError("Faltan el código o el token para procesar el cambio", 400))
+    }
+
+    try {
+        // Verificamos el token de recuperación
+        const decoded = jwt.verify(recoveryToken, process.env.SECRET_JWT)
+
+        // Validamos que el código enviado por el usuario sea el que guardamos en el token
+        if (decoded.code !== code) {
+            return next(new AppError("El código introducido es incorrecto", 400))
+        }
+
+        // Buscamos al usuario por el ID que viene en el token
+        await userModel.findById(decoded.userId, async function(err, userFound) {
+            if (err || !userFound) return next(new AppError("Usuario no encontrado", 404))
+
+            // Encriptamos la nueva password que estaba "en espera" dentro del token
+            const hashedPassword = await bcrypt.hashPassword(decoded.newPassword)
+            const updatedUser = { ...userFound, user_password: hashedPassword }
+
+            await userModel.updateById(userFound.user_id, updatedUser, function (err, result) {
+                if (err) return next(new AppError("Error al actualizar la contraseña", 500))
+                res.status(200).json({ msg: "Contraseña actualizada correctamente. Ya puedes iniciar sesión." })
+            })
+        })
+    } catch (err) {
+        return next(new AppError("El proceso de recuperación ha expirado o el token es inválido", 401))
     }
 })
 

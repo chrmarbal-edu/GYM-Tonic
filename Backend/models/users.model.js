@@ -41,7 +41,7 @@ user.findById = async function (id, result) {
         if (response.recordset.length > 0) {
             result(null, response.recordset[0])
         } else {
-            result({ err: "No hay datos" }, null)
+            result("No hay datos", null)
         }
 
     } catch (err) {
@@ -54,7 +54,6 @@ user.updateById = async function (id, updateUser, result) {
     try {
         const pool = await sql.connect(dbConn)
 
-        // Fetch the current user data to compare against new values
         const currentUserResponse = await pool.request()
             .input("id", sql.Int, id)
             .query("SELECT user_username, user_email, user_oauth FROM Users WHERE user_id = @id");
@@ -64,10 +63,7 @@ user.updateById = async function (id, updateUser, result) {
         }
         const currentUser = currentUserResponse.recordset[0];
 
-        // Validación de Nombre de Usuario Único (Solo para registros tradicionales/no-oAuth)
-        // Solo verificar si el nombre de usuario se está actualizando y es diferente del nombre de usuario actual
         if (updateUser.user_username && updateUser.user_username !== currentUser.user_username) {
-            // Si el usuario que se está actualizando NO es un usuario OAuth
             if (!currentUser.user_oauth) {
                 const usernameCheck = await pool.request()
                     .input("username", sql.NVarChar, updateUser.user_username)
@@ -95,7 +91,7 @@ user.updateById = async function (id, updateUser, result) {
             UPDATE Users SET
                 user_username = @username,
                 user_name = @name,
-                user_password = @password, // Se mantiene la actualización de contraseña
+                user_password = @password,
                 user_height = @height,
                 user_weight = @weight,
                 user_objective = @objective,
@@ -189,8 +185,6 @@ user.delete = async function (id, result) {
 }
 
 /* <=============================== FIND BY USERNAME ===============================> */
-/* <=============================== FIND BY USERNAME (Para Login Tradicional) ===============================> */
-// Filtramos para que solo busque usuarios que NO sean OAuth, ya que permitimos duplicidad de nombres entre tipos
 user.findByUsername = async function (usernameParam, result) {
     try {
         const pool = await sql.connect(dbConn)
@@ -202,6 +196,25 @@ user.findByUsername = async function (usernameParam, result) {
             result(null, response.recordset)
         } else {
             result("No hay datos del usuario " + usernameParam, null)
+        }
+
+    } catch (err) {
+        result(err, null)
+    }
+}
+
+/* <=============================== FIND BY EMAIL ===============================> */
+user.findByEmail = async function (email, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT * FROM Users WHERE user_email = @email")
+
+        if (response.recordset.length > 0) {
+            result(null, response.recordset[0])
+        } else {
+            result("El correo electrónico no está registrado", null)
         }
 
     } catch (err) {

@@ -5,6 +5,8 @@ import edu.gymtonic_app.core.UserRoles
 object Routes {
     const val WELCOME = "welcome"
     const val LOGIN_FORM = "login_form"
+    const val FORGOT_PASSWORD = "forgot_password"
+    const val RESET_PASSWORD = "reset_password?email={email}"
 
     const val REGISTER = "register_step_1"
 
@@ -64,6 +66,8 @@ object Routes {
     fun adminUserDetail(userId: Int): String = "admin/user/$userId"
     fun adminGroupDetail(groupId: Int): String = "admin/group/$groupId"
     fun adminMissionEdit(missionId: Int): String = "admin/mission/$missionId"
+
+    fun resetPassword(email: String): String = "reset_password?email=$email"
 
     fun postLoginDestination(role: Int?): String =
         if (UserRoles.isAdmin(role)) HOME else TRAINING

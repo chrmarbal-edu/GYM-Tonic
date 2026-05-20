@@ -26,6 +26,12 @@ router.post("/", upload.single('picture'), usersController.register)
 // LOGIN
 router.post("/login", usersController.login)
 
+// RECOVER ACCOUNT
+router.post("/recover-account", usersController.recoverAccount)
+
+// CHANGE PASSWORD (Unificado)
+router.post("/change-password", usersController.changePassword)
+
 // LOGOUT
 router.get("/logout", jwtMW.authenticate, usersController.logout)
 

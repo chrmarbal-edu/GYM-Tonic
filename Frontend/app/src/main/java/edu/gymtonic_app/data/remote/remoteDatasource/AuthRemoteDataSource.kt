@@ -113,6 +113,28 @@ class AuthRemoteDataSource {
         throw Exception("Error en register: ${response.message()}")
     }
 
+    suspend fun recoverAccount(email: String, newPassword: String): edu.gymtonic_app.data.remote.remoteModel.user.RecoverResponse {
+        val request = edu.gymtonic_app.data.remote.remoteModel.user.ResetPasswordRequest(email, newPassword)
+        val response = api.recoverAccount(request)
+        if (response.isSuccessful) {
+            return response.body() ?: throw Exception("Respuesta vacía del servidor")
+        }
+
+        val errorBody = response.errorBody()?.string()
+        Log.e(tag, "Error recoverAccount: ${response.code()} ${response.message()} | $errorBody")
+        throw Exception("Error al recuperar cuenta")
+    }
+
+    suspend fun changePassword(code: String, recoveryToken: String) {
+        val request = edu.gymtonic_app.data.remote.remoteModel.user.ChangePasswordRequest(code, recoveryToken)
+        val response = api.changePassword(request)
+        if (!response.isSuccessful) {
+            val errorBody = response.errorBody()?.string()
+            Log.e(tag, "Error changePassword: ${response.code()} ${response.message()} | $errorBody")
+            throw Exception("Código incorrecto o expirado")
+        }
+    }
+
     suspend fun logout() {
         val response = api.logout()
         if (response.isSuccessful) return

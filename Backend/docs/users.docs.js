@@ -140,6 +140,99 @@
 
 /**
  * @swagger
+ * /users/recover-account:
+ *   post:
+ *     summary: Iniciar el proceso de recuperación de cuenta (envía código por email)
+ *     tags: [Usuarios]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Correo electrónico del usuario
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 description: La nueva contraseña deseada (debe cumplir requisitos de seguridad)
+ *     responses:
+ *       200:
+ *         description: Código de recuperación enviado exitosamente. Devuelve un token temporal.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Código de recuperación enviado al email"
+ *                 recoveryToken:
+ *                   type: string
+ *                   description: Token temporal que contiene el código y la nueva contraseña, válido por 10 minutos.
+ *                 expiresAt:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Marca de tiempo de expiración del token.
+ *       400:
+ *         description: Datos inválidos o nueva contraseña no cumple requisitos.
+ *       404:
+ *         description: Usuario no encontrado con ese email.
+ *       500:
+ *         description: Error al enviar el correo de recuperación o error interno del servidor.
+ */
+
+/**
+ * @swagger
+ * /users/change-password:
+ *   post:
+ *     summary: Verificar código y cambiar la contraseña (paso final de recuperación)
+ *     tags: [Usuarios]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *               - recoveryToken
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 description: Código de 6 dígitos recibido por email.
+ *               recoveryToken:
+ *                 type: string
+ *                 description: Token temporal recibido en el paso anterior.
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada correctamente.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 msg:
+ *                   type: string
+ *                   example: "Contraseña actualizada correctamente. Ya puedes iniciar sesión."
+ *       400:
+ *         description: Faltan datos o el código introducido es incorrecto.
+ *       401:
+ *         description: El proceso de recuperación ha expirado o el token es inválido.
+ *       404:
+ *         description: Usuario no encontrado (aunque el token era válido, el usuario ya no existe).
+ *       500:
+ *         description: Error interno del servidor al actualizar la contraseña.
+ */
+
+/**
+ * @swagger
  * /users/{id}:
  *   get:
  *     summary: Obtener un usuario por ID

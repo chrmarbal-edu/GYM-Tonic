@@ -63,8 +63,12 @@ object RetrofitClient {
         val isRegisterEndpoint = url.endsWith("users") && originalRequest.method == "POST"
         val isGoogleLogin = url.contains("auth/googleLogin") && originalRequest.method == "POST"
         val isFacebookLogin = url.contains("auth/facebookLogin") && originalRequest.method == "POST"
+        val isRecoverEndpoint = url.contains("users/recover-account") && originalRequest.method == "POST"
+        val isChangePasswordEndpoint = url.contains("users/change-password") && originalRequest.method == "POST"
 
-        val newRequest = if (!isLoginEndpoint && !isRegisterEndpoint && !isGoogleLogin && !isFacebookLogin && sessionManager != null) {
+        val isExcluded = isLoginEndpoint || isRegisterEndpoint || isGoogleLogin || isFacebookLogin || isRecoverEndpoint || isChangePasswordEndpoint
+
+        val newRequest = if (!isExcluded && sessionManager != null) {
             try {
                 val token = runBlocking {
                     sessionManager?.sessionFlow?.first()?.token
@@ -133,6 +137,14 @@ interface ApiService {
     @Headers("Content-Type: application/json")
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
+    @POST("users/recover-account")
+    @Headers("Content-Type: application/json")
+    suspend fun recoverAccount(@Body request: edu.gymtonic_app.data.remote.remoteModel.user.ResetPasswordRequest): Response<edu.gymtonic_app.data.remote.remoteModel.user.RecoverResponse>
+
+    @POST("users/change-password")
+    @Headers("Content-Type: application/json")
+    suspend fun changePassword(@Body request: edu.gymtonic_app.data.remote.remoteModel.user.ChangePasswordRequest): Response<Unit>
+
     @GET("users/logout")
     suspend fun logout(): Response<Unit>
 
@@ -148,7 +160,8 @@ interface ApiService {
     @PATCH("users/{id}")
     suspend fun updateUser(
         @Path("id") id: Int,
-        @Body request: @JvmSuppressWildcards Map<String, Any?>
+        @Body request: @JvmSuppressWildcards Map<String, Any?>,
+        @retrofit2.http.Header("Authorization") token: String? = null
     ): Response<LoginResponse>
 
     @Multipart
