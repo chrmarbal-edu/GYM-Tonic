@@ -40,12 +40,15 @@ import edu.gymtonic_app.ui.theme.AppTheme
 import edu.gymtonic_app.ui.theme.DarkColors
 import edu.gymtonic_app.ui.theme.LightColors
 import edu.gymtonic_app.ui.theme.LocalColors
+import com.facebook.FacebookSdk
 import edu.gymtonic_app.ui.theme.ThemeManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
+        FacebookSdk.sdkInitialize(applicationContext)
+
         // Inicializar managers con persistencia
         LanguageManager.init(this)
         ThemeManager.init(this)

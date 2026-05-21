@@ -17,9 +17,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.AlertDialog
@@ -99,6 +102,7 @@ fun CreateRoutineScreen(
     var searchQuery by remember { mutableStateOf("") }
     
     var exerciseToConfigure by remember { mutableStateOf<edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto?>(null) }
+    var favoritesExpanded by rememberSaveable { mutableStateOf(true) }
 
     val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri ?: return@rememberLauncherForActivityResult
@@ -168,9 +172,20 @@ fun CreateRoutineScreen(
         )
     }
 
-    val filteredExercises = remember(allExercises, searchQuery) {
-        if (searchQuery.isBlank()) allExercises
+    val favoriteIds = remember(favoriteExercises) {
+        favoriteExercises.map { it.exercise_id }.toSet()
+    }
+
+    val filteredFavorites = remember(allExercises, searchQuery, favoriteIds) {
+        val base = if (searchQuery.isBlank()) allExercises
         else allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
+        base.filter { it.exercise_id in favoriteIds }
+    }
+
+    val filteredOthers = remember(allExercises, searchQuery, favoriteIds) {
+        val base = if (searchQuery.isBlank()) allExercises
+        else allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
+        base.filter { it.exercise_id !in favoriteIds }
     }
 
     TrainingShellScreen(
@@ -246,16 +261,64 @@ fun CreateRoutineScreen(
                     )
                 }
 
-                items(
-                    items = filteredExercises,
-                    key = { it.exercise_id }
-                ) { exercise ->
-                    val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
-                    ExerciseRow(
-                        exercise = exercise,
-                        selected = isSelected,
-                        onToggle = { toggleSelection(exercise) }
-                    )
+                if (filteredFavorites.isNotEmpty()) {
+                    item(key = "header_favorites") {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { favoritesExpanded = !favoritesExpanded }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Favoritos (${filteredFavorites.size})",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.accent
+                            )
+                            Icon(
+                                imageVector = if (favoritesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = colors.accent
+                            )
+                        }
+                    }
+                    if (favoritesExpanded) {
+                        items(
+                            items = filteredFavorites,
+                            key = { "fav_${it.exercise_id}" }
+                        ) { exercise ->
+                            val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
+                            ExerciseRow(
+                                exercise = exercise,
+                                selected = isSelected,
+                                onToggle = { toggleSelection(exercise) }
+                            )
+                        }
+                    }
+                }
+
+                if (filteredOthers.isNotEmpty()) {
+                    item(key = "header_all") {
+                        Text(
+                            text = if (filteredFavorites.isNotEmpty()) "Todos los ejercicios" else "Ejercicios",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary
+                        )
+                    }
+                    items(
+                        items = filteredOthers,
+                        key = { it.exercise_id }
+                    ) { exercise ->
+                        val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
+                        ExerciseRow(
+                            exercise = exercise,
+                            selected = isSelected,
+                            onToggle = { toggleSelection(exercise) }
+                        )
+                    }
                 }
             }
 // ... resto del componente
