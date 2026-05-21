@@ -96,7 +96,9 @@ val EnglishStrings = AppStrings(
         deleteRoutineMessage = "The routine and its links to exercises will be removed. The exercises will not be deleted.",
         deleteRoutineConfirm = "Delete",
         deleteRoutineCancel = "Cancel",
-        routineDeleted = "Routine deleted"
+        routineDeleted = "Routine deleted",
+        trainingGroupRoutines = "My Group Routines",
+        trainingMyRoutines = "My routines"
     ),
     profile = ProfileStrings(
         profileTitle = "Profile",

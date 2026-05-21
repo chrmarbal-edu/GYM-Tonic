@@ -50,14 +50,16 @@ routineExercise.create = async (newRoutineExercise, result) => {
         const request = pool.request()
         request.input("routineId", sql.Int, newRoutineExercise.routine_x_exercise_routineid)
         request.input("exerciseId", sql.Int, newRoutineExercise.routine_x_exercise_exerciseid)
+        request.input("reps", sql.NVarChar, newRoutineExercise.routine_x_exercise_reps)
+        request.input("sets", sql.Int, newRoutineExercise.routine_x_exercise_sets)
 
         const sqlQuery = `
             INSERT INTO Routine_X_Exercise (
-                routine_x_exercise_routineid, routine_x_exercise_exerciseid
+                routine_x_exercise_routineid, routine_x_exercise_exerciseid, routine_x_exercise_reps, routine_x_exercise_sets
             )
             OUTPUT INSERTED.*
             VALUES (
-                @routineId, @exerciseId
+                @routineId, @exerciseId, @reps, @sets
             )
         `
 

@@ -87,6 +87,8 @@ CREATE TABLE dbo.Routine_X_Exercise (
     routine_x_exercise_id INT IDENTITY(1,1) NOT NULL,
     routine_x_exercise_routineid INT NOT NULL,
     routine_x_exercise_exerciseid INT NOT NULL,
+    routine_x_exercise_reps NVARCHAR(50) NULL,
+    routine_x_exercise_sets INT NULL,
     CONSTRAINT PK_Routine_X_Exercise PRIMARY KEY (routine_x_exercise_id),
     FOREIGN KEY (routine_x_exercise_routineid)  REFERENCES dbo.Routines(routine_id),
     FOREIGN KEY (routine_x_exercise_exerciseid) REFERENCES dbo.Exercises(exercise_id)
@@ -215,40 +217,27 @@ VALUES
     ('Full Body Principiante', 'images/routines/rutina_fullbody.png'),
     ('Tren Superior Avanzado', 'images/routines/rutina_tren_superior_avanzado.png'),
     ('Cardio Quema Grasa', 'images/routines/rutina_cardio_quemagrasa.png'),
-    ('Piernas y Glúteos', 'images/routines/rutina_piernas_y_gluteos.png'),
-    ('Flexibilidad y Movilidad', 'images/routines/rutina_flexibilidad_y_mobilidad.png');
+    ('Piernas y Glúteos', 'images/routines/rutina_piernas_y_gluteos.png');
 GO
 
--- Migración para bases de datos ya creadas (ejecutar solo si las columnas no existen):
--- ALTER TABLE dbo.Routines ADD routine_image NVARCHAR(500) NULL;
--- ALTER TABLE dbo.Routines ADD routine_is_personal_routine INT NOT NULL CONSTRAINT DF_Routines_is_personal DEFAULT (0);
--- ALTER TABLE dbo.Routines ADD routine_creator_id INT NULL;
--- ALTER TABLE dbo.Routines ADD CONSTRAINT FK_Routines_Creator FOREIGN KEY (routine_creator_id) REFERENCES dbo.Users(user_id) ON DELETE SET NULL;
--- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_fullbody.png' WHERE routine_id = 1;
--- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_tren_superior_avanzado.png' WHERE routine_id = 2;
--- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_cardio_quemagrasa.png' WHERE routine_id = 3;
--- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_piernas_y_gluteos.png' WHERE routine_id = 4;
--- UPDATE dbo.Routines SET routine_image = 'images/routines/rutina_flexibilidad_y_mobilidad.png' WHERE routine_id = 5;
-
 -- Ejercicios por rutina
-INSERT INTO dbo.Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid)
+INSERT INTO dbo.Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid, routine_x_exercise_reps, routine_x_exercise_sets)
 VALUES
-    (1,1),(1,2),(1,6),
-    (2,2),(2,4),(2,5),(2,6),
-    (3,7),(3,8),(3,9),(3,10),
-    (4,1),(4,3),
-    (5,11),(5,12);
+    (1,1,'12',3),(1,2,'10',3),(1,6,'15',3),
+    (2,2,'8',4),(2,4,'10',3),(2,5,'12',3),(2,6,'12',3),
+    (3,7,'20',4),(3,8,'15',4),(3,9,'12',3),(3,10,'10',3), -- Cardio Quema Grasa
+    (4,1,'12',3),(4,3,'20',3); -- Piernas y Glúteos
 GO
 
 -- Rutinas asignadas a usuarios (IDs 2-9)
 INSERT INTO dbo.User_X_Routine (user_x_routine_userid, user_x_routine_routineid)
 VALUES
     (2,1),(2,3),
-    (3,3),(3,5),
+    (3,3),
     (4,2),(4,4),
-    (5,3),(5,5),
+    (5,3),(5,4),
     (6,1),
-    (7,3),(7,5),
+    (7,3),
     (8,2),(8,4),
     (9,1),(9,3);
 GO

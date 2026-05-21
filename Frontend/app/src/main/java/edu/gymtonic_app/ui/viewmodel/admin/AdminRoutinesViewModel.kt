@@ -50,13 +50,13 @@ class AdminRoutinesViewModel : ViewModel() {
     fun saveRoutine(
         id: Int?,
         name: String,
-        exerciseIds: List<Int>,
+        exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
         imageFile: File?,
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             _detailState.update { it.copy(isSaving = true, error = null) }
-            repository.saveRoutineWithFiles(id, name, exerciseIds, imageFile)
+            repository.saveRoutineWithFiles(id, name, exercises, imageFile)
                 .onSuccess { routine ->
                     _detailState.update {
                         it.copy(

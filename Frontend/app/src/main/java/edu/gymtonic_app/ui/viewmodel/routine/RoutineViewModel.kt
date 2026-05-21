@@ -54,7 +54,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
 
     fun createUserRoutineWithExercises(
         routineName: String,
-        exerciseIds: List<Int>,
+        exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
         imageFile: File? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
@@ -64,7 +64,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             return
         }
 
-        if (exerciseIds.isEmpty()) {
+        if (exercises.isEmpty()) {
             onError("Debes añadir al menos un ejercicio")
             return
         }
@@ -73,7 +73,7 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
             routineRepository.saveRoutineWithFiles(
                 id = null,
                 name = routineName,
-                exerciseIds = exerciseIds,
+                exercises = exercises,
                 imageFile = imageFile,
                 isPersonal = true
             )

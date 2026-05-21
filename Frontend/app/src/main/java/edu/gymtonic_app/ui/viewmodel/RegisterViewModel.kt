@@ -79,10 +79,24 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
                     pictureFile = pictureFile,
                     pictureUrl = pictureUrl
                 )
-                Log.i("register",response.toString())
+                Log.i("register", response.toString())
                 val user = response.resolvedUser()
-                if(user != null){
-                    _registerState.value = RegisterState.AwaitingConfirmation(response)
+                if (user != null) {
+                    // Si es un registro social (OAuth) o el backend ya nos da un token (ya verificado),
+                    // iniciamos sesión directamente y saltamos el código de confirmación.
+                    if (response.token != null && (oauth != null || response.confirmationCode == null)) {
+                        clearSocialData()
+                        sessionManager.saveSession(
+                            token = response.token,
+                            userId = user.userId,
+                            username = user.userUsername,
+                            email = user.userEmail,
+                            role = user.userRole
+                        )
+                        _registerState.value = RegisterState.Success(response)
+                    } else {
+                        _registerState.value = RegisterState.AwaitingConfirmation(response)
+                    }
                 } else {
                     _registerState.value = RegisterState.Error("Usuario nulo en respuesta")
                 }

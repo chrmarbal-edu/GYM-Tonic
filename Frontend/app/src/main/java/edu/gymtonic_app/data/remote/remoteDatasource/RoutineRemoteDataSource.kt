@@ -21,17 +21,17 @@ class RoutineRemoteDataSource {
 
     suspend fun createRoutineMultipart(
         name: okhttp3.RequestBody,
-        exerciseIds: okhttp3.RequestBody,
+        exercises: okhttp3.RequestBody,
         isPersonal: okhttp3.RequestBody,
         image: okhttp3.MultipartBody.Part?
-    ) = api.createRoutineMultipart(name, exerciseIds, isPersonal, image)
+    ) = api.createRoutineMultipart(name, exercises, isPersonal, image)
 
     suspend fun updateRoutineMultipart(
         routineId: Int,
         name: okhttp3.RequestBody?,
-        exerciseIds: okhttp3.RequestBody?,
+        exercises: okhttp3.RequestBody?,
         image: okhttp3.MultipartBody.Part?
-    ) = api.updateRoutineMultipart(routineId, name, exerciseIds, image)
+    ) = api.updateRoutineMultipart(routineId, name, exercises, image)
 
     suspend fun deleteRoutine( routineId: Int) = api.deleteRoutine(routineId)
 }

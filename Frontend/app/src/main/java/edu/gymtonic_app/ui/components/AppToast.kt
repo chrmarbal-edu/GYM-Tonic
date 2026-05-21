@@ -1,5 +1,6 @@
 package edu.gymtonic_app.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +62,7 @@ fun ObserveToastMessage(
     val snackbarHostState = LocalAppSnackbarHostState.current
     LaunchedEffect(message) {
         if (!message.isNullOrBlank()) {
+            Log.d("AppToast", "Mostrando Toast: $message")
             snackbarHostState.showSnackbar(message)
             onConsumed()
         }
@@ -72,6 +74,7 @@ fun showAppToast(
     scope: kotlinx.coroutines.CoroutineScope,
     message: String
 ) {
+    Log.d("AppToast", "Mostrando Toast (manual): $message")
     scope.launch {
         snackbarHostState.showSnackbar(message)
     }

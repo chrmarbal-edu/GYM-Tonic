@@ -18,38 +18,6 @@ const normalizeRoutineNameOrSlug = (value = "") => {
     return value.toLowerCase().replace(/[\s_-]+/g, "")
 }
 
-const repsByExerciseType = (exerciseType) => {
-    if (exerciseType === 1) {
-        return "x20"
-    }
-
-    if (exerciseType === 2) {
-        return "x30s"
-    }
-
-    return "x12"
-}
-
-const toImageKey = (image = "") => {
-    if (!image || typeof image !== "string") {
-        return ""
-    }
-
-    return image.replace(/\.[^/.]+$/, "")
-}
-
-/* <=============================== FIND ALL ===============================> */
-routine.findAll = async (result) => {
-    try {
-        const pool = await sql.connect(dbConn)
-        const response = await pool.request().query("SELECT * FROM Routines")
-        result(null, response.recordset)
-        
-    } catch (err) {
-        result(err, null)
-    }
-}
-
 /* <=============================== FIND ALL WITH EXERCISE SUMMARY ===============================> */
 routine.findAllWithExerciseSummary = async (result) => {
     const summaryQueryFull = `
@@ -62,9 +30,8 @@ routine.findAllWithExerciseSummary = async (result) => {
             r.routine_is_group_routine,
             r.routine_groupid,
             COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 2 THEN 1 ELSE 0 END), 0) AS flexibility_exercises_count
+            ISNULL(SUM(CASE WHEN e.exercise_type BETWEEN 1 AND 10 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
+            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -94,9 +61,8 @@ routine.findAllWithExerciseSummary = async (result) => {
             r.routine_is_group_routine,
             r.routine_groupid,
             COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 2 THEN 1 ELSE 0 END), 0) AS flexibility_exercises_count
+            ISNULL(SUM(CASE WHEN e.exercise_type BETWEEN 1 AND 10 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
+            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -122,9 +88,8 @@ routine.findAllWithExerciseSummary = async (result) => {
             r.routine_is_group_routine,
             r.routine_groupid,
             COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 2 THEN 1 ELSE 0 END), 0) AS flexibility_exercises_count
+            ISNULL(SUM(CASE WHEN e.exercise_type BETWEEN 1 AND 10 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
+            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -174,9 +139,8 @@ routine.findPersonalByUserId = async function (userId, result) {
             r.routine_is_group_routine,
             r.routine_groupid,
             COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 2 THEN 1 ELSE 0 END), 0) AS flexibility_exercises_count
+            ISNULL(SUM(CASE WHEN e.exercise_type BETWEEN 1 AND 10 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
+            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -206,9 +170,8 @@ routine.findPersonalByUserId = async function (userId, result) {
             r.routine_is_group_routine,
             r.routine_groupid,
             COUNT(rxe.routine_x_exercise_exerciseid) AS exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 1 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count,
-            ISNULL(SUM(CASE WHEN e.exercise_type = 2 THEN 1 ELSE 0 END), 0) AS flexibility_exercises_count
+            ISNULL(SUM(CASE WHEN e.exercise_type BETWEEN 1 AND 10 THEN 1 ELSE 0 END), 0) AS strength_exercises_count,
+            ISNULL(SUM(CASE WHEN e.exercise_type = 0 THEN 1 ELSE 0 END), 0) AS cardio_exercises_count
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -332,7 +295,9 @@ routine.findByIdWithExercises = async function (id, result) {
             e.exercise_description,
             e.exercise_type,
             e.exercise_video,
-            e.exercise_image
+            e.exercise_image,
+            rxe.routine_x_exercise_reps,
+            rxe.routine_x_exercise_sets
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -352,7 +317,9 @@ routine.findByIdWithExercises = async function (id, result) {
             e.exercise_description,
             e.exercise_type,
             e.exercise_video,
-            e.exercise_image
+            e.exercise_image,
+            rxe.routine_x_exercise_reps,
+            rxe.routine_x_exercise_sets
         FROM Routines r
         LEFT JOIN Routine_X_Exercise rxe
             ON r.routine_id = rxe.routine_x_exercise_routineid
@@ -398,8 +365,9 @@ routine.findByIdWithExercises = async function (id, result) {
             routineWithExercises.exercises.push({
                 exercise_id: String(row.exercise_id),
                 exercise_name: row.exercise_name,
-                reps: repsByExerciseType(row.exercise_type),
-                image_key: toImageKey(row.exercise_image),
+                reps: row.routine_x_exercise_reps ?? "12",
+                sets: row.routine_x_exercise_sets ?? 3,
+                exercise_image: row.exercise_image,
                 instructions: row.exercise_description ? [row.exercise_description] : []
             })
         })

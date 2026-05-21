@@ -7,6 +7,7 @@ const userRoutineModel = require("../models/userRoutines.model.js")
 const routineExerciseModel = require("../models/routineExercises.model.js")
 const routinesModel = require("../models/routines.model.js")
 const fs = require("fs").promises
+const path = require("path")
 const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
@@ -14,7 +15,6 @@ const { log } = require("console")
 const sql = require("mssql")
 const dbConn = require("../utils/mssql.config")
 const {
-    buildRoutineImagePath,
     normalizeRoutineImageForClient,
     parseExerciseIds
 } = require("../utils/routineHelpers.js")
@@ -505,9 +505,7 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
 
     const groupId = Number(req.params.id)
     const { name, routine_image: routineImageBody, exercise_ids: exerciseIdsRaw } = req.body
-    const uploadedImage = buildRoutineImagePath(req.files)
-    const parsedExerciseIds = parseExerciseIds(exerciseIdsRaw)
-    const exerciseIds = parsedExerciseIds
+    const exerciseIds = parseExerciseIds(exerciseIdsRaw)
 
     if (!Number.isFinite(groupId)) {
         return next(new AppError("group_id inválido", 400))
@@ -551,11 +549,19 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
     const transaction = new sql.Transaction(pool)
     await transaction.begin()
     try {
-        const routineImage =
-            uploadedImage ||
-            (typeof routineImageBody === "string" && routineImageBody.trim()
-                ? routineImageBody.trim()
-                : null)
+        let routineImage = null;
+        if (req.files?.image?.[0]) {
+            const file = req.files.image[0];
+            const folderName = group.group_name;
+            const targetDir = path.join("public", "images", "routines", "groups", folderName);
+            await fs.mkdir(targetDir, { recursive: true });
+            const sanitizedName = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            const fileName = `${sanitizedName}${path.extname(file.originalname)}`;
+            await fs.rename(file.path, path.join(targetDir, fileName));
+            routineImage = `images/routines/groups/${folderName}/${fileName}`.replace(/\\/g, "/");
+        } else if (typeof routineImageBody === "string" && routineImageBody.trim()) {
+            routineImage = routineImageBody.trim();
+        }
 
         let routineRow
 

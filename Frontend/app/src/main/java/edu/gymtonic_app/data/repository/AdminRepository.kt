@@ -1,7 +1,6 @@
 package edu.gymtonic_app.data.repository
 
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
-import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
@@ -55,11 +54,19 @@ class AdminRepository {
     suspend fun saveRoutineWithFiles(
         id: Int?,
         name: String,
-        exerciseIds: List<Int>,
+        exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
         imageFile: File?
     ): Result<RoutineDetailDto> = runCatching {
         val gson = Gson()
-        val exerciseIdsBody = gson.toJson(exerciseIds).toRequestBody("application/json".toMediaTypeOrNull())
+        // Enviamos la lista completa de objetos para incluir reps y series
+        val exercisesJson = gson.toJson(exercises.map {
+            mapOf(
+                "id" to it.exercise_id,
+                "reps" to it.reps,
+                "series" to it.series
+            )
+        })
+        val exercisesBody = exercisesJson.toRequestBody("application/json".toMediaTypeOrNull())
         val imagePart = imageFile?.let {
             MultipartBody.Part.createFormData(
                 "image",
@@ -72,7 +79,7 @@ class AdminRepository {
             val isPersonalBody = "0".toRequestBody("text/plain".toMediaTypeOrNull())
             val response = api.createRoutineMultipart(
                 name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
-                exerciseIds = exerciseIdsBody,
+                exercises = exercisesBody,
                 isPersonal = isPersonalBody,
                 image = imagePart
             )
@@ -82,7 +89,7 @@ class AdminRepository {
             val response = api.updateRoutineMultipart(
                 routineId = id,
                 name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
-                exerciseIds = exerciseIdsBody,
+                exercises = exercisesBody,
                 image = imagePart
             )
             if (response.isSuccessful && response.body() != null) response.body()!!

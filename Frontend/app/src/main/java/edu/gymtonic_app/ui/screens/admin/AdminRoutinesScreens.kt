@@ -37,6 +37,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.*
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
@@ -154,7 +156,8 @@ fun AdminRoutineDetailScreen(
                     AdminListItem(
                         title = ex.exercise_name.orEmpty(),
                         subtitle = listOfNotNull(
-                            ex.reps,
+                            ex.series?.let { "$it series" },
+                            ex.reps?.let { "$it reps" },
                             exerciseTypeLabel(ex.exercise_type)
                         ).joinToString(" · ")
                     ) {
@@ -223,7 +226,7 @@ fun AdminRoutineEditScreen(
         AdminExerciseSelectionScreen(
             alreadySelectedIds = selectedExercises.map { it.exercise_id }.toSet(),
             onBack = { showSelection = false },
-            onSelected = { ex ->
+            onSelected = { ex, reps, series ->
                 if (selectedExercises.none { it.exercise_id == ex.exercise_id }) {
                     selectedExercises.add(
                         RoutineExerciseDto(
@@ -231,7 +234,9 @@ fun AdminRoutineEditScreen(
                             exercise_name = ex.exercise_name,
                             exercise_type = ex.exercise_type,
                             exercise_image = ex.exercise_image,
-                            exercise_video = ex.exercise_video
+                            exercise_video = ex.exercise_video,
+                            reps = reps,
+                            series = series
                         )
                     )
                 }
@@ -298,7 +303,13 @@ fun AdminRoutineEditScreen(
                 selectedExercises.forEachIndexed { index, ex ->
                     AdminSelectedExerciseItem(
                         exercise = ex,
-                        onRemove = { selectedExercises.removeAt(index) }
+                        onRemove = { selectedExercises.removeAt(index) },
+                        onUpdateReps = { newReps ->
+                            selectedExercises[index] = selectedExercises[index].copy(reps = newReps)
+                        },
+                        onUpdateSeries = { newSeries ->
+                            selectedExercises[index] = selectedExercises[index].copy(series = newSeries.toIntOrNull())
+                        }
                     )
                 }
             }
@@ -308,11 +319,10 @@ fun AdminRoutineEditScreen(
                 enabled = name.isNotBlank(),
                 loading = state.isSaving,
                 onClick = {
-                    val ids = selectedExercises.map { it.exercise_id }
                     viewModel.saveRoutine(
                         id = routineId,
                         name = name.trim(),
-                        exerciseIds = ids,
+                        exercises = selectedExercises.toList(),
                         imageFile = imageFile,
                         onSuccess = onSaved
                     )
@@ -326,7 +336,9 @@ fun AdminRoutineEditScreen(
 @Composable
 fun AdminSelectedExerciseItem(
     exercise: RoutineExerciseDto,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onUpdateReps: (String) -> Unit,
+    onUpdateSeries: (String) -> Unit
 ) {
     val colors = LocalColors.current
     Surface(
@@ -334,16 +346,47 @@ fun AdminSelectedExerciseItem(
         shape = RoundedCornerShape(12.dp),
         color = colors.surfaceCard.copy(alpha = 0.5f)
     ) {
-        Row(
-            Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(exercise.exercise_name.orEmpty(), fontWeight = FontWeight.SemiBold)
-                Text(exerciseTypeLabel(exercise.exercise_type), fontSize = 12.sp, color = colors.textSecondary)
+        Column(Modifier.padding(12.dp)) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(exercise.exercise_name.orEmpty(), fontWeight = FontWeight.SemiBold)
+                    Text(exerciseTypeLabel(exercise.exercise_type), fontSize = 12.sp, color = colors.textSecondary)
+                }
+                IconButton(onClick = onRemove) {
+                    Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFE53935))
+                }
             }
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color(0xFFE53935))
+            
+            Row(
+                Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = exercise.series?.toString() ?: "",
+                    onValueChange = onUpdateSeries,
+                    label = { Text("Series", fontSize = 11.sp) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.accent,
+                        unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
+                    )
+                )
+                OutlinedTextField(
+                    value = exercise.reps ?: "",
+                    onValueChange = onUpdateReps,
+                    label = { Text("Reps", fontSize = 11.sp) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.accent,
+                        unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
+                    )
+                )
             }
         }
     }
@@ -353,20 +396,34 @@ fun AdminSelectedExerciseItem(
 fun AdminExerciseSelectionScreen(
     alreadySelectedIds: Set<Int> = emptySet(),
     onBack: () -> Unit,
-    onSelected: (ExerciseDto) -> Unit,
+    onSelected: (ExerciseDto, reps: String, series: Int) -> Unit,
     viewModel: AdminExercisesViewModel = viewModel()
 ) {
     val strings = LocalStrings.current
     val state by viewModel.listState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf<Int?>(null) }
+    
+    var exerciseToConfigure by remember { mutableStateOf<ExerciseDto?>(null) }
 
     LaunchedEffect(Unit) { viewModel.loadList() }
+
+    if (exerciseToConfigure != null) {
+        AddExerciseDetailsDialog(
+            exerciseName = exerciseToConfigure!!.exercise_name,
+            onDismiss = { exerciseToConfigure = null },
+            onConfirm = { reps, series ->
+                onSelected(exerciseToConfigure!!, reps, series)
+                exerciseToConfigure = null
+            }
+        )
+    }
 
     AdminShellScreen(
         title = strings.groupsSelectExercises,
         onBack = onBack
     ) {
+// ... resto del componente
         val filteredItems = remember(state.items, searchQuery, selectedType) {
             state.items.filter { 
                 it.exercise_name.contains(searchQuery, ignoreCase = true) &&
@@ -400,11 +457,64 @@ fun AdminExerciseSelectionScreen(
                                 exerciseTypeLabel(exercise.exercise_type)
                             },
                             imageUrl = resolveBackendMediaUrl(exercise.exercise_image),
-                            onClick = { onSelected(exercise) }
+                            onClick = { exerciseToConfigure = exercise }
                         )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+fun AddExerciseDetailsDialog(
+    exerciseName: String,
+    onDismiss: () -> Unit,
+    onConfirm: (reps: String, series: Int) -> Unit
+) {
+    var reps by remember { mutableStateOf("10") }
+    var series by remember { mutableStateOf("3") }
+    val colors = LocalColors.current
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Detalles del ejercicio", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(exerciseName, fontSize = 14.sp, color = colors.textSecondary)
+                
+                OutlinedTextField(
+                    value = series,
+                    onValueChange = { if (it.all { c -> c.isDigit() }) series = it },
+                    label = { Text("Series") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = reps,
+                    onValueChange = { reps = it },
+                    label = { Text("Repeticiones") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val s = series.toIntOrNull() ?: 0
+                    if (s > 0 && reps.isNotBlank()) {
+                        onConfirm(reps, s)
+                    }
+                },
+                enabled = (series.toIntOrNull() ?: 0) > 0 && reps.isNotBlank()
+            ) {
+                Text("Añadir")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
 }

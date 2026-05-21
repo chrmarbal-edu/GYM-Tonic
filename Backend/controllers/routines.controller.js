@@ -3,7 +3,9 @@
 const routinesmodel = require("../models/routines.model.js")
 const routineExerciseModel = require("../models/routineExercises.model.js")
 const userModel = require("../models/users.model.js")
+const groupmodel = require("../models/groups.model.js")
 const fs = require("fs").promises
+const path = require("path")
 const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
@@ -11,9 +13,7 @@ const sql = require("mssql")
 const dbConn = require("../utils/mssql.config")
 const { log } = require("console")
 const {
-    buildRoutineImagePath,
     normalizeRoutineImageForClient,
-    parseExerciseIds
 } = require("../utils/routineHelpers.js")
 const {
     assertCanManageRoutine,
@@ -21,68 +21,63 @@ const {
     canManageRoutine
 } = require("../utils/routinePermissions.js")
 
-const promisifyModel =
-    (fn) =>
-    (...args) =>
-        new Promise((resolve, reject) => {
-            fn(...args, (err, result) => {
-                if (err) reject(err)
-                else resolve(result)
-            })
-        })
-
-const findRoutineById = promisifyModel(routinesmodel.findById)
-const findRoutineByIdWithExercises = promisifyModel(routinesmodel.findByIdWithExercises)
-const findPersonalRoutinesByUserId = promisifyModel(routinesmodel.findPersonalByUserId)
-
-const parseIsPersonalFlag = (rawValue, userLogued) => {
-    if (rawValue === undefined || rawValue === null || rawValue === "") {
-        return 1
-    }
-    if (rawValue === "0" || rawValue === 0 || rawValue === false || rawValue === "false") {
-        return 0
-    }
-    if (rawValue === "1" || rawValue === 1 || rawValue === true || rawValue === "true") {
-        return 1
-    }
-    return Number(userLogued?.user_role) === 1 ? 0 : 1
+/**
+ * Una rutina es personal si NO es de grupo y el usuario NO es administrador.
+ * @returns {number} 1 si es personal, 0 si es de catálogo (admin)
+ */
+const parseIsPersonalFlag = (userLogued) => {
+    return userLogued.user_role === 1 ? 0 : 1
 }
-const createRoutineModel = promisifyModel(routinesmodel.create)
-const updateRoutineModel = promisifyModel(routinesmodel.updateById)
-const deleteRoutineExercises = promisifyModel(routineExerciseModel.deleteByRoutineId)
 
-const assertValidExerciseIds = async (exerciseIds) => {
+const assertValidExercises = async (exercises) => {
     const pool = await sql.connect(dbConn)
 
-    for (const exerciseId of exerciseIds) {
+    for (const exercise of exercises) {
+        if (!exercise || typeof exercise.exercise_id === 'undefined' || !Number.isFinite(exercise.exercise_id)) {
+            throw new AppError("Cada ejercicio debe tener un 'exercise_id' numérico válido", 400);
+        }
+        if (!exercise.reps || typeof exercise.reps !== 'string' || exercise.reps.trim() === '') {
+            throw new AppError(`El ejercicio ${exercise.exercise_id} debe tener 'reps' válidas (cadena no vacía)`, 400);
+        }
+        if (!exercise.sets || !Number.isFinite(exercise.sets) || exercise.sets <= 0) {
+            throw new AppError(`El ejercicio ${exercise.exercise_id} debe tener 'sets' numéricas válidas y mayores que 0`, 400);
+        }
+
         const check = await pool
             .request()
-            .input("exerciseId", sql.Int, exerciseId)
+            .input("exerciseId", sql.Int, exercise.exercise_id)
             .query("SELECT 1 FROM Exercises WHERE exercise_id = @exerciseId")
 
         if (check.recordset.length === 0) {
-            throw new AppError(`El ejercicio ${exerciseId} no existe`, 400)
+            throw new AppError(`El ejercicio ${exercise.exercise_id} no existe`, 400)
         }
     }
 }
 
-const replaceRoutineExercises = async (routineId, exerciseIds) => {
-    await deleteRoutineExercises(routineId)
-
-    for (const exerciseId of exerciseIds) {
-        await new Promise((resolve, reject) => {
-            routineExerciseModel.create(
-                {
-                    routine_x_exercise_routineid: routineId,
-                    routine_x_exercise_exerciseid: exerciseId
-                },
-                (err) => {
-                    if (err) reject(err)
-                    else resolve()
+const replaceRoutineExercises = async (routineId, exercises) => {
+    return new Promise((resolve, reject) => {
+        routineExerciseModel.deleteByRoutineId(routineId, async (err) => {
+            if (err) return reject(err)
+            try {
+                for (const exercise of exercises) {
+                    await new Promise((res, rej) => {
+                        routineExerciseModel.create(
+                            {
+                                routine_x_exercise_routineid: routineId,
+                                routine_x_exercise_exerciseid: exercise.exercise_id,
+                                routine_x_exercise_reps: exercise.reps,
+                                routine_x_exercise_sets: exercise.sets
+                            },
+                            (e) => (e ? rej(e) : res())
+                        )
+                    })
                 }
-            )
+                resolve()
+            } catch (error) {
+                reject(error)
+            }
         })
-    }
+    })
 }
 
 
@@ -160,18 +155,15 @@ exports.findRoutineCategoriesCSR = wrapAsync(async function (req,res,next) {
 
     const userId = Number(userLogued.user_id)
 
-    const [datosRoutines, datosPersonal] = await Promise.all([
-        new Promise((resolve, reject) => {
-            routinesmodel.findAllWithExerciseSummary((err, data) => {
-                if (err) reject(err)
-                else resolve(data)
-            })
-        }),
-        Number.isFinite(userId)
-            ? findPersonalRoutinesByUserId(userId).catch(() => [])
-            : Promise.resolve([])
-    ]).catch(() => {
-        throw new AppError("Error al obtener categorias de rutinas", 500)
+    // Obtenemos las rutinas generales
+    const datosRoutines = await new Promise((resolve) => {
+        routinesmodel.findAllWithExerciseSummary((err, data) => resolve(err ? [] : data))
+    })
+
+    // Obtenemos las rutinas personales si el usuario existe
+    const datosPersonal = await new Promise((resolve) => {
+        if (!Number.isFinite(userId)) return resolve([])
+        routinesmodel.findPersonalByUserId(userId, (err, data) => resolve(err ? [] : data))
     })
 
     const routines = Array.isArray(datosRoutines)
@@ -179,8 +171,7 @@ exports.findRoutineCategoriesCSR = wrapAsync(async function (req,res,next) {
             ...routine,
             exercises_count: parseCount(routine.exercises_count),
             strength_exercises_count: parseCount(routine.strength_exercises_count),
-            cardio_exercises_count: parseCount(routine.cardio_exercises_count),
-            flexibility_exercises_count: parseCount(routine.flexibility_exercises_count)
+            cardio_exercises_count: parseCount(routine.cardio_exercises_count)
         }))
         : []
 
@@ -189,8 +180,7 @@ exports.findRoutineCategoriesCSR = wrapAsync(async function (req,res,next) {
             ...routine,
             exercises_count: parseCount(routine.exercises_count),
             strength_exercises_count: parseCount(routine.strength_exercises_count),
-            cardio_exercises_count: parseCount(routine.cardio_exercises_count),
-            flexibility_exercises_count: parseCount(routine.flexibility_exercises_count)
+            cardio_exercises_count: parseCount(routine.cardio_exercises_count)
         }))
         : []
 
@@ -207,8 +197,7 @@ exports.findRoutineCategoriesCSR = wrapAsync(async function (req,res,next) {
 
         const muscleGroupByType = routines.filter((routine) =>
             routine.strength_exercises_count > 0 &&
-            routine.strength_exercises_count >= routine.cardio_exercises_count &&
-            routine.strength_exercises_count >= routine.flexibility_exercises_count
+            routine.strength_exercises_count >= routine.cardio_exercises_count
         )
         const muscleGroups = takeRoutines(
             [...muscleGroupByType].sort((a, b) => {
@@ -271,7 +260,7 @@ exports.findRoutineByIdCSR = wrapAsync(async function (req,res,next){
     if(!userLogued){
         return next(new AppError("No estÃ¡s registrado!", 403))
     }else{
-        await routinesmodel.findById(id, async function(err, datosRoutines){
+        await routinesmodel.findById(id, async function (err, datosRoutines) {
             if(err){
                 return next(new AppError(err,404))
             }
@@ -307,35 +296,31 @@ exports.findRoutineWithExercisesByIdCSR = wrapAsync(async function (req,res,next
         return next(new AppError("No estás registrado!", 403))
     }
 
-    const datosRoutine = await findRoutineByIdWithExercises(id).catch((err) => {
-        const isNotFound = err?.err === "No hay datos"
-        const statusCode = isNotFound ? 404 : 500
-        const message = isNotFound ? "Rutina no encontrada" : "Error al obtener rutina con ejercicios"
-        throw new AppError(message, statusCode)
-    })
+    await routinesmodel.findByIdWithExercises(id, async function (err, datosRoutine) {
+        if (err) {
+            const isNotFound = err?.err === "No hay datos"
+            return next(new AppError(isNotFound ? "Rutina no encontrada" : err, isNotFound ? 404 : 500))
+        }
 
-    if(!datosRoutine){
-        return next(new AppError("Rutina no encontrada", 404))
-    }
+        await assertCanViewRoutine(userLogued, {
+            routine_id: datosRoutine.routine_id,
+            routine_creator_id: datosRoutine.routine_creator_id,
+            routine_is_group_routine: datosRoutine.routine_is_group_routine,
+            routine_groupid: datosRoutine.routine_groupid
+        })
 
-    await assertCanViewRoutine(userLogued, {
-        routine_id: datosRoutine.routine_id,
-        routine_creator_id: datosRoutine.routine_creator_id,
-        routine_is_group_routine: datosRoutine.routine_is_group_routine,
-        routine_groupid: datosRoutine.routine_groupid
-    })
+        const canEdit = await canManageRoutine(userLogued, {
+            routine_id: datosRoutine.routine_id,
+            routine_creator_id: datosRoutine.routine_creator_id,
+            routine_is_group_routine: datosRoutine.routine_is_group_routine,
+            routine_groupid: datosRoutine.routine_groupid
+        })
 
-    const canEdit = await canManageRoutine(userLogued, {
-        routine_id: datosRoutine.routine_id,
-        routine_creator_id: datosRoutine.routine_creator_id,
-        routine_is_group_routine: datosRoutine.routine_is_group_routine,
-        routine_groupid: datosRoutine.routine_groupid
-    })
-
-    return res.status(200).json({
-        ...datosRoutine,
-        routine_image: normalizeRoutineImageForClient(datosRoutine.routine_image),
-        can_edit: canEdit
+        return res.status(200).json({
+            ...datosRoutine,
+            routine_image: normalizeRoutineImageForClient(datosRoutine.routine_image),
+            can_edit: canEdit
+        })
     })
 })
 
@@ -381,75 +366,90 @@ exports.updateRoutineCSR = wrapAsync(async function (req, res, next) {
     }
 
     const routineId = Number(req.params.id)
-    const { name, routine_image: routineImageBody, exercise_ids: exerciseIdsRaw } = req.body
-    const uploadedImage = buildRoutineImagePath(req.files)
-    const exerciseIds = parseExerciseIds(exerciseIdsRaw)
+    const { name, routine_image: routineImageBody, exercises: exercisesRaw } = req.body
+
+    let exercises = null;
+    if (exercisesRaw !== undefined && exercisesRaw !== null) {
+        try {
+            exercises = JSON.parse(exercisesRaw);
+            if (!Array.isArray(exercises)) throw new Error("exercises no es un array válido");
+        } catch (e) {
+            return next(new AppError("El formato de 'exercises' no es válido. Debe ser un array JSON de objetos.", 400));
+        }
+    }
 
     if (!Number.isFinite(routineId)) {
         return next(new AppError("routine_id inválido", 400))
     }
 
-    let existingRoutine
-    try {
-        existingRoutine = await findRoutineById(routineId)
-    } catch (err) {
-        return next(new AppError("Rutina no encontrada", 404))
-    }
-
-    if (!existingRoutine) {
-        return next(new AppError("Rutina no encontrada", 404))
-    }
-
-    await assertCanManageRoutine(userLogued, existingRoutine)
-
-    if (name !== undefined && name !== null && typeof name !== "string") {
-        return next(new AppError("El nombre de la rutina no es válido", 400))
-    }
-
-    if (exerciseIds !== null) {
-        if (!Array.isArray(exerciseIds) || exerciseIds.length === 0) {
-            return next(
-                new AppError("exercise_ids debe ser un array con al menos un ejercicio", 400)
-            )
+    await routinesmodel.findById(routineId, async function (err, existingRoutine) {
+        if (err || !existingRoutine) {
+            return next(new AppError("Rutina no encontrada", 404))
         }
 
-        if (exerciseIds.some((exerciseId) => !Number.isFinite(exerciseId))) {
-            return next(new AppError("exercise_ids debe contener solo números enteros", 400))
+        await assertCanManageRoutine(userLogued, existingRoutine)
+
+        let routineImage = undefined;
+        if (req.files?.image?.[0]) {
+            const file = req.files.image[0];
+            let folderName = userLogued.user_username;
+            let subfolder = "users";
+
+            // Si la rutina es de grupo, guardamos en la carpeta del grupo
+            if (Number(existingRoutine.routine_is_group_routine) === 1 && existingRoutine.routine_groupid) {
+                const group = await new Promise((resolve) => {
+                    groupmodel.findById(existingRoutine.routine_groupid, (err, data) => resolve(err ? null : data));
+                });
+                if (group) {
+                    folderName = group.group_name;
+                    subfolder = "groups";
+                }
+            }
+
+            const targetDir = path.join("public", "images", "routines", subfolder, folderName);
+            await fs.mkdir(targetDir, { recursive: true });
+            const sanitizedName = (name || existingRoutine.routine_name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            const fileName = `${sanitizedName}${path.extname(file.originalname)}`;
+            await fs.rename(file.path, path.join(targetDir, fileName));
+            routineImage = `images/routines/${subfolder}/${folderName}/${fileName}`.replace(/\\/g, "/");
+        } else if (typeof routineImageBody === "string" && routineImageBody.trim()) {
+            routineImage = routineImageBody.trim();
         }
 
-        await assertValidExerciseIds(exerciseIds)
-    }
+        if (name !== undefined && name !== null && typeof name !== "string") {
+            return next(new AppError("El nombre de la rutina no es válido", 400))
+        }
 
-    const routineImage =
-        uploadedImage ||
-        (typeof routineImageBody === "string" && routineImageBody.trim()
-            ? routineImageBody.trim()
-            : undefined)
+        if (exercises !== null) {
+            if (!Array.isArray(exercises) || exercises.length === 0) {
+                return next(new AppError("La lista de ejercicios debe ser un array con al menos un ejercicio", 400))
+            }
+            await assertValidExercises(exercises)
+        }
 
-    const updateRoutine = {
-        routine_name:
-            typeof name === "string" && name.trim() ? name.trim() : existingRoutine.routine_name,
-        routine_is_group_routine:
-            existingRoutine.routine_is_group_routine !== undefined &&
-            existingRoutine.routine_is_group_routine !== null
-                ? existingRoutine.routine_is_group_routine
-                : 0,
-        routine_groupid: existingRoutine.routine_groupid ?? null
-    }
+        const updateRoutine = {
+            routine_name: typeof name === "string" && name.trim() ? name.trim() : existingRoutine.routine_name,
+            routine_is_group_routine: existingRoutine.routine_is_group_routine ?? 0,
+            routine_groupid: existingRoutine.routine_groupid ?? null
+        }
 
-    if (routineImage !== undefined) {
-        updateRoutine.routine_image = routineImage
-    }
+        if (routineImage !== undefined) {
+            updateRoutine.routine_image = routineImage
+        }
 
-    await updateRoutineModel(routineId, updateRoutine)
+        await routinesmodel.updateById(routineId, updateRoutine, async function (errUpdate) {
+            if (errUpdate) return next(new AppError(errUpdate, 500))
 
-    if (exerciseIds !== null) {
-        await replaceRoutineExercises(routineId, exerciseIds)
-    }
+            if (exercises !== null) {
+                await replaceRoutineExercises(routineId, exercises)
+            }
 
-    const updatedRoutine = await findRoutineByIdWithExercises(routineId)
-    const canEdit = await canManageRoutine(userLogued, existingRoutine)
-    return res.status(200).json({ ...updatedRoutine, can_edit: canEdit })
+            await routinesmodel.findByIdWithExercises(routineId, async function (errFinal, updatedRoutine) {
+                const canEdit = await canManageRoutine(userLogued, existingRoutine)
+                return res.status(200).json({ ...updatedRoutine, can_edit: canEdit })
+            })
+        })
+    })
 })
 
 // #region CREATEROUTINE - CSR
@@ -460,49 +460,67 @@ exports.createRoutineCSR = wrapAsync(async function (req, res, next) {
         return next(new AppError("No estás registrado!", 403))
     }
 
-    const { name, routine_image: routineImageBody, exercise_ids: exerciseIdsRaw } = req.body
-    const uploadedImage = buildRoutineImagePath(req.files)
-    const exerciseIds = parseExerciseIds(exerciseIdsRaw)
+    const { name, routine_image: routineImageBody, exercises: exercisesRaw } = req.body
+
+    let routineImage = null;
+    if (req.files?.image?.[0]) {
+        const file = req.files.image[0];
+        const folderName = userLogued.user_username;
+        const targetDir = path.join("public", "images", "routines", "users", folderName);
+        await fs.mkdir(targetDir, { recursive: true });
+        const sanitizedName = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const fileName = `${sanitizedName}${path.extname(file.originalname)}`;
+        await fs.rename(file.path, path.join(targetDir, fileName));
+        routineImage = `images/routines/users/${folderName}/${fileName}`.replace(/\\/g, "/");
+    } else if (typeof routineImageBody === "string" && routineImageBody.trim()) {
+        routineImage = routineImageBody.trim();
+    }
+
+    let exercises;
+    try {
+        exercises = JSON.parse(exercisesRaw);
+        if (!Array.isArray(exercises)) throw new Error("exercises no es un array válido");
+    } catch (e) {
+        return next(new AppError("El formato de 'exercises' no es válido. Debe ser un array JSON de objetos.", 400));
+    }
 
     if (!name || typeof name !== "string" || !name.trim()) {
         return next(new AppError("El nombre de la rutina es obligatorio", 400))
     }
 
-    if (!Array.isArray(exerciseIds) || exerciseIds.length === 0) {
+    if (!Array.isArray(exercises) || exercises.length === 0) {
         return next(
-            new AppError("exercise_ids debe ser un array con al menos un ejercicio", 400)
+            new AppError("La lista de ejercicios debe ser un array con al menos un ejercicio", 400)
         )
     }
+    await assertValidExercises(exercises)
 
-    if (exerciseIds.some((exerciseId) => !Number.isFinite(exerciseId))) {
-        return next(new AppError("exercise_ids debe contener solo números enteros", 400))
-    }
+    // Si el rol es 1 (Admin), no es personal (0). Si no, es personal (1).
+    const isPersonal = Number(userLogued.user_role) === 1 ? 0 : 1
+    
+    // Nos aseguramos de pillar el ID con cualquiera de los dos nombres posibles
+    const userId = Number(userLogued.user_id || userLogued.idUser)
 
-    await assertValidExerciseIds(exerciseIds)
-
-    const routineImage =
-        uploadedImage ||
-        (typeof routineImageBody === "string" && routineImageBody.trim()
-            ? routineImageBody.trim()
-            : null)
-
-    const isPersonal = parseIsPersonalFlag(req.body.is_personal, userLogued)
-
-    const createdRoutine = await createRoutineModel({
+    const newRoutineData = {
         routine_name: name.trim(),
         routine_image: routineImage,
-        routine_creator_id: isPersonal === 1 ? Number(userLogued.user_id) : null,
+        routine_creator_id: isPersonal === 1 ? userId : null,
         routine_is_personal_routine: isPersonal,
         routine_is_group_routine: 0
-    })
+    }
 
-    await replaceRoutineExercises(createdRoutine.routine_id, exerciseIds)
+    await routinesmodel.create(newRoutineData, async function (err, createdRoutine) {
+        if (err) return next(new AppError(err, 500))
 
-    const routineWithExercises = await findRoutineByIdWithExercises(createdRoutine.routine_id)
-    return res.status(201).json({
-        ...routineWithExercises,
-        routine_image: normalizeRoutineImageForClient(routineWithExercises.routine_image),
-        can_edit: true
+        await replaceRoutineExercises(createdRoutine.routine_id, exercises)
+
+        await routinesmodel.findByIdWithExercises(createdRoutine.routine_id, function (errEx, routineWithExercises) {
+            return res.status(201).json({
+                ...routineWithExercises,
+                routine_image: normalizeRoutineImageForClient(routineWithExercises.routine_image),
+                can_edit: true
+            })
+        })
     })
 });
 
@@ -519,19 +537,16 @@ exports.deleteRoutineCSR = wrapAsync(async function (req, res, next) {
         return next(new AppError("routine_id inválido", 400))
     }
 
-    let existingRoutine
-    try {
-        existingRoutine = await findRoutineById(routineId)
-    } catch (err) {
-        return next(new AppError("Rutina no encontrada", 404))
-    }
+    await routinesmodel.findById(routineId, async function (err, existingRoutine) {
+        if (err || !existingRoutine) {
+            return next(new AppError("Rutina no encontrada", 404))
+        }
 
-    if (!existingRoutine) {
-        return next(new AppError("Rutina no encontrada", 404))
-    }
+        await assertCanManageRoutine(userLogued, existingRoutine)
 
-    await assertCanManageRoutine(userLogued, existingRoutine)
-
-    await promisifyModel(routinesmodel.delete)(routineId)
-    return res.status(200).json({ msg: "Rutina eliminada correctamente" })
+        await routinesmodel.delete(routineId, function (errDel) {
+            if (errDel) return next(new AppError(errDel, 500))
+            return res.status(200).json({ msg: "Rutina eliminada correctamente" })
+        })
+    })
 });

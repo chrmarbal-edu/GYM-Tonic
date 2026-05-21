@@ -83,14 +83,21 @@ class RoutineRepository(
     suspend fun saveRoutineWithFiles(
         id: Int?,
         name: String,
-        exerciseIds: List<Int>,
+        exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
         imageFile: File?,
         isPersonal: Boolean = true
     ): Result<RoutineDetailDto> {
         return runCatching {
             val gson = Gson()
-            val exerciseIdsBody =
-                gson.toJson(exerciseIds).toRequestBody("application/json".toMediaTypeOrNull())
+            val exercisesJson = gson.toJson(exercises.map {
+                mapOf(
+                    "exercise_id" to it.exercise_id,
+                    "sets" to (it.series ?: 0),
+                    "reps" to (it.reps ?: "")
+                )
+            })
+            val exercisesBody =
+                exercisesJson.toRequestBody("text/plain".toMediaTypeOrNull())
             val imagePart = imageFile?.let {
                 MultipartBody.Part.createFormData(
                     "image",
@@ -105,7 +112,7 @@ class RoutineRepository(
                 unwrapOne(
                     response = routineRemoteDataSource.createRoutineMultipart(
                         name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
-                        exerciseIds = exerciseIdsBody,
+                        exercises = exercisesBody,
                         isPersonal = isPersonalBody,
                         image = imagePart
                     ),
@@ -116,7 +123,7 @@ class RoutineRepository(
                     response = routineRemoteDataSource.updateRoutineMultipart(
                         routineId = id,
                         name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
-                        exerciseIds = exerciseIdsBody,
+                        exercises = exercisesBody,
                         image = imagePart
                     ),
                     defaultMessage = "No se pudo actualizar la rutina con id=$id"

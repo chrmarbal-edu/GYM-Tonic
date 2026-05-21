@@ -22,9 +22,11 @@ data class RoutineExerciseDto(
     val exercise_type: Int = 0,
     @SerializedName("exercise_video", alternate = ["video", "exerciseVideo"])
     val exercise_video: String? = null,
-    @SerializedName("exercise_image", alternate = ["image", "exerciseImage", "exercise_image_url", "image_key"])
+    @SerializedName("exercise_image", alternate = ["image", "routineImage", "routine_image_url", "image_key"])
     val exercise_image: String? = null,
-    val reps: String? = null
+    val reps: String? = null,
+    @SerializedName("sets", alternate = ["series"])
+    val series: Int? = null
 )
 
 data class RoutineDetailDto(

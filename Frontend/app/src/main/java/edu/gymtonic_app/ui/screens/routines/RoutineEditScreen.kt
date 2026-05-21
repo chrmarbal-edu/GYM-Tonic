@@ -100,7 +100,7 @@ fun RoutineEditScreen(
         AdminExerciseSelectionScreen(
             alreadySelectedIds = selectedRemoteExercises.map { it.exercise_id }.toSet(),
             onBack = { showRemoteSelection = false },
-            onSelected = { exercise ->
+            onSelected = { exercise, reps, series ->
                 if (selectedRemoteExercises.none { it.exercise_id == exercise.exercise_id }) {
                     selectedRemoteExercises.add(
                         RoutineExerciseDto(
@@ -108,7 +108,9 @@ fun RoutineEditScreen(
                             exercise_name = exercise.exercise_name,
                             exercise_type = exercise.exercise_type,
                             exercise_image = exercise.exercise_image,
-                            exercise_video = exercise.exercise_video
+                            exercise_video = exercise.exercise_video,
+                            reps = reps,
+                            series = series
                         )
                     )
                 }
@@ -204,7 +206,13 @@ fun RoutineEditScreen(
                         selectedRemoteExercises.forEachIndexed { index, exercise ->
                             AdminSelectedExerciseItem(
                                 exercise = exercise,
-                                onRemove = { selectedRemoteExercises.removeAt(index) }
+                                onRemove = { selectedRemoteExercises.removeAt(index) },
+                                onUpdateReps = { newReps ->
+                                    selectedRemoteExercises[index] = exercise.copy(reps = newReps)
+                                },
+                                onUpdateSeries = { newSeries ->
+                                    selectedRemoteExercises[index] = exercise.copy(series = newSeries.toIntOrNull())
+                                }
                             )
                         }
                     }
@@ -218,7 +226,7 @@ fun RoutineEditScreen(
                                 routineId = routineId,
                                 isLocal = isLocal,
                                 name = name.trim(),
-                                exerciseIds = selectedRemoteExercises.map { it.exercise_id },
+                                exercises = selectedRemoteExercises.toList(),
                                 imageFile = imageFile,
                                 onSuccess = onSaved
                             )

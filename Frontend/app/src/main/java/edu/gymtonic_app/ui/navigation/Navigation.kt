@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import edu.gymtonic_app.ui.components.LocalAppSnackbarHostState
@@ -495,6 +496,19 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.TRAINING) {
             val trainingViewModel: TrainingScreenViewModel = viewModel()
             val trainingUiState = trainingViewModel.uiState.collectAsState()
+
+            val refreshRequested by navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.getStateFlow("refresh_training", false)
+                ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+            LaunchedEffect(refreshRequested) {
+                if (refreshRequested) {
+                    trainingViewModel.refreshCategories()
+                    navController.currentBackStackEntry?.savedStateHandle?.set("refresh_training", false)
+                }
+            }
+
             ObserveToastMessage(message = trainingUiState.value.errorMessage)
             TrainingShellScreen(
                 title = strings.trainingTitle,
@@ -513,6 +527,8 @@ fun Navigation(navController: NavHostController) {
                         navController.navigate(Routes.routine(routineId.toString(), isLocal)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     categories = trainingUiState.value.categories,
+                    groupRoutines = trainingUiState.value.groupRoutines,
+                    personalRoutines = trainingUiState.value.personalRoutines,
                     isRefreshing = trainingUiState.value.isRefreshing,
                     onRefresh = { trainingViewModel.refreshCategories() }
                 )
@@ -522,7 +538,10 @@ fun Navigation(navController: NavHostController) {
         composable(Routes.CREATE_ROUTINE) {
             CreateRoutineScreen(
                 onBack = { navController.popBackStack() },
-                onRoutineCreated = { navController.popBackStack() },
+                onRoutineCreated = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_training", true)
+                    navController.popBackStack()
+                },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,

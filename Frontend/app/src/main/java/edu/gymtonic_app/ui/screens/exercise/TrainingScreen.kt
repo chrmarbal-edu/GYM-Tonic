@@ -51,6 +51,8 @@ fun TrainingScreen(
     onSelect: (Int, Boolean) -> Unit,
     onCreateRoutine: () -> Unit = {},
     categories: List<TrainingCategoryDto> = emptyList(),
+    groupRoutines: List<TrainingRoutineDto> = emptyList(),
+    personalRoutines: List<TrainingRoutineDto> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
@@ -110,7 +112,33 @@ fun TrainingScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(top = 4.dp, bottom = 14.dp),
             ) {
-                if (categories.isEmpty() && !isRefreshing) {
+                if (personalRoutines.isNotEmpty()) {
+                    item {
+                        TrainingSection(
+                            title = strings.trainingMyRoutines,
+                            routines = personalRoutines,
+                            routinesLabel = strings.trainingRoutines,
+                            tapToOpen = strings.trainingTapToOpen,
+                            onSelect = onSelect,
+                            isLocal = false
+                        )
+                    }
+                }
+
+                if (groupRoutines.isNotEmpty()) {
+                    item {
+                        TrainingSection(
+                            title = strings.trainingGroupRoutines,
+                            routines = groupRoutines,
+                            routinesLabel = strings.trainingRoutines,
+                            tapToOpen = strings.trainingTapToOpen,
+                            onSelect = onSelect,
+                            isLocal = false
+                        )
+                    }
+                }
+
+                if (categories.isEmpty() && groupRoutines.isEmpty() && personalRoutines.isEmpty() && !isRefreshing) {
                     item {
                         EmptyTrainingState(strings.trainingNoWorkouts)
                     }

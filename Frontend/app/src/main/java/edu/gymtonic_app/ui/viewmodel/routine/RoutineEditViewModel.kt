@@ -12,6 +12,8 @@ import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 
+import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto
+
 import edu.gymtonic_app.data.repository.RoutineRepository
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -96,7 +98,7 @@ class RoutineEditViewModel(application: Application) : AndroidViewModel(applicat
 
         name: String,
 
-        exerciseIds: List<Int>,
+        exercises: List<RoutineExerciseDto>,
 
         imageFile: File?,
 
@@ -110,7 +112,7 @@ class RoutineEditViewModel(application: Application) : AndroidViewModel(applicat
 
 
 
-            routineRepository.saveRoutineWithFiles(routineId, name, exerciseIds, imageFile)
+            routineRepository.saveRoutineWithFiles(routineId, name, exercises, imageFile)
 
                 .onSuccess { updated ->
 
