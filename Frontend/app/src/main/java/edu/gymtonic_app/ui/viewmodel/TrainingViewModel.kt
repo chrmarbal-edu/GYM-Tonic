@@ -5,13 +5,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.repository.GroupRepository
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.repository.RoutineRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -24,10 +27,7 @@ data class TrainingUiState(
 )
 
 class TrainingScreenViewModel(application: Application) : AndroidViewModel(application) {
-    private val routineRepository = RoutineRepository(
-        routineRemoteDataSource = RoutineRemoteDataSource(),
-        routineLocalDataSource = null
-    )
+    private val routineRepository = RepositoryProvider.getRoutineRepository(application)
     private val groupRepository = GroupRepository()
 
     private val _uiState = MutableStateFlow(TrainingUiState())
@@ -47,11 +47,14 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
 
     private fun loadCategories() {
         viewModelScope.launch {
+            val sessionManager = edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager(getApplication<Application>().sessionDataStore)
+            val userId = sessionManager.sessionFlow.first().userId
+
             // Load standard categories
             val categoriesResult = routineRepository.getRoutineCategoriesFromApi()
             
             // Load personal routines
-            val personalRoutinesResult = routineRepository.getRoutinesFromApi()
+            val personalRoutinesResult = routineRepository.getRoutinesFromApi(userId)
             val personalRoutines = personalRoutinesResult.getOrNull()?.map {
                 TrainingRoutineDto(
                     routine_id = it.routine_id,

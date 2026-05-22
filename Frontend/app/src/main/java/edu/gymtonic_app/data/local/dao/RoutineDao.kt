@@ -25,11 +25,17 @@ interface RoutineDao {
     """)
     suspend fun getRoutineWithExercisesByIdForOwner(id: Int, ownerUserId: Int): RoutineEntity?
 
-    @Query("SELECT COUNT(*) FROM routines WHERE routine_name = :name AND owner_user_id = :ownerUserId")
+    @Query("SELECT EXISTS(SELECT 1 FROM routines WHERE routine_name = :name AND owner_user_id = :ownerUserId)")
     suspend fun existsByNameForOwner(name: String, ownerUserId: Int): Boolean
 
+    @Query("SELECT * FROM routines")
+    suspend fun getAllRoutines(): List<RoutineEntity>
+
+    @Query("SELECT * FROM routines WHERE routine_id = :id LIMIT 1")
+    suspend fun getRoutineById(id: Int): RoutineEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertRoutine(routine: RoutineEntity): Long
+    suspend fun insertRoutines(routines: List<RoutineEntity>)
 
     @Update
     suspend fun updateRoutine(routine: RoutineEntity): Int

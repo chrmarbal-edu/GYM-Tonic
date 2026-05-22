@@ -3,9 +3,9 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.repository.UserMissionsRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,16 +63,13 @@ data class UserMissionsUiState(
 )
 
 class UserMissionsViewModel(application: Application) : AndroidViewModel(application) {
-	private val userMissionsRemoteDataSource : UserMissionsRemoteDatasource
-	private val userMissionsRepository : UserMissionsRepository
+	private val userMissionsRepository = RepositoryProvider.getUserMissionsRepository(application)
 	private val sessionManager = SessionManager(application.sessionDataStore)
 
 	private val _uiState = MutableStateFlow(UserMissionsUiState())
 	val uiState: StateFlow<UserMissionsUiState> = _uiState.asStateFlow()
 
 	init {
-		userMissionsRemoteDataSource = UserMissionsRemoteDatasource()
-		userMissionsRepository = UserMissionsRepository(userMissionsRemoteDataSource)
 		loadUserMissions()
 	}
 
@@ -99,129 +96,121 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 
 			val userMissionsResult = userMissionsRepository.getUserMissionByUserId(userId)
 			val missionsDetailsResult = userMissionsRepository.getMissions()
+
+			val userMissionsResponse = userMissionsResult.getOrNull()
+			val missionDetails = missionsDetailsResult.getOrDefault(emptyList())
+			
+			if (userMissionsResponse == null) {
+				_uiState.update {
+					it.copy(
+						isRefreshing = false,
+						errorMessage = userMissionsResult.exceptionOrNull()?.message ?: "Error al cargar misiones"
+					)
+				}
+				return@launch
+			}
+
 			val currentCal = java.util.Calendar.getInstance()
 			val currentYear = currentCal.get(java.util.Calendar.YEAR)
 			val currentMonth = currentCal.get(java.util.Calendar.MONTH) + 1
 
-			userMissionsResult
-				.onSuccess { userMissionsResponse ->
-					missionsDetailsResult
-						.onSuccess { missionDetails ->
-							// Unir todas las misiones para calcular estados del calendario
-							val allMissions = userMissionsResponse.missions + userMissionsResponse.expiredMissions
-							val calendarStatuses = calculateCalendarStatuses(allMissions, currentYear, currentMonth)
+			// Unir todas las misiones para calcular estados del calendario
+			val allMissions = userMissionsResponse.missions + userMissionsResponse.expiredMissions
+			val calendarStatuses = calculateCalendarStatuses(allMissions, currentYear, currentMonth)
 
-							val mappedCalendar = (0 until 31).map { dayIdx ->
-								CalendarDayUi(
-									dayIndex = dayIdx,
-									status = calendarStatuses[dayIdx] ?: CalendarDayUiStatus.PENDING
-								)
-							}
+			val mappedCalendar = (0 until 31).map { dayIdx ->
+				CalendarDayUi(
+					dayIndex = dayIdx,
+					status = calendarStatuses[dayIdx] ?: CalendarDayUiStatus.PENDING
+				)
+			}
 
-							// Procesar misiones activas
-							val mappedGoals = userMissionsResponse.missions.mapNotNull { userMission ->
-								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
-								if (missionDetail != null) {
-									val goalValue = userMission.missionGoal ?: missionDetail.missionGoal ?: missionDetail.missionObjective
-									val progressFloat = if (goalValue > 0) {
-										(userMission.progress.toFloat() / goalValue.toFloat())
-											.coerceIn(0f, 1f)
-									} else {
-										0f
-									}
-									WeeklyGoalUi(
-										userMissionId = userMission.userMissionId,
-										missionId = userMission.missionId,
-										title = missionDetail.missionName,
-										progressLabel = "${userMission.progress} de $goalValue",
-										pointsLabel = "${missionDetail.missionPoints} pts",
-										progress = progressFloat,
-										progressValue = userMission.progress,
-										objectiveValue = goalValue,
-										isExpired = userMission.expired,
-										isCompleted = userMission.completed
-									)
-								} else {
-									null
-								}
-							}
-
-							// Procesar misiones expiradas
-							val mappedExpiredGoals = userMissionsResponse.expiredMissions.mapNotNull { userMission ->
-								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
-								if (missionDetail != null) {
-									val goalValue = userMission.missionGoal ?: missionDetail.missionGoal ?: missionDetail.missionObjective
-									val progressFloat = if (goalValue > 0) {
-										(userMission.progress.toFloat() / goalValue.toFloat())
-											.coerceIn(0f, 1f)
-									} else {
-										0f
-									}
-									WeeklyGoalUi(
-										userMissionId = userMission.userMissionId,
-										missionId = userMission.missionId,
-										title = missionDetail.missionName,
-										progressLabel = "${userMission.progress} de $goalValue",
-										pointsLabel = "${missionDetail.missionPoints} pts",
-										progress = progressFloat,
-										progressValue = userMission.progress,
-										objectiveValue = goalValue,
-										isExpired = true,
-										isCompleted = userMission.completed
-									)
-								} else {
-									null
-								}
-							}
-
-							// Convertir notificaciones
-							val notifications = userMissionsResponse.notifications.map { notif ->
-								NotificationUi(
-									message = notif.message,
-									missionName = notif.missionName,
-									isExpired = notif.expired
-								)
-							}
-
-							// Mostrar en "goals" tanto las activas como las expiradas pero completadas
-							val visibleGoals = mappedGoals.filter { !it.isExpired } + 
-											 mappedExpiredGoals.filter { it.isCompleted }
-
-							val achievedCount = (mappedGoals + mappedExpiredGoals).count { it.isCompleted }
-							val totalCount = (mappedGoals + mappedExpiredGoals).size
-
-							_uiState.update {
-								it.copy(
-									goals = visibleGoals.sortedBy { g -> if (g.isCompleted) 1 else 0 },
-									expiredGoals = mappedExpiredGoals.filter { !it.isCompleted },
-									notifications = notifications,
-									achievedCount = achievedCount,
-									totalCount = totalCount,
-									calendarDays = normalizeCalendar(mappedCalendar),
-									calendarYear = currentYear,
-									calendarMonth = currentMonth,
-									isRefreshing = false,
-									errorMessage = null
-								)
-							}
-						}
-						.onFailure { error ->
-							_uiState.update {
-								it.copy(
-									isRefreshing = false,
-									errorMessage = error.message ?: "No se pudieron cargar los detalles de misiones"
-								)
-							}
-						}
-				}
-				.onFailure { error ->
-					_uiState.update {
-						it.copy(
-							isRefreshing = false,
-							errorMessage = error.message ?: "No se pudieron cargar las misiones del usuario"
-						)
+			// Procesar misiones activas
+			val mappedGoals = userMissionsResponse.missions.mapNotNull { userMission ->
+				val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
+				if (missionDetail != null) {
+					val goalValue = userMission.missionGoal ?: missionDetail.missionGoal ?: missionDetail.missionObjective
+					val progressFloat = if (goalValue > 0) {
+						(userMission.progress.toFloat() / goalValue.toFloat())
+							.coerceIn(0f, 1f)
+					} else {
+						0f
 					}
+					WeeklyGoalUi(
+						userMissionId = userMission.userMissionId,
+						missionId = userMission.missionId,
+						title = missionDetail.missionName,
+						progressLabel = "${userMission.progress} de $goalValue",
+						pointsLabel = "${missionDetail.missionPoints} pts",
+						progress = progressFloat,
+						progressValue = userMission.progress,
+						objectiveValue = goalValue,
+						isExpired = userMission.expired,
+						isCompleted = userMission.completed
+					)
+				} else {
+					null
 				}
+			}
+
+			// Procesar misiones expiradas
+			val mappedExpiredGoals = userMissionsResponse.expiredMissions.mapNotNull { userMission ->
+				val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
+				if (missionDetail != null) {
+					val goalValue = userMission.missionGoal ?: missionDetail.missionGoal ?: missionDetail.missionObjective
+					val progressFloat = if (goalValue > 0) {
+						(userMission.progress.toFloat() / goalValue.toFloat())
+							.coerceIn(0f, 1f)
+					} else {
+						0f
+					}
+					WeeklyGoalUi(
+						userMissionId = userMission.userMissionId,
+						missionId = userMission.missionId,
+						title = missionDetail.missionName,
+						progressLabel = "${userMission.progress} de $goalValue",
+						pointsLabel = "${missionDetail.missionPoints} pts",
+						progress = progressFloat,
+						progressValue = userMission.progress,
+						objectiveValue = goalValue,
+						isExpired = true,
+						isCompleted = userMission.completed
+					)
+				} else {
+					null
+				}
+			}
+
+			// Convertir notificaciones
+			val notifications = userMissionsResponse.notifications.map { notif ->
+				NotificationUi(
+					message = notif.message,
+					missionName = notif.missionName,
+					isExpired = notif.expired
+				)
+			}
+
+			// Mostrar en "goals" tanto las activas como las expiradas pero completadas
+			val visibleGoals = mappedGoals.filter { !it.isExpired } + 
+							 mappedExpiredGoals.filter { it.isCompleted }
+
+			val achievedCount = (mappedGoals + mappedExpiredGoals).count { it.isCompleted }
+			val totalCount = (mappedGoals + mappedExpiredGoals).size
+
+			_uiState.update {
+				it.copy(
+					goals = visibleGoals.sortedBy { g -> if (g.isCompleted) 1 else 0 },
+					expiredGoals = mappedExpiredGoals.filter { !it.isCompleted },
+					notifications = notifications,
+					achievedCount = achievedCount,
+					totalCount = totalCount,
+					calendarDays = normalizeCalendar(mappedCalendar),
+					calendarYear = currentYear,
+					calendarMonth = currentMonth,
+					isRefreshing = false,
+					errorMessage = null
+				)
+			}
 		}
 	}
 

@@ -4,13 +4,11 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.local.GymTonicDatabase
-import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
-import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.repository.ExerciseRepository
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,8 +33,6 @@ sealed class ExerciseUiState {
 class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
     private val exerciseRepository: ExerciseRepository
-    private val exerciseRemoteDataSource: ExerciseRemoteDataSource
-    private val exerciseLocalDataSource: ExerciseLocalDataSource
 
     private val _uiState = MutableStateFlow<ExerciseUiState>(ExerciseUiState.Idle)
     val uiState: StateFlow<ExerciseUiState> = _uiState.asStateFlow()
@@ -51,12 +47,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     val allExercises: StateFlow<List<ExerciseDto>> = _allExercises.asStateFlow()
 
     init {
-        val database = GymTonicDatabase.getInstance(application)
-        val dao = database.exerciseDao()
-
-        exerciseRemoteDataSource = ExerciseRemoteDataSource()
-        exerciseLocalDataSource = ExerciseLocalDataSource(dao)
-        exerciseRepository = ExerciseRepository(exerciseRemoteDataSource, exerciseLocalDataSource)
+        exerciseRepository = RepositoryProvider.getExerciseRepository(application)
 
         observeFavoritesFromRoom()
         refreshExercises()

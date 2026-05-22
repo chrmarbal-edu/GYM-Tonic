@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,7 @@ sealed class AccountUiState {
 }
 
 class AccountViewModel(application: Application) : AndroidViewModel(application) {
-    private val userRepository = UserRepository()
+    private val userRepository = RepositoryProvider.getUserRepository(application)
     private val sessionManager = SessionManager(application.sessionDataStore)
 
     private val _uiState = MutableStateFlow<AccountUiState>(AccountUiState.Loading)

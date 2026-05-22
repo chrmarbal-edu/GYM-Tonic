@@ -3,12 +3,15 @@ package edu.gymtonic_app.ui.viewmodel.routine
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.repository.RoutineRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -23,9 +26,7 @@ sealed class RoutineCatalogUiState {
 
 class RoutineCatalogViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val routineRepository = RoutineRepository(
-        routineRemoteDataSource = RoutineRemoteDataSource()
-    )
+    private val routineRepository = RepositoryProvider.getRoutineRepository(application)
 
     private val _catalogUiState = MutableStateFlow<RoutineCatalogUiState>(RoutineCatalogUiState.Loading)
     val catalogUiState: StateFlow<RoutineCatalogUiState> = _catalogUiState.asStateFlow()
@@ -40,7 +41,10 @@ class RoutineCatalogViewModel(application: Application) : AndroidViewModel(appli
                 return@launch
             }
 
-            routineRepository.getRoutineWithExercisesByIdFromApi(idInt)
+            val sessionManager = SessionManager(getApplication<Application>().sessionDataStore)
+            val userId = sessionManager.sessionFlow.first().userId
+
+            routineRepository.getRoutineWithExercisesByIdFromApi(idInt, userId)
                 .onSuccess { routineDetailDto ->
                     _catalogUiState.value = RoutineCatalogUiState.Success(routineDetailDto)
                 }

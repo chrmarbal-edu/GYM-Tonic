@@ -3,13 +3,12 @@ package edu.gymtonic_app.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
-import edu.gymtonic_app.data.remote.remoteDatasource.user.UserMissionsRemoteDatasource
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.repository.GroupRepository
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.repository.RoutineRepository
 import edu.gymtonic_app.data.repository.UserMissionsRepository
 import edu.gymtonic_app.data.repository.UserRepository
@@ -36,11 +35,9 @@ sealed class ProfileUiState {
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
 
-	private val userMissionsRemoteDataSource : UserMissionsRemoteDatasource
-	private val userMissionsRepository : UserMissionsRepository
-	private val routineRepository: RoutineRepository
-	private val routineRemoteDataSource: RoutineRemoteDataSource
-	private val userRepository = UserRepository()
+	private val userMissionsRepository = RepositoryProvider.getUserMissionsRepository(application)
+	private val routineRepository = RepositoryProvider.getRoutineRepository(application)
+	private val userRepository = RepositoryProvider.getUserRepository(application)
 
 	private val groupRepository = GroupRepository()
 	private val sessionManager = SessionManager(application.sessionDataStore)
@@ -49,12 +46,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 	val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
 	init {
-		userMissionsRemoteDataSource = UserMissionsRemoteDatasource()
-		userMissionsRepository = UserMissionsRepository(userMissionsRemoteDataSource)
-
-		routineRemoteDataSource = RoutineRemoteDataSource()
-		routineRepository = RoutineRepository(routineRemoteDataSource)
-
 		loadProfile()
 	}
 
@@ -81,22 +72,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val streakLabel = "$streakDone/7 Logrados"
 
 			val routinesResult = routineRepository.getRoutineCategoriesFromApi()
+			// Ensure personal routines are updated in cache with correct userId
+			if (userId != null) {
+				routineRepository.getRoutinesFromApi(userId)
+			}
 			val groupsResult = groupRepository.getUserGroups()
 
-			if (routinesResult.isFailure || groupsResult.isFailure) {
-				_uiState.value = ProfileUiState.Error(
-					message = routinesResult.exceptionOrNull()?.message
-						?: groupsResult.exceptionOrNull()?.message
-						?: "No se pudo cargar el perfil"
-				)
-				return@launch
-			}
+			val routines = routinesResult.getOrDefault(emptyList())
+			val groups = groupsResult.getOrDefault(emptyList())
 
-			val category = routinesResult.getOrNull().orEmpty().firstOrNull { it.id == "recent" }
-				?: routinesResult.getOrNull().orEmpty().firstOrNull()
-
+			val category = routines.firstOrNull { it.id == "recent" } ?: routines.firstOrNull()
 			val recentRoutines = category?.routines.orEmpty().take(3)
-			val groups = groupsResult.getOrNull().orEmpty()
 
 			_uiState.value = ProfileUiState.Success(
 				ProfileData(

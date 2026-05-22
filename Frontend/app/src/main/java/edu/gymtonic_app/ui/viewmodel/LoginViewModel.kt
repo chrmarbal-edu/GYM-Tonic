@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.repository.AuthRepository
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.auth.SocialLoginResponse
@@ -27,7 +28,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
     val loginState: StateFlow<LoginState> = _loginState
 
     init {
-        authRepository = AuthRepository()
+        authRepository = RepositoryProvider.getAuthRepository(application)
 
         val dataStore: DataStore<Preferences> = application.sessionDataStore
         sessionManager = SessionManager(dataStore)

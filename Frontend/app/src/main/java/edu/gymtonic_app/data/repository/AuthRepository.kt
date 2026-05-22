@@ -1,5 +1,6 @@
 package edu.gymtonic_app.data.repository
 
+import edu.gymtonic_app.data.local.localDatasource.user.UserLocalDataSource
 import edu.gymtonic_app.data.remote.remoteDatasource.AuthRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginRequest
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
@@ -7,10 +8,29 @@ import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import java.io.File
 
 class AuthRepository(
-	private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource()
+	private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource(),
+	private val userLocalDataSource: UserLocalDataSource? = null
 ) {
 	suspend fun login(request: LoginRequest): LoginResponse {
-		return authRemoteDataSource.login(request)
+		val response = authRemoteDataSource.login(request)
+		response.data?.let { userData ->
+			// Cache user on login
+			val userEntity = edu.gymtonic_app.data.local.localModel.user.UserEntity(
+				user_id = userData.user_id,
+				user_username = userData.user_username,
+				user_name = userData.user_name,
+				user_birthdate = userData.user_birthdate,
+				user_email = userData.user_email,
+				user_picture = userData.user_picture,
+				user_height = userData.user_height,
+				user_weight = userData.user_weight,
+				user_objetive = userData.user_objetive,
+				user_points = userData.user_points,
+				user_role = userData.user_role
+			)
+			userLocalDataSource?.upsertUser(userEntity)
+		}
+		return response
 	}
 
 	suspend fun googleLogin(idToken: String): Any {

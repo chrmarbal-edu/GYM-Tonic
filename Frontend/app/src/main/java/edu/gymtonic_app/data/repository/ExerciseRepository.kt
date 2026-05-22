@@ -1,16 +1,22 @@
 package edu.gymtonic_app.data.repository
 
+import android.content.Context
+import android.util.Log
 import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.mapper.toDto
+import edu.gymtonic_app.data.mapper.toEntity
 import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
+import edu.gymtonic_app.data.util.MediaCacheManager
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
 class ExerciseRepository(
-	private val exerciseRemoteDataSource: ExerciseRemoteDataSource ,
-	private val exerciseLocalDataSource: ExerciseLocalDataSource
+	private val exerciseRemoteDataSource: ExerciseRemoteDataSource,
+	private val exerciseLocalDataSource: ExerciseLocalDataSource,
+	private val context: Context? = null
 ) {
 
 	//region Room
@@ -21,7 +27,15 @@ class ExerciseRepository(
 	suspend fun updateFavWord(exercise: ExerciseEntity) {
 		val state: ExerciseEntity? = exerciseLocalDataSource.getFavExerciseById(exercise.exercise_id)
 		if (state == null) {
-			exerciseLocalDataSource.insertExercise(exercise)
+			// When making favorite, we download media
+			val cachedExercise = context?.let { ctx ->
+				val localImg = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_image)
+				val localVid = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_video)
+				exercise.copy(exercise_image = localImg, exercise_video = localVid, is_favorite = true)
+			} ?: exercise.copy(is_favorite = true)
+			
+			Log.d("ExerciseRepository", "Caching favorite exercise: ${exercise.exercise_id}")
+			exerciseLocalDataSource.insertExercise(cachedExercise)
 		} else {
 			exerciseLocalDataSource.deleteExercise(exercise)
 		}
@@ -31,28 +45,43 @@ class ExerciseRepository(
 	//region Retrofit
 	suspend fun getExercises(): Result<List<ExerciseDto>> {
 		return runCatching {
-			unwrapList(
-				response = exerciseRemoteDataSource.getExercises(),
-				defaultMessage = "No se pudieron obtener los ejercicios"
-			)
+			try {
+				unwrapList(
+					response = exerciseRemoteDataSource.getExercises(),
+					defaultMessage = "No se pudieron obtener los ejercicios"
+				)
+			} catch (e: Exception) {
+				Log.d("ExerciseRepository", "Offline: loading all local exercises (favorites/routine members)")
+				exerciseLocalDataSource.getAllExercises().map { it.toDto() }
+			}
 		}
 	}
 
 	suspend fun getExercisesByType(type: String): Result<List<ExerciseDto>> {
 		return runCatching {
-			unwrapList(
-				response = exerciseRemoteDataSource.getExercisesByType(type),
-				defaultMessage = "No se pudieron obtener los ejercicios del tipo $type"
-			)
+			try {
+				unwrapList(
+					response = exerciseRemoteDataSource.getExercisesByType(type),
+					defaultMessage = "No se pudieron obtener los ejercicios del tipo $type"
+				)
+			} catch (e: Exception) {
+				// Filter local by type if we had type info in entity. 
+				// For now, return all cached as a fallback
+				exerciseLocalDataSource.getAllExercises().map { it.toDto() }
+			}
 		}
 	}
 
 	suspend fun getExerciseById(exerciseId: Int): Result<ExerciseDto> {
 		return runCatching {
-			unwrapOne(
-				response = exerciseRemoteDataSource.getExerciseById(exerciseId),
-				defaultMessage = "No se pudo obtener el ejercicio con id=$exerciseId"
-			)
+			try {
+				unwrapOne(
+					response = exerciseRemoteDataSource.getExerciseById(exerciseId),
+					defaultMessage = "No se pudo obtener el ejercicio con id=$exerciseId"
+				)
+			} catch (e: Exception) {
+				exerciseLocalDataSource.getExerciseById(exerciseId)?.toDto() ?: throw e
+			}
 		}
 	}
 

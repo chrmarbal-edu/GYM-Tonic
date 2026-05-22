@@ -23,8 +23,20 @@ class RoutineLocalDataSource(
         return routineDao.existsByNameForOwner(name, ownerUserId)
     }
 
+    suspend fun getRoutineById(id: Int): RoutineEntity? {
+        return routineDao.getRoutineById(id)
+    }
+
+    suspend fun getAllRoutines(): List<RoutineEntity> {
+        return routineDao.getAllRoutines()
+    }
+
+    suspend fun insertRoutines(routines: List<RoutineEntity>) {
+        routineDao.insertRoutines(routines)
+    }
+
     suspend fun createOrUpdateRoutine(routine: RoutineEntity): Long {
-        return routineDao.upsertRoutine(routine)
+        return routineDao.insertRoutines(listOf(routine)).let { 0L } // Using insertRoutines for simplicity
     }
 
     suspend fun updateRoutine(routine: RoutineEntity): Int {

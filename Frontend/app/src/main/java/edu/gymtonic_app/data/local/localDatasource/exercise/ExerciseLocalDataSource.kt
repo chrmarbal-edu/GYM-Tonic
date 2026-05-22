@@ -11,7 +11,14 @@ class ExerciseLocalDataSource(
 	fun getExercises(): Flow<List<ExerciseEntity>> = exerciseDao.getFavoriteExercise()
 
 	//obtener por id
-	suspend fun getFavExerciseById(exercise_id: Int): ExerciseEntity? = exerciseDao.getFavExerciseById(exercise_id)
+	suspend fun getExerciseById(exercise_id: Int): ExerciseEntity? = exerciseDao.getExerciseById(exercise_id)
+
+	suspend fun getAllExercises(): List<ExerciseEntity> = exerciseDao.getAllExercises()
+
+	suspend fun insertExercises(exercises: List<ExerciseEntity>) = exerciseDao.insertExercises(exercises)
+
+	//obtener favoritas por id
+	suspend fun getFavExerciseById(exercise_id: Int): ExerciseEntity? = exerciseDao.getExerciseById(exercise_id)
 
 	//insertar favorita
 	suspend fun insertExercise(exercise: ExerciseEntity): Long = exerciseDao.insertExercise(exercise)
