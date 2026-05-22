@@ -59,6 +59,7 @@ CREATE TABLE dbo.Missions (
     mission_type     INT               NOT NULL,
     mission_points   INT               NOT NULL,
     mission_objective INT               NOT NULL,
+    mission_goal      INT               DEFAULT 0 NOT NULL,
     CONSTRAINT PK_Missions PRIMARY KEY (mission_id)
 );
 GO
@@ -144,6 +145,7 @@ CREATE TABLE dbo.User_X_Mission (
     user_x_mission_expiration DATE NOT NULL,
     user_x_mission_completed BIT DEFAULT 0 NOT NULL,
     user_x_mission_progress INT DEFAULT 0 NOT NULL,
+    user_x_mission_points_deducted BIT DEFAULT 0 NOT NULL,
     CONSTRAINT PK_User_X_Mission PRIMARY KEY (user_x_mission_id),
     FOREIGN KEY (user_x_mission_userid)    REFERENCES dbo.Users(user_id),
     FOREIGN KEY (user_x_mission_missionid) REFERENCES dbo.Missions(mission_id)
@@ -243,16 +245,17 @@ VALUES
 GO
 
 -- Misiones (mission_type: 0=diaria 1=semanal 2=mensual)
-INSERT INTO dbo.Missions (mission_name, mission_type, mission_points, mission_objective)
+-- mission_objective: 0=Mantenimiento 1=Pérdida de peso 2=Ganancia muscular 3=Rendimiento
+INSERT INTO dbo.Missions (mission_name, mission_type, mission_points, mission_objective, mission_goal)
 VALUES
-    ('Primera sesión',            0,  10,     1),
-    ('Racha de 3 días',           0,  30,     3),
-    ('Completa 5 entrenamientos', 1,  75,     5),
-    ('10 km en una semana',       1, 100,    10),
-    ('30 sesiones en un mes',     2, 500,    30),
-    ('Quema 10 000 kcal',         2, 300, 10000),
-    ('Primer ejercicio de fuerza',0,  10,     1),
-    ('Semana de cardio completa', 1,  80,     7);
+    ('Primera sesión',            0,  10,  0, 0),
+    ('Racha de 3 días',           0,  30,  0, 3),
+    ('Completa 5 entrenamientos', 1,  75,  1, 5),
+    ('10 km en una semana',       1, 100,  1, 10),
+    ('30 sesiones en un mes',     2, 500,  2, 30),
+    ('Quema 10 000 kcal',         2, 300,  2, 10000),
+    ('Primer ejercicio de fuerza',0,  10,  3, 0),
+    ('Semana de cardio completa', 1,  80,  3, 0);
 GO
 
 -- Grupos

@@ -18,12 +18,19 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -61,7 +68,9 @@ fun WeekChallengesScreen(
     calendarMonth: Int = 0,
     achievedLabel: String = "0/0",
     isRefreshing: Boolean = false,
-    onRefresh: () -> Unit = {}
+    onRefresh: () -> Unit = {},
+    onUpdateProgress: (Int, Int) -> Unit = { _, _ -> },
+    onCompleteMission: (Int) -> Unit = {}
 ) {
     val strings = LocalStrings.current
     val colors = LocalColors.current
@@ -118,7 +127,13 @@ fun WeekChallengesScreen(
                         }
 
                         items(goals) { goal ->
-                            GoalCard(goal = goal)
+                            GoalCard(
+                                goal = goal,
+                                onUpdateProgress = { val newProgress = (goal.progressValue + it).coerceIn(0, goal.objectiveValue)
+                                    onUpdateProgress(goal.userMissionId, newProgress)
+                                },
+                                onCompleteMission = { onCompleteMission(goal.userMissionId) }
+                            )
                         }
 
                         item {
@@ -197,7 +212,12 @@ private fun HeaderRow(title: String) {
 }
 
 @Composable
-private fun GoalCard(goal: WeeklyGoalUi) {
+private fun GoalCard(
+    goal: WeeklyGoalUi,
+    onUpdateProgress: (Int) -> Unit = {},
+    onCompleteMission: () -> Unit = {}
+) {
+    val strings = LocalStrings.current
     val colors = LocalColors.current
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -205,51 +225,127 @@ private fun GoalCard(goal: WeeklyGoalUi) {
         color = colors.surfaceAccent,
         shadowElevation = 4.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                .padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Outlined.EmojiEvents,
-                contentDescription = null,
-                tint = Color(0xFFF4C542),
-                modifier = Modifier.size(34.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.EmojiEvents,
+                    contentDescription = null,
+                    tint = Color(0xFFF4C542),
+                    modifier = Modifier.size(34.dp)
+                )
 
-            Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = goal.title,
+                        color = colors.textOnAccent,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = goal.progressLabel,
+                        color = colors.textOnAccent.copy(alpha = 0.8f),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
                 Text(
-                    text = goal.title,
+                    text = goal.pointsLabel,
                     color = colors.textOnAccent,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = goal.progressLabel,
-                    color = colors.textOnAccent,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 1.dp, bottom = 4.dp)
-                )
-                LinearProgressIndicator(
-                    progress = { goal.progress },
-                    color = Color(0xFF1EF847),
-                    trackColor = Color(0xFFE6E8EB),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(9.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 14.sp
                 )
             }
 
-            Text(
-                text = goal.pointsLabel,
-                color = colors.textOnAccent,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp
+            Spacer(modifier = Modifier.height(10.dp))
+
+            LinearProgressIndicator(
+                progress = { if (goal.progress.isNaN()) 0f else goal.progress },
+                color = Color(0xFF1EF847),
+                trackColor = Color(0xFFE6E8EB).copy(alpha = 0.3f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(8.dp))
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (goal.isCompleted) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1B5E20).copy(alpha = 0.1f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color(0xFF1EF847),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = strings.completedLabel ?: "Completado",
+                            color = Color(0xFF1EF847),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                } else if (!goal.isExpired) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { onUpdateProgress(-1) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Remove, contentDescription = null, tint = colors.textOnAccent)
+                        }
+                        Text(
+                            text = goal.progressValue.toString(),
+                            color = colors.textOnAccent,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+                        IconButton(
+                            onClick = { onUpdateProgress(1) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, tint = colors.textOnAccent)
+                        }
+                    }
+
+                    if (goal.progressValue >= goal.objectiveValue) {
+                        Button(
+                            onClick = onCompleteMission,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF1EF847),
+                                contentColor = Color(0xFF0D3200)
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Text(
+                                text = strings.completeButton ?: "Completar",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -2,7 +2,7 @@ package edu.gymtonic_app.ui.i18n
 
 val EnglishStrings = AppStrings(
     common = CommonStrings(
-        language = "ES",
+        language = "EN",
         back = "Back",
         navTraining = "Workouts",
         navChallenges = "Challenges",
@@ -21,6 +21,8 @@ val EnglishStrings = AppStrings(
         myCalendar = "My Calendar",
         showMore = "Show more",
         achieved = "Achieved",
+        completedLabel = "Completed",
+        completeButton = "Complete",
         calendarDayNames = listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"),
         calendarMonthNames = listOf("January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December")
@@ -265,6 +267,7 @@ val EnglishStrings = AppStrings(
         adminMissionName = "Mission name",
         adminMissionType = "Mission type",
         adminMissionObjective = "Objective",
+        adminMissionGoal = "Goal",
         adminDeleteUserMessage = "This user and associated data will be removed.",
         adminDeleteExerciseMessage = "This exercise will be removed from the catalog.",
         adminDeleteGroupMessage = "This group will be dissolved.",

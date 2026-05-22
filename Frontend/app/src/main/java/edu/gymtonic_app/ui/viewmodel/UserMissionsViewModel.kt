@@ -22,6 +22,8 @@ data class WeeklyGoalUi(
 	val progressLabel: String,
 	val pointsLabel: String,
 	val progress: Float,
+	val progressValue: Int = 0,
+	val objectiveValue: Int = 0,
 	val isExpired: Boolean = false,
 	val isCompleted: Boolean = false
 )
@@ -97,38 +99,32 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 
 			val userMissionsResult = userMissionsRepository.getUserMissionByUserId(userId)
 			val missionsDetailsResult = userMissionsRepository.getMissions()
-			val calendarResult = userMissionsRepository.getWeeklyCalendarDays()
-
-			// El calendario siempre se muestra
-			val mappedCalendar = calendarResult.getOrElse { emptyList() }.map { day ->
-				CalendarDayUi(
-					dayIndex = day.dayIndex,
-					status = when {
-						day.isClosedDay && day.didWorkout -> CalendarDayUiStatus.DONE
-						day.isClosedDay && !day.didWorkout -> CalendarDayUiStatus.MISSED
-						else -> CalendarDayUiStatus.PENDING
-					}
-				)
-			}
 			val currentCal = java.util.Calendar.getInstance()
-			_uiState.update {
-				it.copy(
-					calendarDays = normalizeCalendar(mappedCalendar),
-					calendarYear = currentCal.get(java.util.Calendar.YEAR),
-					calendarMonth = currentCal.get(java.util.Calendar.MONTH) + 1
-				)
-			}
+			val currentYear = currentCal.get(java.util.Calendar.YEAR)
+			val currentMonth = currentCal.get(java.util.Calendar.MONTH) + 1
 
 			userMissionsResult
 				.onSuccess { userMissionsResponse ->
 					missionsDetailsResult
 						.onSuccess { missionDetails ->
+							// Unir todas las misiones para calcular estados del calendario
+							val allMissions = userMissionsResponse.missions + userMissionsResponse.expiredMissions
+							val calendarStatuses = calculateCalendarStatuses(allMissions, currentYear, currentMonth)
+
+							val mappedCalendar = (0 until 31).map { dayIdx ->
+								CalendarDayUi(
+									dayIndex = dayIdx,
+									status = calendarStatuses[dayIdx] ?: CalendarDayUiStatus.PENDING
+								)
+							}
+
 							// Procesar misiones activas
 							val mappedGoals = userMissionsResponse.missions.mapNotNull { userMission ->
 								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
 								if (missionDetail != null) {
-									val progressFloat = if (missionDetail.missionObjective > 0) {
-										(userMission.progress.toFloat() / missionDetail.missionObjective.toFloat())
+									val goalValue = userMission.missionGoal ?: missionDetail.missionGoal ?: missionDetail.missionObjective
+									val progressFloat = if (goalValue > 0) {
+										(userMission.progress.toFloat() / goalValue.toFloat())
 											.coerceIn(0f, 1f)
 									} else {
 										0f
@@ -137,9 +133,11 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 										userMissionId = userMission.userMissionId,
 										missionId = userMission.missionId,
 										title = missionDetail.missionName,
-										progressLabel = "${userMission.progress} de ${missionDetail.missionObjective}",
+										progressLabel = "${userMission.progress} de $goalValue",
 										pointsLabel = "${missionDetail.missionPoints} pts",
 										progress = progressFloat,
+										progressValue = userMission.progress,
+										objectiveValue = goalValue,
 										isExpired = userMission.expired,
 										isCompleted = userMission.completed
 									)
@@ -152,13 +150,22 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 							val mappedExpiredGoals = userMissionsResponse.expiredMissions.mapNotNull { userMission ->
 								val missionDetail = missionDetails.find { it.missionId == userMission.missionId }
 								if (missionDetail != null) {
+									val goalValue = userMission.missionGoal ?: missionDetail.missionGoal ?: missionDetail.missionObjective
+									val progressFloat = if (goalValue > 0) {
+										(userMission.progress.toFloat() / goalValue.toFloat())
+											.coerceIn(0f, 1f)
+									} else {
+										0f
+									}
 									WeeklyGoalUi(
 										userMissionId = userMission.userMissionId,
 										missionId = userMission.missionId,
 										title = missionDetail.missionName,
-										progressLabel = "${userMission.progress} de ${missionDetail.missionObjective}",
+										progressLabel = "${userMission.progress} de $goalValue",
 										pointsLabel = "${missionDetail.missionPoints} pts",
-										progress = (userMission.progress.toFloat() / missionDetail.missionObjective.toFloat()).coerceIn(0f, 1f),
+										progress = progressFloat,
+										progressValue = userMission.progress,
+										objectiveValue = goalValue,
 										isExpired = true,
 										isCompleted = userMission.completed
 									)
@@ -176,14 +183,23 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 								)
 							}
 
-							val achievedCount = mappedGoals.count { it.progress >= 1f && !it.isExpired }
+							// Mostrar en "goals" tanto las activas como las expiradas pero completadas
+							val visibleGoals = mappedGoals.filter { !it.isExpired } + 
+											 mappedExpiredGoals.filter { it.isCompleted }
+
+							val achievedCount = (mappedGoals + mappedExpiredGoals).count { it.isCompleted }
+							val totalCount = (mappedGoals + mappedExpiredGoals).size
+
 							_uiState.update {
 								it.copy(
-									goals = mappedGoals.filter { !it.isExpired },
-									expiredGoals = mappedExpiredGoals,
+									goals = visibleGoals.sortedBy { g -> if (g.isCompleted) 1 else 0 },
+									expiredGoals = mappedExpiredGoals.filter { !it.isCompleted },
 									notifications = notifications,
 									achievedCount = achievedCount,
-									totalCount = mappedGoals.size + mappedExpiredGoals.size,
+									totalCount = totalCount,
+									calendarDays = normalizeCalendar(mappedCalendar),
+									calendarYear = currentYear,
+									calendarMonth = currentMonth,
 									isRefreshing = false,
 									errorMessage = null
 								)
@@ -290,5 +306,38 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 		}
 
 		return result
+	}
+
+	private fun calculateCalendarStatuses(
+		allMissions: List<edu.gymtonic_app.data.remote.remoteModel.user.UserMissionDto>,
+		currentYear: Int,
+		currentMonth: Int
+	): Map<Int, CalendarDayUiStatus> {
+		val statusMap = mutableMapOf<Int, CalendarDayUiStatus>()
+
+		// Sort: not completed first, so completed ones override them
+		val sortedMissions = allMissions.sortedBy { it.completed }
+
+		for (m in sortedMissions) {
+			val dateStr = m.userMissionExpiration // "yyyy-MM-dd"
+			val parts = dateStr.split("-")
+			if (parts.size != 3) continue
+
+			val y = parts[0].toIntOrNull() ?: 0
+			val month = parts[1].toIntOrNull() ?: 0
+			val d = parts[2].toIntOrNull() ?: 0
+
+			if (y == currentYear && month == currentMonth) {
+				val dayIdx = d - 1
+				if (m.completed) {
+					statusMap[dayIdx] = CalendarDayUiStatus.DONE
+				} else if (m.expired) {
+					if (statusMap[dayIdx] != CalendarDayUiStatus.DONE) {
+						statusMap[dayIdx] = CalendarDayUiStatus.MISSED
+					}
+				}
+			}
+		}
+		return statusMap
 	}
 }

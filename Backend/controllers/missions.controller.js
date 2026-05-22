@@ -3,6 +3,8 @@
 const missionmodel = require("../models/missions.model.js")
 const userModel = require("../models/users.model.js")
 const userMissionsModel = require("../models/userMissions.model.js")
+const sql = require("mssql")
+const dbConn = require("../utils/mssql.config")
 const fs = require("fs").promises
 const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
@@ -17,6 +19,51 @@ function wrapAsync(fn) {
         });
     }
 }
+
+/* <=============================== SYNC MISSION ASSIGNMENTS ===============================> */
+async function syncMissionAssignments(missionId, objective, type) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const now = new Date()
+        let expiration = new Date()
+
+        // mission_type: 0=diaria, 1=semanal, 2=mensual
+        if (type == 0) {
+            expiration.setDate(now.getDate() + 1)
+        } else if (type == 1) {
+            expiration.setDate(now.getDate() + 7)
+        } else if (type == 2) {
+            expiration.setDate(now.getDate() + 30)
+        }
+
+        // 1. Eliminar asignaciones activas (no completadas) de usuarios que ya no coinciden con el objetivo de la misión
+        await pool.request()
+            .input("missionId", sql.Int, missionId)
+            .input("objective", sql.Int, objective)
+            .query(`
+                DELETE FROM User_X_Mission 
+                WHERE user_x_mission_missionid = @missionId 
+                AND user_x_mission_completed = 0
+                AND user_x_mission_userid IN (SELECT user_id FROM Users WHERE user_objective <> @objective)
+            `)
+
+        // 2. Asignar la misión a todos los usuarios que tienen el mismo objetivo y aún no la tienen asignada
+        await pool.request()
+            .input("missionId", sql.Int, missionId)
+            .input("objective", sql.Int, objective)
+            .input("expiration", sql.DateTime, expiration)
+            .query(`
+                INSERT INTO User_X_Mission (user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration, user_x_mission_completed, user_x_mission_progress, user_x_mission_points_deducted)
+                SELECT u.user_id, @missionId, @expiration, 0, 0, 0
+                FROM Users u
+                WHERE u.user_objective = @objective
+                AND NOT EXISTS (SELECT 1 FROM User_X_Mission ux WHERE ux.user_x_mission_userid = u.user_id AND ux.user_x_mission_missionid = @missionId)
+            `)
+    } catch (err) {
+        console.error("Error inside syncMissionAssignments:", err)
+    }
+}
+
 /* 
 400 - BAD REQUEST (EL SERVIDOR NO PUEDE PROCESAR LA SOLICITUD)
 404 - NOT FOUND (NO EXISTE EN EL SERVIDOR EL RECURSO PEDIDO)
@@ -70,44 +117,33 @@ exports.findMissionByIdCSR = wrapAsync(async function (req,res,next){
 // Actualizamos la misión.
 exports.updateMissionCSR = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    let { name, type, points, objective } = req.body
-
-    console.log("id", id);
-
-    let completeMission    
+    let { name, type, points, objective, goal } = req.body
    
-    /* <================== PARTE 1 ==================> */
-    // Espera una promesa de lo que devuelva la función "findById" del modelo. 
-    await missionmodel.findById(id, async function(err,objetoDatos){
+    await missionmodel.findById(id, async function(err, existingMission){
         if(err){
-            console.log("ERROR UPDATE GROUP SSR");
-
             next(new AppError(err, 500))
-        }else{     
-            completeMission = objetoDatos
+        } else if (!existingMission || existingMission.length == 0) {
+            return next(new AppError("Misión no encontrada", 404))
         }
 
-        let updateMission = {}           
-        updateMission = {            
-            name: name,
-            type: type,
-            points: points,
-            objective: objective
+        let updateMission = {            
+            name: name !== undefined ? name : existingMission.mission_name,
+            type: type !== undefined ? Number(type) : existingMission.mission_type,
+            points: points !== undefined ? Number(points) : existingMission.mission_points,
+            objective: objective !== undefined ? Number(objective) : existingMission.mission_objective,
+            goal: goal !== undefined ? Number(goal) : existingMission.mission_goal
         }
-
-        completeMission.name = updateMission.name
-        completeMission.type = updateMission.type
-        completeMission.points = updateMission.points
-        completeMission.objective = updateMission.objective
-
         
-        // Realizamos la redirección en la promesa de la actualización.
-        await missionmodel.updateById(id, updateMission, function(err, datosMissionActualizada){
+        await missionmodel.updateById(id, updateMission, async function(err, datosMissionActualizada){
             if(err){
-                console.log("ERROR UPDATE BY ID SSR");
-
                 next(new AppError(err, 500))
             } else{
+                try {
+                    // Sincronizar asignaciones tras la actualización
+                    await syncMissionAssignments(id, updateMission.objective, updateMission.type)
+                } catch (assignErr) {
+                    console.error("Error updating mission assignments:", assignErr)
+                }
                 res.status(200).json(datosMissionActualizada);
             }
         })
@@ -117,24 +153,27 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
 // #region CREATEMISSION - CSR
 /* <=============================== 7. CREATEMISSION ===============================> */
 exports.createMissionCSR = wrapAsync(async function (req, res, next) {
-    const { name, type, points, objective } = req.body
+    const { name, type, points, objective, goal } = req.body
 
         let newMission = {}
 
         newMission = {
             name: name,
-            type: type,
-            points: points,
-            objective: objective
+            type: Number(type),
+            points: Number(points),
+            objective: Number(objective),
+            goal: Number(goal)
         }
 
         // Realizamos la redirección en la promesa de la creación.
-        await missionmodel.create(newMission,function(err,datosMisionCreada){
+        await missionmodel.create(newMission, async function(err,datosMisionCreada){
             if(err){
                 console.log(err)
                 console.log("ERROR CREATE MISSIONS CSR");
                 return next(new AppError(err, 500))
             } else{
+                // Asignar automáticamente a los usuarios que tengan el mismo objetivo
+                await syncMissionAssignments(datosMisionCreada.mission_id, datosMisionCreada.mission_objective, datosMisionCreada.mission_type)
                 res.status(200).json({ datosMisionCreada })
             }
         })

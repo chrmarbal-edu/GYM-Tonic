@@ -36,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +53,7 @@ import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.ProfileUiState
 import edu.gymtonic_app.ui.viewmodel.ProfileViewModel
+import edu.gymtonic_app.ui.screens.admin.missionObjectiveLabel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -141,11 +143,14 @@ fun ProfileScreen(
                 }
 
                 is ProfileUiState.Success -> {
+                    val data = state.data
                     ProfileContent(
-                        username = state.data.username,
-                        streakLabel = state.data.streakLabel,
-                        routines = state.data.recentRoutines,
-                        groups = state.data.groups,
+                        username = data.username,
+                        userPoints = data.userPoints,
+                        objective = data.objective,
+                        streakLabel = data.streakLabel,
+                        routines = data.recentRoutines,
+                        groups = data.groups,
                         onOpenWeek = onOpenWeek,
                         onOpenGroups = onOpenGroups,
                         onOpenGroup = onOpenGroup,
@@ -161,6 +166,8 @@ fun ProfileScreen(
 @Composable
 private fun ProfileContent(
     username: String,
+    userPoints: Int,
+    objective: Int,
     streakLabel: String,
     routines: List<TrainingRoutineDto>,
     groups: List<GroupDto>,
@@ -187,12 +194,36 @@ private fun ProfileContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = strings.profileGreeting(username),
-                    color = colors.textPrimary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = strings.profileGreeting(username),
+                        color = colors.textPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = missionObjectiveLabel(objective),
+                        color = colors.textSecondary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = Color(0xFFF4C542),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.padding(top = 2.dp)
+                    ) {
+                        Text(
+                            text = "$userPoints pts",
+                            color = Color(0xFF0D3200),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 IconButton(onClick = onOpenDrawer) {
                     Icon(
                         imageVector = Icons.Outlined.AccountCircle,

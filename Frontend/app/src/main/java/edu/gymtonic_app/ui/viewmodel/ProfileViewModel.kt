@@ -12,6 +12,7 @@ import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.repository.GroupRepository
 import edu.gymtonic_app.data.repository.RoutineRepository
 import edu.gymtonic_app.data.repository.UserMissionsRepository
+import edu.gymtonic_app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +21,8 @@ import kotlinx.coroutines.launch
 
 data class ProfileData(
 	val username: String,
+	val userPoints: Int,
+	val objective: Int,
 	val streakLabel: String,
 	val recentRoutines: List<TrainingRoutineDto>,
 	val groups: List<GroupDto>
@@ -37,6 +40,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 	private val userMissionsRepository : UserMissionsRepository
 	private val routineRepository: RoutineRepository
 	private val routineRemoteDataSource: RoutineRemoteDataSource
+	private val userRepository = UserRepository()
 
 	private val groupRepository = GroupRepository()
 	private val sessionManager = SessionManager(application.sessionDataStore)
@@ -59,7 +63,17 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			_uiState.value = ProfileUiState.Loading
 
 			val session = sessionManager.sessionFlow.first()
+			val userId = session.userId
 			val username = session.username ?: "Usuario"
+
+			var points = 0
+			var objective = 0
+			if (userId != null) {
+				userRepository.getUserById(userId).onSuccess { user ->
+					points = user.userPoints
+					objective = user.userObjetive
+				}
+			}
 
 			val weekDaysResult = userMissionsRepository.getWeeklyCalendarDays()
 			val weekDays = weekDaysResult.getOrElse { emptyList() }
@@ -87,6 +101,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			_uiState.value = ProfileUiState.Success(
 				ProfileData(
 					username = username,
+					userPoints = points,
+					objective = objective,
 					streakLabel = streakLabel,
 					recentRoutines = recentRoutines,
 					groups = groups

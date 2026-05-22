@@ -489,7 +489,13 @@ fun Navigation(navController: NavHostController) {
                 calendarMonth = week.calendarMonth,
                 achievedLabel = "${week.achievedCount}/${week.totalCount} ${strings.achieved}",
                 isRefreshing = week.isRefreshing,
-                onRefresh = { userMissionsViewModel.refreshUserMissions() }
+                onRefresh = { userMissionsViewModel.refreshUserMissions() },
+                onUpdateProgress = { id, progress ->
+                    userMissionsViewModel.updateMissionProgress(id, progress)
+                },
+                onCompleteMission = { id ->
+                    userMissionsViewModel.completeMission(id)
+                }
             )
         }
 

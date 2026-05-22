@@ -27,6 +27,9 @@ data class UserMissionDto(
     @SerializedName("mission_name")
     val missionName: String? = null,
 
+    @SerializedName("mission_goal", alternate = ["goal", "missionGoal"])
+    val missionGoal: Int? = null,
+
     @SerializedName("mission_points")
     val missionPoints: Int? = null
 )

@@ -9,6 +9,7 @@ let mission = function(mission){
     this.mission_type = mission.mission_type
     this.mission_points = mission.mission_points
     this.mission_objective = mission.mission_objective
+    this.mission_goal = mission.mission_goal
 }
 
 /* <=============================== FIND ALL ===============================> */
@@ -51,22 +52,32 @@ mission.updateById = async (id, updateMission, result) => {
 
         const request = pool.request()
         request.input("id", sql.Int, id)
-        request.input("name", sql.VarChar, updateMission.mission_name)
-        request.input("type", sql.Int, updateMission.mission_type)
-        request.input("points", sql.Int, updateMission.mission_points)
-        request.input("objective", sql.Int, updateMission.mission_objective)
+        
+        const nameVal = updateMission.name !== undefined ? updateMission.name : updateMission.mission_name;
+        const typeVal = updateMission.type !== undefined ? updateMission.type : updateMission.mission_type;
+        const pointsVal = updateMission.points !== undefined ? updateMission.points : updateMission.mission_points;
+        const objectiveVal = updateMission.objective !== undefined ? updateMission.objective : updateMission.mission_objective;
+        const goalVal = updateMission.goal !== undefined ? updateMission.goal : updateMission.mission_goal;
+
+        request.input("name", sql.VarChar, nameVal)
+        request.input("type", sql.Int, typeVal)
+        request.input("points", sql.Int, pointsVal)
+        request.input("objective", sql.Int, objectiveVal)
+        request.input("goal", sql.Int, goalVal)
 
         const sqlQuery = `
             UPDATE Missions SET
                 mission_name = @name,
                 mission_type = @type,
                 mission_points = @points,
-                mission_objective = @objective
+                mission_objective = @objective,
+                mission_goal = @goal
+            OUTPUT INSERTED.*
             WHERE mission_id = @id
         `
 
         const response = await request.query(sqlQuery)
-        result(null, response)
+        result(null, response.recordset[0])
         
     } catch (err) {
         result(err, null)
@@ -80,25 +91,38 @@ mission.create = async (newMission, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-        request.input("name", sql.VarChar, newMission._name)
-        request.input("type", sql.Int, newMission._type)
-        request.input("points", sql.Int, newMission._points)
-        request.input("objective", sql.Int, newMission._objective)
+        
+        const nameVal = newMission.name !== undefined ? newMission.name : newMission.mission_name;
+        const typeVal = newMission.type !== undefined ? newMission.type : newMission.mission_type;
+        const pointsVal = newMission.points !== undefined ? newMission.points : newMission.mission_points;
+        const objectiveVal = newMission.objective !== undefined ? newMission.objective : newMission.mission_objective;
+        const goalVal = newMission.goal !== undefined ? newMission.goal : newMission.mission_goal;
+
+        request.input("name", sql.VarChar, nameVal)
+        request.input("type", sql.Int, typeVal)
+        request.input("points", sql.Int, pointsVal)
+        request.input("objective", sql.Int, objectiveVal)
+        request.input("goal", sql.Int, goalVal)
 
         const sqlQuery = `
             INSERT INTO Missions (
                 mission_name,
                 mission_type,
                 mission_points,
-                mission_objective
+                mission_objective,
+                mission_goal
             )
+            OUTPUT INSERTED.*
             VALUES (
                 @name,
                 @type,
                 @points,
-                @objective
+                @objective,
+                @goal
             )
         `
+        const response = await request.query(sqlQuery)
+        result(null, response.recordset[0])
     } catch (err) {
         result(err, null)
         

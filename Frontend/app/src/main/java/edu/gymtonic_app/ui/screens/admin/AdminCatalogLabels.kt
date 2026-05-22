@@ -4,7 +4,9 @@ import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.core.MediaUtils
 
 fun resolveRoutineImageUrl(imageKey: String?): String? {
-    if (imageKey.isNullOrBlank()) return null
+    if (imageKey.isNullOrBlank()) {
+        return resolveBackendMediaUrl("images/routines/routine-default.png")
+    }
     if (imageKey.startsWith("http://") || imageKey.startsWith("https://")) return imageKey
     if (imageKey.startsWith("file://")) return imageKey
     val localFile = java.io.File(imageKey)

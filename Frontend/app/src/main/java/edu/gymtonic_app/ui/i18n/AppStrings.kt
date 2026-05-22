@@ -20,6 +20,8 @@ data class CommonStrings(
     val myCalendar: String,
     val showMore: String,
     val achieved: String,
+    val completedLabel: String,
+    val completeButton: String,
     val calendarDayNames: List<String>,
     val calendarMonthNames: List<String>
 )
@@ -273,6 +275,7 @@ data class AdminStrings(
     val adminMissionName: String,
     val adminMissionType: String,
     val adminMissionObjective: String,
+    val adminMissionGoal: String,
     val adminDeleteUserMessage: String,
     val adminDeleteExerciseMessage: String,
     val adminDeleteGroupMessage: String,
@@ -323,6 +326,8 @@ data class AppStrings(
     val myCalendar get() = common.myCalendar
     val showMore get() = common.showMore
     val achieved get() = common.achieved
+    val completedLabel get() = common.completedLabel
+    val completeButton get() = common.completeButton
     val calendarDayNames get() = common.calendarDayNames
     val calendarMonthNames get() = common.calendarMonthNames
 
@@ -556,6 +561,7 @@ data class AppStrings(
     val adminMissionName get() = admin.adminMissionName
     val adminMissionType get() = admin.adminMissionType
     val adminMissionObjective get() = admin.adminMissionObjective
+    val adminMissionGoal get() = admin.adminMissionGoal
     val adminDeleteUserMessage get() = admin.adminDeleteUserMessage
     val adminDeleteExerciseMessage get() = admin.adminDeleteExerciseMessage
     val adminDeleteGroupMessage get() = admin.adminDeleteGroupMessage

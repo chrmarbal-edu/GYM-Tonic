@@ -18,6 +18,18 @@ const normalizeRoutineNameOrSlug = (value = "") => {
     return value.toLowerCase().replace(/[\s_-]+/g, "")
 }
 
+/* <=============================== FIND ALL ===============================> */
+routine.findAll = async (result) => {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request().query("SELECT * FROM Routines")
+        if (result) result(null, response.recordset)
+        
+    } catch (err) {
+        if (result) result(err, null)
+    }
+}
+
 /* <=============================== FIND ALL WITH EXERCISE SUMMARY ===============================> */
 routine.findAllWithExerciseSummary = async (result) => {
     const summaryQueryFull = `

@@ -88,10 +88,10 @@ fun RegisterScreen2(
     var objetivoError by remember { mutableStateOf(false) }
 
     val objetivos = listOf(
-        strings.goalMaintenance,
-        strings.goalLoseWeight,
-        strings.goalBuildMuscle,
-        strings.goalPerformance
+        strings.goalMaintenance,    // 0 -> Mantenimiento
+        strings.goalLoseWeight,     // 1 -> Pérdida de peso
+        strings.goalBuildMuscle,    // 2 -> Ganancia muscular
+        strings.goalPerformance     // 3 -> Rendimiento
     )
     var dropdownExpanded by remember { mutableStateOf(false) }
 

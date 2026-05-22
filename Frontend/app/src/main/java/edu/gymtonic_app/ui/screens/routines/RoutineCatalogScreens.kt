@@ -169,6 +169,7 @@ fun RoutineCatalogScreen(
                 onEditClick = onEditClick
             ) {
                 val routineImageUrl = resolveRoutineImageUrl(state.routine.routine_image)
+                    ?: resolveRoutineImageUrl("routine-default.png")
                 Column(Modifier.fillMaxSize()) {
                     if (!routineImageUrl.isNullOrBlank()) {
                         AsyncImage(

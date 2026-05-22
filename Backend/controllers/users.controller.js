@@ -10,6 +10,8 @@ const nodemailer = require("nodemailer")
 const fs = require("fs")
 const path = require("path")
 const jwt = require("jsonwebtoken")
+const sql = require("mssql")
+const dbConn = require("../utils/mssql.config")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -80,6 +82,54 @@ function deleteProfilePictureFile(picturePath) {
         }
     } catch (e) {
         console.error(`No se pudo eliminar la foto de perfil: ${filePath}`, e)
+    }
+}
+
+async function assignMissionsByObjective(userId, objective) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const missionsResponse = await pool.request()
+            .input("objective", sql.Int, objective)
+            .query("SELECT * FROM Missions WHERE mission_objective = @objective")
+        
+        const missions = missionsResponse.recordset
+        const now = new Date()
+
+        for (const mission of missions) {
+            let expiration = new Date()
+            if (mission.mission_type === 0) { // Daily
+                expiration.setDate(now.getDate() + 1)
+            } else if (mission.mission_type === 1) { // Weekly
+                expiration.setDate(now.getDate() + 7)
+            } else if (mission.mission_type === 2) { // Monthly
+                expiration.setDate(now.getDate() + 30)
+            }
+
+            const checkResponse = await pool.request()
+                .input("userId", sql.Int, userId)
+                .input("missionId", sql.Int, mission.mission_id)
+                .query(`
+                    SELECT 1 FROM User_X_Mission 
+                    WHERE user_x_mission_userid = @userId AND user_x_mission_missionid = @missionId
+                `)
+            
+            if (checkResponse.recordset.length === 0) {
+                await pool.request()
+                    .input("userId", sql.Int, userId)
+                    .input("missionId", sql.Int, mission.mission_id)
+                    .input("expiration", sql.DateTime, expiration)
+                    .query(`
+                        INSERT INTO User_X_Mission (
+                            user_x_mission_userid, user_x_mission_missionid, user_x_mission_expiration, user_x_mission_completed, user_x_mission_progress, user_x_mission_points_deducted
+                        ) VALUES (
+                            @userId, @missionId, @expiration, 0, 0, 0
+                        )
+                    `)
+            }
+        }
+    } catch (err) {
+        console.error("Error inside assignMissionsByObjective:", err)
+        throw err;
     }
 }
 
@@ -194,8 +244,13 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             }
 
             // OBJECTIVE
+            const oldObjective = userFounded.user_objective
+            let objectiveChanged = false
             if(objective !== undefined && objective !== ""){
-                userFounded.user_objective = objective
+                if(userFounded.user_objective != objective) {
+                    userFounded.user_objective = objective
+                    objectiveChanged = true
+                }
             }
             
             // PICTURE
@@ -221,10 +276,21 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             }
 
             // ACTUALIZAMOS USUARIO
-            await userModel.updateById(id, userFounded, function(err, datosUsuarioActualizado){
+            await userModel.updateById(id, userFounded, async function(err, datosUsuarioActualizado){
                 if(err){
                     next(new AppError(err, 500))
                 } else{
+                    if (objectiveChanged) {
+                        try {
+                            const pool = await sql.connect(dbConn)
+                            await pool.request()
+                                .input("userId", sql.Int, id)
+                                .query("DELETE FROM User_X_Mission WHERE user_x_mission_userid = @userId AND user_x_mission_completed = 0")
+                            await assignMissionsByObjective(id, userFounded.user_objective)
+                        } catch (assignErr) {
+                            console.error("Error updating user missions on objective change:", assignErr)
+                        }
+                    }
                     // Si el usuario que está modificando datos es el mismo, actualizamos los datos de la sesión
                     if (req.userLogued && req.userLogued.user_id == id) {
                         Object.assign(req.userLogued, datosUsuarioActualizado)
@@ -309,10 +375,16 @@ exports.register = wrapAsync(async function (req, res, next) {
     newUser.user_password = await bcrypt.hashPassword(newUser.user_password)
 
     if(!req.userLogued || (req.userLogued && req.userLogued.user_role == 1)){
-        await userModel.create(newUser,function(err,datosUsuarioCreado){
+        await userModel.create(newUser, async function(err,datosUsuarioCreado){
             if(err){
                 return next(new AppError(err, 500))
             } else{
+                // Autoassign missions
+                try {
+                    await assignMissionsByObjective(datosUsuarioCreado.user_id, datosUsuarioCreado.user_objective)
+                } catch (assignErr) {
+                    console.error("Error auto-assigning missions during registration:", assignErr)
+                }
                 if(req.userLogued && req.userLogued.user_role == 1){
                     const response = { user: datosUsuarioCreado, token: null }
                     if (!oauth) {
@@ -542,50 +614,17 @@ exports.findUserMissionByUserId = wrapAsync(async function (req,res,next){
     const userLogued = req.userLogued
 
     if(userLogued && (userLogued.user_id == userId || userLogued.user_role == 1)){
-        await userMissionsModel.findByUserId(userId, async function(err,datosUserMission){
+        await userMissionsModel.findByUserId(userId, function(err, data){
             if(err){
                 return next(new AppError(err,404))
             } 
 
-            if(!datosUserMission || datosUserMission.length == 0) {
+            if(!data) {
                 return res.status(200).json({ missions: [], expiredMissions: [], notifications: [] })
             }
 
-            const hoy = new Date();
-            const misionesActivas = [];
-            const misionesExpiradas = [];
-            const notifications = [];
-
-            // Procesamos cada misión para verificar caducidad
-            for (const mision of datosUserMission) {
-                const fechaExpiracion = new Date(mision.user_x_mission_expiration);
-
-                if (fechaExpiracion < hoy && !mision.user_x_mission_completed) {
-                    // Misión expirada y no completada - NO BORRAR, solo notificar
-                    misionesExpiradas.push({
-                        ...mision,
-                        expired: true
-                    });
-                    
-                    notifications.push({
-                        message: `La misión "${mision.mission_name}" ha caducado.`,
-                        mission_name: mision.mission_name,
-                        expired: true
-                    });
-                } else {
-                    // Misión activa o completada
-                    misionesActivas.push({
-                        ...mision,
-                        expired: fechaExpiracion < hoy ? true : false
-                    });
-                }
-            }
-
-            res.status(200).json({
-                missions: misionesActivas,
-                expiredMissions: misionesExpiradas,
-                notifications: notifications
-            });
+            // El modelo ya devuelve el objeto formateado con: missions, expiredMissions y notifications
+            res.status(200).json(data);
         })
     } else{
         return next(new AppError("No estás autorizado para realizar esta petición", 403))
@@ -729,11 +768,39 @@ exports.completeMissionById = wrapAsync(async function (req,res,next){
         return next(new AppError("La misión ha expirado", 400))
     }
 
+    const pool = await sql.connect(dbConn)
+    const mDetails = await pool.request()
+        .input("missionId", sql.Int, missionFound.user_x_mission_missionid)
+        .query("SELECT * FROM Missions WHERE mission_id = @missionId")
+    
+    if (mDetails.recordset.length === 0) {
+        return next(new AppError("Misión no encontrada en el catálogo", 404))
+    }
+    const missionPoints = mDetails.recordset[0].mission_points || 0
+
     // Marcar como completada
-    await userMissionsModel.completeMission(id, function(err, datosUserMissionActualizada) {
+    await userMissionsModel.completeMission(id, async function(err, datosUserMissionActualizada) {
         if(err){
             return next(new AppError(err, 500))
         } else{
+            try {
+                const userRes = await pool.request()
+                    .input("userId", sql.Int, missionFound.user_x_mission_userid)
+                    .query("SELECT user_points FROM Users WHERE user_id = @userId")
+                
+                if (userRes.recordset.length > 0) {
+                    const currentPoints = userRes.recordset[0].user_points || 0
+                    const newPoints = currentPoints + missionPoints
+                    
+                    await pool.request()
+                        .input("userId", sql.Int, missionFound.user_x_mission_userid)
+                        .input("points", sql.Int, newPoints)
+                        .query("UPDATE Users SET user_points = @points WHERE user_id = @userId")
+                }
+            } catch (pointsErr) {
+                console.error("Error adding points to user on mission completion:", pointsErr)
+            }
+
             res.status(200).json(datosUserMissionActualizada)
         }
     })

@@ -191,9 +191,9 @@ class AdminRepository {
         points: Int?
     ): Result<GroupDto> = runCatching {
         val body = mutableMapOf<String, Any?>()
-        if (name != null) body["name"] = name
-        if (description != null) body["description"] = description
-        if (points != null) body["points"] = points
+        if (name != null) body["group_name"] = name
+        if (description != null) body["group_description"] = description
+        if (points != null) body["group_points"] = points
         val response = api.updateGroup(id, body)
         if (response.isSuccessful && response.body() != null) response.body()!!
         else throw Exception(response.message() ?: "No se pudo actualizar")
@@ -220,14 +220,16 @@ class AdminRepository {
         name: String,
         type: Int,
         points: Int,
-        objective: Int
+        objective: Int,
+        goal: Int
     ): Result<MissionDto> = runCatching {
         val response = api.createMission(
             mapOf(
                 "name" to name,
                 "type" to type,
                 "points" to points,
-                "objective" to objective
+                "objective" to objective,
+                "goal" to goal
             )
         )
         if (response.isSuccessful && response.body() != null) response.body()!!
@@ -239,13 +241,15 @@ class AdminRepository {
         name: String?,
         type: Int?,
         points: Int?,
-        objective: Int?
+        objective: Int?,
+        goal: Int?
     ): Result<MissionDto> = runCatching {
         val body = mutableMapOf<String, Any?>()
         if (name != null) body["name"] = name
         if (type != null) body["type"] = type
         if (points != null) body["points"] = points
         if (objective != null) body["objective"] = objective
+        if (goal != null) body["goal"] = goal
         val response = api.updateMission(id, body)
         if (response.isSuccessful && response.body() != null) response.body()!!
         else throw Exception(response.message() ?: "No se pudo actualizar")

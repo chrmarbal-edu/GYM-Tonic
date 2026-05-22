@@ -48,7 +48,7 @@ fun AdminMissionsListScreen(
                 items = state.items,
                 titleFor = { it.missionName },
                 subtitleFor = {
-                    "${missionTypeLabel(it.missionType)} · ${missionObjectiveLabel(it.missionObjective)} · ${it.missionPoints} pts"
+                    "${missionTypeLabel(it.missionType)} · ${missionObjectiveLabel(it.missionObjective)} · Meta: ${it.missionGoal ?: 0} · ${it.missionPoints} pts"
                 },
                 onItemClick = { onOpenEdit(it.missionId) }
             )
@@ -69,6 +69,7 @@ fun AdminMissionEditScreen(
     var type by remember { mutableIntStateOf(0) }
     var points by remember { mutableStateOf("0") }
     var objective by remember { mutableIntStateOf(0) }
+    var goal by remember { mutableStateOf("0") }
     var showDelete by remember { mutableStateOf(false) }
 
     LaunchedEffect(missionId) {
@@ -82,6 +83,7 @@ fun AdminMissionEditScreen(
             type = m.missionType
             points = m.missionPoints.toString()
             objective = m.missionObjective
+            goal = (m.missionGoal ?: 0).toString()
         }
     }
 
@@ -111,6 +113,7 @@ fun AdminMissionEditScreen(
                 selectedValue = objective,
                 onSelected = { objective = it }
             )
+            AdminField(strings.adminMissionGoal, goal, onValueChange = { goal = it })
             AdminSaveButton(
                 text = strings.saveChanges,
                 enabled = name.isNotBlank(),
@@ -122,6 +125,7 @@ fun AdminMissionEditScreen(
                         type,
                         points.toIntOrNull() ?: 0,
                         objective,
+                        goal.toIntOrNull() ?: 0,
                         onSaved
                     )
                 }

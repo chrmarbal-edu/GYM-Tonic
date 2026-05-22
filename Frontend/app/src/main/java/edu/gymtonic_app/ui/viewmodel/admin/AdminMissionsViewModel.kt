@@ -51,14 +51,15 @@ class AdminMissionsViewModel : ViewModel() {
         type: Int,
         points: Int,
         objective: Int,
+        goal: Int,
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
             _detailState.update { it.copy(isSaving = true, error = null) }
             val result = if (id == null) {
-                repository.createMission(name, type, points, objective)
+                repository.createMission(name, type, points, objective, goal)
             } else {
-                repository.updateMission(id, name, type, points, objective)
+                repository.updateMission(id, name, type, points, objective, goal)
             }
             result
                 .onSuccess { mission ->

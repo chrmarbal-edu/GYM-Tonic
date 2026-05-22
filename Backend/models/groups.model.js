@@ -16,7 +16,11 @@ let group = function(group){
 group.findAll = async (result) => {
     try {
         const pool = await sql.connect(dbConn)
-        const response = await pool.request().query("SELECT * FROM Groups")
+        const response = await pool.request().query(`
+            SELECT g.group_id, g.group_name, g.group_description, g.group_image, g.group_creator_id,
+                   COALESCE((SELECT SUM(COALESCE(u.user_points, 0)) FROM Users u INNER JOIN Group_x_user gx ON u.user_id = gx.Group_x_user_userid WHERE gx.Group_x_user_groupid = g.group_id), 0) AS group_points
+            FROM Groups g
+        `)
         result(null, response.recordset)
         
     } catch (err) {
@@ -32,7 +36,8 @@ group.findByUserId = async function (userId, result) {
             .request()
             .input("userId", sql.Int, userId)
             .query(`
-                SELECT g.*
+                SELECT g.group_id, g.group_name, g.group_description, g.group_image, g.group_creator_id,
+                       COALESCE((SELECT SUM(COALESCE(u.user_points, 0)) FROM Users u INNER JOIN Group_x_user gx ON u.user_id = gx.Group_x_user_userid WHERE gx.Group_x_user_groupid = g.group_id), 0) AS group_points
                 FROM Groups g
                 INNER JOIN Group_x_user gx ON g.group_id = gx.Group_x_user_groupid
                 WHERE gx.Group_x_user_userid = @userId
@@ -51,7 +56,12 @@ group.findById = async function (id, result) {
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("id", sql.Int, id)
-            .query("SELECT * FROM Groups WHERE group_id = @id")
+            .query(`
+                SELECT g.group_id, g.group_name, g.group_description, g.group_image, g.group_creator_id,
+                       COALESCE((SELECT SUM(COALESCE(u.user_points, 0)) FROM Users u INNER JOIN Group_x_user gx ON u.user_id = gx.Group_x_user_userid WHERE gx.Group_x_user_groupid = g.group_id), 0) AS group_points
+                FROM Groups g
+                WHERE g.group_id = @id
+            `)
 
         if (response.recordset.length > 0) {
             result(null, response.recordset[0])
