@@ -8,7 +8,7 @@ Este documento detalla el significado de los valores numéricos utilizados en di
 - **0**: Usuario estándar (Acceso a la app, seguimiento y grupos).
 - **1**: Administrador (Gestión de ejercicios, misiones y usuarios).
 
-### `user_objetive`
+### `user_objective`
 - **0**: Mantenimiento (Mantener peso y mejorar salud general).
 - **1**: Pérdida de peso (Enfoque en déficit calórico y cardio).
 - **2**: Ganancia muscular (Enfoque en hipertrofia y fuerza).

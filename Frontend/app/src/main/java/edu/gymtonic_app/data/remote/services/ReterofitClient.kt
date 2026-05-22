@@ -172,6 +172,7 @@ interface ApiService {
         @Part("password") password: okhttp3.RequestBody?,
         @Part("height") height: okhttp3.RequestBody?,
         @Part("weight") weight: okhttp3.RequestBody?,
+        @Part("objective") objective: okhttp3.RequestBody?,
         @Part picture: okhttp3.MultipartBody.Part?
     ): Response<LoginResponse>
 

@@ -13,7 +13,7 @@ fun UserDto.toEntity(): UserEntity {
         user_picture = userPicture,
         user_height = userHeight,
         user_weight = userWeight,
-        user_objetive = userObjetive,
+        user_objective = userObjective,
         user_points = userPoints,
         user_role = userRole
     )
@@ -29,7 +29,7 @@ fun UserEntity.toDto(): UserDto {
         userPicture = user_picture,
         userHeight = user_height,
         userWeight = user_weight,
-        userObjetive = user_objetive,
+        userObjective = user_objective,
         userPoints = user_points,
         userRole = user_role
     )

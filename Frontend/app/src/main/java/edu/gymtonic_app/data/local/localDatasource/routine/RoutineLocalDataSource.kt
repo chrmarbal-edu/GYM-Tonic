@@ -31,6 +31,10 @@ class RoutineLocalDataSource(
         return routineDao.getAllRoutines()
     }
 
+    fun getRecentRoutines(): Flow<List<RoutineEntity>> {
+        return routineDao.getRecentRoutines()
+    }
+
     suspend fun insertRoutines(routines: List<RoutineEntity>) {
         routineDao.insertRoutines(routines)
     }

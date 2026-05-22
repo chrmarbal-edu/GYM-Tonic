@@ -24,7 +24,7 @@ class AuthRepository(
 				user_picture = userData.user_picture,
 				user_height = userData.user_height,
 				user_weight = userData.user_weight,
-				user_objetive = userData.user_objetive,
+				user_objective = userData.user_objective,
 				user_points = userData.user_points,
 				user_role = userData.user_role
 			)

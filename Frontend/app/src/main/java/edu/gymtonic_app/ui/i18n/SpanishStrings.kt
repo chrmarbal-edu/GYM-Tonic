@@ -100,7 +100,9 @@ val SpanishStrings = AppStrings(
         deleteRoutineCancel = "Cancelar",
         routineDeleted = "Rutina eliminada",
         trainingGroupRoutines = "Rutinas de mis Grupos",
-        trainingMyRoutines = "Mis rutinas"
+        trainingMyRoutines = "Mis rutinas",
+        trainingRecent = "Recientes",
+        trainingAll = "Todas"
     ),
     profile = ProfileStrings(
         profileTitle = "Perfil",

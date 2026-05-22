@@ -61,7 +61,6 @@ fun WeekChallengesScreen(
     onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
-    onShowMoreCalendar: () -> Unit,
     goals: List<WeeklyGoalUi> = emptyList(),
     calendarDays: List<CalendarDayUi> = emptyList(),
     calendarYear: Int = 0,
@@ -149,17 +148,6 @@ fun WeekChallengesScreen(
                                     color = colors.textPrimary,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp
-                                )
-                                Text(
-                                    text = strings.showMore,
-                                    color = colors.accentDark,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp,
-                                    modifier = Modifier
-                                        .clickable { onShowMoreCalendar() }
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color.Transparent)
-                                        .padding(horizontal = 4.dp, vertical = 2.dp)
                                 )
                             }
                         }

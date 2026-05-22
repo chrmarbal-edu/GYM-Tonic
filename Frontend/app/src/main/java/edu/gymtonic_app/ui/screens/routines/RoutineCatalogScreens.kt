@@ -47,7 +47,7 @@ fun RoutineCatalogScreen(
     routineId: String,
     isLocal: Boolean = false,
     onBack: () -> Unit,
-    onExerciseClick: (String, String) -> Unit,
+    onExerciseClick: (String, String, String) -> Unit,
     onOpenTraining: () -> Unit = {},
     onOpenGroups: () -> Unit = {},
     onOpenFriends: () -> Unit = {},

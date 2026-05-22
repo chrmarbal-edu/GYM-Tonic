@@ -53,7 +53,6 @@ import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.ProfileUiState
 import edu.gymtonic_app.ui.viewmodel.ProfileViewModel
-import edu.gymtonic_app.ui.screens.admin.missionObjectiveLabel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -147,11 +146,8 @@ fun ProfileScreen(
                     ProfileContent(
                         username = data.username,
                         userPoints = data.userPoints,
-                        objective = data.objective,
-                        streakLabel = data.streakLabel,
                         routines = data.recentRoutines,
                         groups = data.groups,
-                        onOpenWeek = onOpenWeek,
                         onOpenGroups = onOpenGroups,
                         onOpenGroup = onOpenGroup,
                         onOpenRoutine = onOpenRoutine,
@@ -167,11 +163,8 @@ fun ProfileScreen(
 private fun ProfileContent(
     username: String,
     userPoints: Int,
-    objective: Int,
-    streakLabel: String,
     routines: List<TrainingRoutineDto>,
     groups: List<GroupDto>,
-    onOpenWeek: () -> Unit,
     onOpenGroups: () -> Unit,
     onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
@@ -201,13 +194,6 @@ private fun ProfileContent(
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = missionObjectiveLabel(objective),
-                        color = colors.textSecondary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
@@ -232,18 +218,6 @@ private fun ProfileContent(
                         modifier = Modifier.size(34.dp)
                     )
                 }
-            }
-        }
-
-        item {
-            SectionCard(title = strings.weeklyStreak, actionText = strings.viewWeek, onActionClick = onOpenWeek) {
-                Text(
-                    text = streakLabel,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textOnAccent,
-                    modifier = Modifier.padding(top = 2.dp)
-                )
             }
         }
 

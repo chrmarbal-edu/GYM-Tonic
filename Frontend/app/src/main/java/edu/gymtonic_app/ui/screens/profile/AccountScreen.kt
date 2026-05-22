@@ -19,11 +19,14 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -251,13 +254,19 @@ fun AccountScreen(
                     // 3. DATOS DE LECTURA
                     item {
                         AccountSectionCard(title = "Información del perfil") {
-                            val objetivos = listOf(strings.goalMaintenance, strings.goalLoseWeight, strings.goalBuildMuscle, strings.goalPerformance)
-                            val objetivoText = if (user.userObjetive in objetivos.indices) objetivos[user.userObjetive] else "N/A"
-                            
                             val formattedDate = try {
-                                val parts = user.userBirthdate.split("-")
+                                val dateStr = user.userBirthdate.take(10)
+                                val parts = dateStr.split("-")
                                 if (parts.size == 3) "${parts[2]}/${parts[1]}/${parts[0]}" else user.userBirthdate
                             } catch (e: Exception) { user.userBirthdate }
+
+                            val objetivosList = listOf(
+                                strings.goalMaintenance, 
+                                strings.goalLoseWeight, 
+                                strings.goalBuildMuscle, 
+                                strings.goalPerformance
+                            )
+                            val objetivoText = objetivosList.getOrElse(user.userObjective) { "Objetivo ${user.userObjective}" }
 
                             ReadOnlyField(label = strings.fullName, value = user.userName)
                             ReadOnlyField(label = strings.email, value = user.userEmail)

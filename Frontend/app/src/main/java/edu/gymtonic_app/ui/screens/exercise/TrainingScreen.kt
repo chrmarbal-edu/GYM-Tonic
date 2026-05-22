@@ -50,9 +50,9 @@ import edu.gymtonic_app.ui.theme.LocalColors
 fun TrainingScreen(
     onSelect: (Int, Boolean) -> Unit,
     onCreateRoutine: () -> Unit = {},
-    categories: List<TrainingCategoryDto> = emptyList(),
-    groupRoutines: List<TrainingRoutineDto> = emptyList(),
+    recentRoutines: List<TrainingRoutineDto> = emptyList(),
     personalRoutines: List<TrainingRoutineDto> = emptyList(),
+    allRoutines: List<TrainingRoutineDto> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
 ) {
@@ -72,11 +72,7 @@ fun TrainingScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = if (categories.isEmpty()) {
-                    strings.trainingEmpty
-                } else {
-                    strings.trainingCategoriesAvailable(categories.size)
-                },
+                text = strings.trainingCategoriesAvailable(3),
                 color = colors.textSubtle,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
@@ -112,6 +108,21 @@ fun TrainingScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
                 contentPadding = PaddingValues(top = 4.dp, bottom = 14.dp),
             ) {
+                // 1. Recientes
+                if (recentRoutines.isNotEmpty()) {
+                    item {
+                        TrainingSection(
+                            title = strings.trainingRecent,
+                            routines = recentRoutines,
+                            routinesLabel = strings.trainingRoutines,
+                            tapToOpen = strings.trainingTapToOpen,
+                            onSelect = onSelect,
+                            isLocal = false
+                        )
+                    }
+                }
+
+                // 2. Mis rutinas (de verdad)
                 if (personalRoutines.isNotEmpty()) {
                     item {
                         TrainingSection(
@@ -125,11 +136,12 @@ fun TrainingScreen(
                     }
                 }
 
-                if (groupRoutines.isNotEmpty()) {
+                // 3. Todas (Catálogo global)
+                if (allRoutines.isNotEmpty()) {
                     item {
                         TrainingSection(
-                            title = strings.trainingGroupRoutines,
-                            routines = groupRoutines,
+                            title = strings.trainingAll,
+                            routines = allRoutines,
                             routinesLabel = strings.trainingRoutines,
                             tapToOpen = strings.trainingTapToOpen,
                             onSelect = onSelect,
@@ -138,23 +150,9 @@ fun TrainingScreen(
                     }
                 }
 
-                if (categories.isEmpty() && groupRoutines.isEmpty() && personalRoutines.isEmpty() && !isRefreshing) {
+                if (recentRoutines.isEmpty() && personalRoutines.isEmpty() && allRoutines.isEmpty() && !isRefreshing) {
                     item {
                         EmptyTrainingState(strings.trainingNoWorkouts)
-                    }
-                } else {
-                    items(
-                        items = categories,
-                        key = { it.id }
-                    ) { category ->
-                        TrainingSection(
-                            title = category.title,
-                            routines = category.routines,
-                            routinesLabel = strings.trainingRoutines,
-                            tapToOpen = strings.trainingTapToOpen,
-                            onSelect = onSelect,
-                            isLocal = false
-                        )
                     }
                 }
             }

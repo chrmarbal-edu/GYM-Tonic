@@ -55,7 +55,7 @@ class UserRepository(
                     user_picture = userData.user_picture,
                     user_height = userData.user_height,
                     user_weight = userData.user_weight,
-                    user_objetive = userData.user_objetive,
+                    user_objective = userData.user_objective,
                     user_points = userData.user_points,
                     user_role = userData.user_role
                 )
@@ -72,9 +72,10 @@ class UserRepository(
         password: String?,
         height: Double?,
         weight: Double?,
+        objective: Int?,
         pictureFile: File?
     ): Result<LoginResponse> = runCatching {
-        val response = usersRemoteDataSource.updateUserWithFile(id, username, password, height, weight, pictureFile)
+        val response = usersRemoteDataSource.updateUserWithFile(id, username, password, height, weight, objective, pictureFile)
         if (response.isSuccessful) {
             val loginResponse = response.body()!!
             loginResponse.data?.let { userData ->
@@ -87,7 +88,7 @@ class UserRepository(
                     user_picture = userData.user_picture,
                     user_height = userData.user_height,
                     user_weight = userData.user_weight,
-                    user_objetive = userData.user_objetive,
+                    user_objective = userData.user_objective,
                     user_points = userData.user_points,
                     user_role = userData.user_role
                 )

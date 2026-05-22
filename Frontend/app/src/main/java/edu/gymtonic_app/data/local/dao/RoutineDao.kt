@@ -34,6 +34,9 @@ interface RoutineDao {
     @Query("SELECT * FROM routines WHERE routine_id = :id LIMIT 1")
     suspend fun getRoutineById(id: Int): RoutineEntity?
 
+    @Query("SELECT * FROM routines ORDER BY last_visited DESC LIMIT 10")
+    fun getRecentRoutines(): Flow<List<RoutineEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRoutines(routines: List<RoutineEntity>)
 

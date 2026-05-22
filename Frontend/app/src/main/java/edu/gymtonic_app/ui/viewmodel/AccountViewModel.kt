@@ -59,6 +59,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
         password: String,
         height: Double?,
         weight: Double?,
+        objective: Int? = null,
         pictureFile: File? = null,
         isDefaultPicture: Boolean = false
     ) {
@@ -77,6 +78,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                     password = if (password.isNotBlank()) password else null,
                     height = height,
                     weight = weight,
+                    objective = objective,
                     pictureFile = pictureFile
                 )
             } else {
@@ -87,6 +89,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                 if (password.isNotBlank()) data["password"] = password
                 data["height"] = height
                 data["weight"] = weight
+                if (objective != null) data["objective"] = objective
                 if (isDefaultPicture) data["picture"] = "default"
                 
                 userRepository.updateUser(userId, data)

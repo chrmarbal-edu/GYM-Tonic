@@ -101,7 +101,9 @@ data class TrainingStrings(
     val deleteRoutineCancel: String,
     val routineDeleted: String,
     val trainingGroupRoutines: String,
-    val trainingMyRoutines: String
+    val trainingMyRoutines: String,
+    val trainingRecent: String,
+    val trainingAll: String
 )
 
 data class ProfileStrings(
@@ -402,6 +404,8 @@ data class AppStrings(
     val routineDeleted get() = training.routineDeleted
     val trainingGroupRoutines get() = training.trainingGroupRoutines
     val trainingMyRoutines get() = training.trainingMyRoutines
+    val trainingRecent get() = training.trainingRecent
+    val trainingAll get() = training.trainingAll
 
     val profileTitle get() = profile.profileTitle
     val profileGreeting get() = profile.profileGreeting

@@ -20,8 +20,9 @@ import kotlinx.coroutines.launch
 
 data class TrainingUiState(
     val categories: List<TrainingCategoryDto> = emptyList(),
-    val groupRoutines: List<TrainingRoutineDto> = emptyList(),
-    val personalRoutines: List<TrainingRoutineDto> = emptyList(),
+    val recentRoutines: List<TrainingRoutineDto> = emptyList(),
+    val allRoutines: List<TrainingRoutineDto> = emptyList(),
+    val personalRoutinesFromCategory: List<TrainingRoutineDto> = emptyList(),
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null
 )
@@ -34,6 +35,19 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
     val uiState: StateFlow<TrainingUiState> = _uiState.asStateFlow()
 
     init {
+        // Observe recent routines automatically for real-time updates
+        viewModelScope.launch {
+            routineRepository.getRecentRoutines().collect { entities ->
+                val recent = entities.filter { it.last_visited > 0 }.map {
+                    TrainingRoutineDto(
+                        routine_id = it.routine_id,
+                        routine_name = it.routine_name,
+                        routine_image = it.routine_image
+                    )
+                }
+                _uiState.update { it.copy(recentRoutines = recent) }
+            }
+        }
         loadCategories()
     }
 
@@ -50,12 +64,19 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
             val sessionManager = edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager(getApplication<Application>().sessionDataStore)
             val userId = sessionManager.sessionFlow.first().userId
 
-            // Load standard categories
+            // Load categories and find "Mis rutinas" de verdad
             val categoriesResult = routineRepository.getRoutineCategoriesFromApi()
+            var personalRoutinesFromCategory = emptyList<TrainingRoutineDto>()
             
-            // Load personal routines
-            val personalRoutinesResult = routineRepository.getRoutinesFromApi(userId)
-            val personalRoutines = personalRoutinesResult.getOrNull()?.map {
+            categoriesResult.onSuccess { categories ->
+                personalRoutinesFromCategory = categories
+                    .find { it.title.equals("Mis rutinas", ignoreCase = true) }
+                    ?.routines ?: emptyList()
+            }
+            
+            // Load global routines (labeled as "Todas")
+            val allRoutinesResult = routineRepository.getRoutinesFromApi(userId)
+            val allRoutines = allRoutinesResult.getOrNull()?.map {
                 TrainingRoutineDto(
                     routine_id = it.routine_id,
                     routine_name = it.routine_name,
@@ -63,39 +84,21 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                 )
             } ?: emptyList()
 
-            // Load group routines
-            val groupRoutinesResult = groupRepository.getUserGroups()
-            val allGroupRoutines = mutableListOf<TrainingRoutineDto>()
-            
-            groupRoutinesResult.onSuccess { groups ->
-                groups.forEach { group ->
-                    groupRepository.getGroupRoutines(group.group_id).onSuccess { routines ->
-                        allGroupRoutines.addAll(routines.map { 
-                            TrainingRoutineDto(
-                                routine_id = it.routine_id,
-                                routine_name = it.routine_name,
-                                routine_image = it.routine_image
-                            )
-                        })
-                    }
-                }
+            _uiState.update {
+                it.copy(
+                    categories = emptyList(), // We handle sections manually in the screen
+                    allRoutines = allRoutines,
+                    personalRoutinesFromCategory = personalRoutinesFromCategory,
+                    isRefreshing = false,
+                    errorMessage = null
+                )
             }
 
-            categoriesResult.onSuccess { categories ->
-                _uiState.update {
-                    it.copy(
-                        categories = categories,
-                        groupRoutines = allGroupRoutines.distinctBy { r -> r.routine_id },
-                        personalRoutines = personalRoutines,
-                        isRefreshing = false,
-                        errorMessage = null
-                    )
-                }
-            }.onFailure { error ->
+            if (categoriesResult.isFailure) {
                 _uiState.update {
                     it.copy(
                         isRefreshing = false,
-                        errorMessage = error.message ?: "No se pudo cargar entrenamientos"
+                        errorMessage = categoriesResult.exceptionOrNull()?.message ?: "Error"
                     )
                 }
             }

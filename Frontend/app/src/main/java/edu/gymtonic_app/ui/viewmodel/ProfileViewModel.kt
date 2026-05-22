@@ -62,7 +62,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			if (userId != null) {
 				userRepository.getUserById(userId).onSuccess { user ->
 					points = user.userPoints
-					objective = user.userObjetive
+					objective = user.userObjective
 				}
 			}
 

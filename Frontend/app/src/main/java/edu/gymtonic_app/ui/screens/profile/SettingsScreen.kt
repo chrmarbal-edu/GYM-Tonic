@@ -57,32 +57,6 @@ fun SettingsScreen(
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
             item {
-                AccountSectionCard(title = strings.settingsNotifications) {
-                    var routineCompletionNotifs by remember { mutableStateOf(true) }
-                    var workoutReminderNotifs by remember { mutableStateOf(false) }
-                    var newChallengeNotifs by remember { mutableStateOf(true) }
-
-                    SettingsToggleRow(
-                        label = strings.settingsCompletedRoutines,
-                        checked = routineCompletionNotifs,
-                        onCheckedChange = { routineCompletionNotifs = it }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SettingsToggleRow(
-                        label = strings.settingsWorkoutReminders,
-                        checked = workoutReminderNotifs,
-                        onCheckedChange = { workoutReminderNotifs = it }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SettingsToggleRow(
-                        label = strings.settingsNewChallenges,
-                        checked = newChallengeNotifs,
-                        onCheckedChange = { newChallengeNotifs = it }
-                    )
-                }
-            }
-
-            item {
                 AccountSectionCard(title = strings.settingsAppearance) {
                     val selectedTheme = if (currentTheme == AppTheme.DARK)
                         strings.settingsThemeDark
@@ -174,32 +148,6 @@ fun SettingsScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun SettingsToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    val colors = LocalColors.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            fontSize = 15.sp,
-            color = colors.textOnAccent
-        )
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = colors.accent,
-                uncheckedThumbColor = Color(0xFFC4C4C4),
-                checkedTrackColor = colors.accent.copy(alpha = 0.4f),
-                uncheckedTrackColor = Color(0xFFE0E0E0)
-            )
-        )
     }
 }
 

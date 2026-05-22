@@ -22,6 +22,7 @@ class UsersRemoteDataSource {
         password: String?,
         height: Double?,
         weight: Double?,
+        objective: Int?,
         pictureFile: File?
     ) = api.updateUserWithFile(
         id = id,
@@ -29,6 +30,7 @@ class UsersRemoteDataSource {
         password = password?.toRequestBody(),
         height = height?.toString()?.toRequestBody(),
         weight = weight?.toString()?.toRequestBody(),
+        objective = objective?.toString()?.toRequestBody(),
         picture = pictureFile?.let {
             val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
             MultipartBody.Part.createFormData("picture", it.name, requestFile)

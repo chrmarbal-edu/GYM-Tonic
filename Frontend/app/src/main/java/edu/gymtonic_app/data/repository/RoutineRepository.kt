@@ -76,7 +76,7 @@ class RoutineRepository(
                     listOf(
                         TrainingCategoryDto(
                             id = "recent",
-                            title = "Mis Rutinas (Offline)",
+                            title = "Recientes (Offline)",
                             routines = localRoutines.map { entity ->
                                 edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto(
                                     routine_id = entity.routine_id,
@@ -91,6 +91,10 @@ class RoutineRepository(
                 }
             }
         }
+    }
+
+    fun getRecentRoutines(): kotlinx.coroutines.flow.Flow<List<edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity>> {
+        return routineLocalDataSource?.getRecentRoutines() ?: kotlinx.coroutines.flow.flowOf(emptyList())
     }
 
     suspend fun getRoutineByNameFromApi(name: String): Result<RoutineDto> {
@@ -109,14 +113,23 @@ class RoutineRepository(
                 if (response.isSuccessful) {
                     val remoteRoutine = response.body() ?: throw Exception("Body vacío")
 
+                    // Update last_visited when a routine is opened
+                    val localRoutine = routineLocalDataSource?.getRoutineById(routineId)
+                    if (localRoutine != null) {
+                        routineLocalDataSource.updateRoutine(localRoutine.copy(last_visited = System.currentTimeMillis()))
+                    }
+
                     // Cache only if user can edit (is their routine)
                     if (remoteRoutine.can_edit || remoteRoutine.routine_id > 0) { 
                         Log.d("RoutineRepository", "Caching routine: ${remoteRoutine.routine_id}")
                         context?.let { ctx ->
                             val localRoutineImg = MediaCacheManager.downloadAndCache(ctx, remoteRoutine.routine_image)
-                            val routineToCache = remoteRoutine.copy(routine_image = localRoutineImg)
+                            val updatedWithVisited = remoteRoutine.toEntity(userId ?: 0).copy(
+                                routine_image = localRoutineImg,
+                                last_visited = System.currentTimeMillis()
+                            )
                             
-                            routineLocalDataSource?.insertRoutines(listOf(routineToCache.toEntity(userId ?: 0)))
+                            routineLocalDataSource?.insertRoutines(listOf(updatedWithVisited))
                             
                             remoteRoutine.exercises?.forEach { exDto ->
                                 val localExImg = MediaCacheManager.downloadAndCache(ctx, exDto.exercise_image)

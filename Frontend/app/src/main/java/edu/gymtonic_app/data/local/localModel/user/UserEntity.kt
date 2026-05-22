@@ -14,7 +14,7 @@ data class UserEntity(
     val user_picture: String? = null,
     val user_height: Float,
     val user_weight: Float,
-    val user_objetive: Int,
+    val user_objective: Int,
     val user_points: Int,
     val user_role: Int
 )

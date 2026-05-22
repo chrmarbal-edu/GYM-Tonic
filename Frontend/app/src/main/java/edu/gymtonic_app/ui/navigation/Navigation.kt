@@ -482,7 +482,6 @@ fun Navigation(navController: NavHostController) {
                 onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = { },
                 onOpenProfile = onOpenProfileGlobal,
-                onShowMoreCalendar = { },
                 goals = week.goals,
                 calendarDays = week.calendarDays,
                 calendarYear = week.calendarYear,
@@ -532,9 +531,9 @@ fun Navigation(navController: NavHostController) {
                     onSelect = { routineId, isLocal ->
                         navController.navigate(Routes.routine(routineId.toString(), isLocal)) },
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
-                    categories = trainingUiState.value.categories,
-                    groupRoutines = trainingUiState.value.groupRoutines,
-                    personalRoutines = trainingUiState.value.personalRoutines,
+                    recentRoutines = trainingUiState.value.recentRoutines,
+                    personalRoutines = trainingUiState.value.personalRoutinesFromCategory,
+                    allRoutines = trainingUiState.value.allRoutines,
                     isRefreshing = trainingUiState.value.isRefreshing,
                     onRefresh = { trainingViewModel.refreshCategories() }
                 )
@@ -573,8 +572,8 @@ fun Navigation(navController: NavHostController) {
                 routineId = routineId,
                 isLocal = isLocal,
                 onBack = { navController.popBackStack() },
-                onExerciseClick = { exerciseId, reps ->
-                    navController.navigate(Routes.exercise(exerciseId, reps))
+                onExerciseClick = { exerciseId, reps, series ->
+                    navController.navigate(Routes.exercise(exerciseId, reps, series))
                 },
                 onEdit = { id, local ->
                     navController.navigate(Routes.editRoutine(id, local))
@@ -620,15 +619,21 @@ fun Navigation(navController: NavHostController) {
                 navArgument("reps") {
                     type = NavType.StringType
                     defaultValue = "N/A"
+                },
+                navArgument("series") {
+                    type = NavType.StringType
+                    defaultValue = "N/A"
                 }
             )
         ) { backStackEntry ->
             val exerciseId = backStackEntry.arguments?.getString("exerciseId").orEmpty()
             val reps = backStackEntry.arguments?.getString("reps") ?: "N/A"
+            val series = backStackEntry.arguments?.getString("series") ?: "N/A"
 
             ExerciseDetailScreen(
                 exerciseId = exerciseId,
                 reps = reps,
+                series = series,
                 onBack = { navController.popBackStack() },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,

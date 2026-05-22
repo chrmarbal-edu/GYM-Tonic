@@ -19,8 +19,8 @@ data class UserDto(
     val userHeight: Float,
     @SerializedName("user_weight")
     val userWeight: Float,
-    @SerializedName("user_objetive")
-    val userObjetive: Int,
+    @SerializedName("user_objective")
+    val userObjective: Int,
     @SerializedName("user_points")
     val userPoints: Int,
     @SerializedName("user_role")

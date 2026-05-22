@@ -9,5 +9,6 @@ data class RoutineEntity(
     val routine_id: Int = 0,
     val owner_user_id: Int,
     val routine_name: String,
-    val routine_image: String? = null
+    val routine_image: String? = null,
+    val last_visited: Long = 0
 )

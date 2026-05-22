@@ -64,6 +64,7 @@ import androidx.compose.ui.text.style.TextOverflow
 fun ExerciseDetailScreen(
     exerciseId: String,
     reps: String = "N/A",
+    series: String = "N/A",
     onBack: () -> Unit,
     onOpenTraining: () -> Unit = {},
     onOpenGroups: () -> Unit = {},
@@ -247,7 +248,7 @@ fun ExerciseDetailScreen(
                                 Spacer(modifier = Modifier.width(6.dp))
 
                                 Text(
-                                    text = reps,
+                                    text = if (series != "N/A") "$series series x $reps" else reps,
                                     fontSize = 16.sp,
                                     color = colors.accentDark,
                                     fontWeight = FontWeight.Bold,
