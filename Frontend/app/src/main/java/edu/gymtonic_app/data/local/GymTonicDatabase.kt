@@ -11,9 +11,11 @@ import edu.gymtonic_app.data.local.localModel.social.FriendEntity
 import edu.gymtonic_app.data.local.localModel.group.GroupEntity
 import edu.gymtonic_app.data.local.localModel.group.GroupUserEntity
 import edu.gymtonic_app.data.local.localModel.MissionEntity
+import edu.gymtonic_app.data.local.localModel.rutine.RecentRoutineEntity
 import edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity
 import edu.gymtonic_app.data.local.localModel.routineExercise.RoutineExerciseEntity
 import edu.gymtonic_app.data.local.localModel.user.UserEntity
+import edu.gymtonic_app.data.local.localModel.user.UserFavoriteExerciseEntity
 import edu.gymtonic_app.data.local.localModel.userMission.UserMissionEntity
 import edu.gymtonic_app.data.local.localModel.userRoutine.UserRoutineEntity
 
@@ -22,6 +24,8 @@ import edu.gymtonic_app.data.local.localModel.userRoutine.UserRoutineEntity
         UserEntity::class,
         ExerciseEntity::class,
         RoutineEntity::class,
+        RecentRoutineEntity::class,
+        UserFavoriteExerciseEntity::class,
         MissionEntity::class,
         GroupEntity::class,
         RoutineExerciseEntity::class,
@@ -31,7 +35,7 @@ import edu.gymtonic_app.data.local.localModel.userRoutine.UserRoutineEntity
         FrequestEntity::class,
         UserMissionEntity::class,
     ],
-    version = 6,
+    version = 8,
     exportSchema = false
 )
 abstract class GymTonicDatabase : RoomDatabase() {
@@ -40,6 +44,8 @@ abstract class GymTonicDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun exerciseDao(): ExerciseDao
     abstract fun routineDao(): RoutineDao
+    abstract fun recentRoutineDao(): RecentRoutineDao
+    abstract fun userFavoriteExerciseDao(): UserFavoriteExerciseDao
     abstract fun missionDao(): MissionDao
     abstract fun groupDao(): GroupDao
 

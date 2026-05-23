@@ -2,6 +2,7 @@
 const friendRequestsModel = require("../models/friendRequests.model")
 const friendsModel = require("../models/friends.model")
 const AppError = require("../utils/AppError")
+const { handleSqlError } = require("../utils/sqlErrors")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -19,7 +20,7 @@ exports.findAllFriendRequests = wrapAsync(async function(req, res, next) {
     if(userLogued && userLogued.user_role == 1){
         await friendRequestsModel.findAll(function(err, datosFriendRequests) {
             if(err){
-                next(new AppError(err, 400))
+                next(new AppError(handleSqlError(err), 400))
             } else{
                 res.status(200).json(datosFriendRequests)
             }
@@ -37,7 +38,7 @@ exports.findFriendRequestById = wrapAsync(async function(req, res, next) {
     if(userLogued && userLogued.user_role == 1){
         await friendRequestsModel.findById(id, function(err, datosFriendRequest) {
             if(err){
-                next(new AppError(err, 404))
+                next(new AppError(handleSqlError(err), 404))
             } else{
                 res.status(200).json(datosFriendRequest)
             }
@@ -60,7 +61,7 @@ exports.create = wrapAsync(async function(req, res, next) {
     if(userLogued && (userLogued.user_id != receiver && userLogued.user_id == sender)){
         await friendRequestsModel.create(newFRequest, function(err, datosFriendRequestCreada){
             if(err){
-                next(new AppError(err, 400))
+                next(new AppError(handleSqlError(err), 400))
             } else{
                 res.status(201).json(datosFriendRequestCreada)
             }
@@ -84,7 +85,7 @@ exports.acceptFriendRequest = wrapAsync(async function(req, res, next) {
 
     friendRequestsModel.findById(id, async function(err, datosFriendRequest){
         if(err){
-            return next(new AppError(err, 404))
+            return next(new AppError(handleSqlError(err), 404))
         }
 
         if(!datosFriendRequest || datosFriendRequest.frequest_receiver != userLogued.user_id){
@@ -99,7 +100,7 @@ exports.acceptFriendRequest = wrapAsync(async function(req, res, next) {
         // 1) Crear amistad
         friendsModel.create(newFriendship, function(errCreate, datosAmistadCreada){
             if(errCreate){
-                return next(new AppError(errCreate, 400))
+                return next(new AppError(handleSqlError(errCreate), 400))
             }
 
             // 2) Eliminar la solicitud aceptada (ya no la necesitamos)
@@ -129,7 +130,7 @@ exports.findFriendRequestsByUserId = wrapAsync(async function(req, res, next) {
 
     friendRequestsModel.findByUserId(userId, function(err, rows){
         if(err){
-            return next(new AppError(err, 500))
+            return next(new AppError(handleSqlError(err), 500))
         }
 
         const incoming = []
@@ -155,12 +156,12 @@ exports.rejectFriendRequest = wrapAsync(async function(req, res, next) {
     if(userLogued){
         await friendRequestsModel.findById(id, async function(err, datosFriendRequest){
             if(err){
-                next(new AppError(err, 404))
+                next(new AppError(handleSqlError(err), 404))
             } else{
                 if(datosFriendRequest.frequest_receiver == userLogued.user_id){
                     friendRequestsModel.delete(id, function(err, datosFriendRequestEliminada){
                         if(err){
-                            next(new AppError(err, 404))
+                            next(new AppError(handleSqlError(err), 404))
                         } else{
                             res.status(200).json(datosFriendRequestEliminada)
                         }
@@ -185,7 +186,7 @@ exports.deleteFrequestById = wrapAsync(async function(req, res, next) {
 
     friendRequestsModel.findById(id, function(err, fr){
         if(err){
-            return next(new AppError(err, 404))
+            return next(new AppError(handleSqlError(err), 404))
         }
 
         const isAdmin = userLogued.user_role == 1
@@ -197,7 +198,7 @@ exports.deleteFrequestById = wrapAsync(async function(req, res, next) {
 
         friendRequestsModel.delete(id, function(errDel, datosFriendRequestEliminada){
             if(errDel){
-                return next(new AppError(errDel, 404))
+                return next(new AppError(handleSqlError(errDel), 404))
             }
             res.status(200).json(datosFriendRequestEliminada)
         })

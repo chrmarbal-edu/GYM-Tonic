@@ -8,6 +8,7 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.social.FriendRequestWithUserDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import edu.gymtonic_app.data.repository.FriendsRepository
+import edu.gymtonic_app.core.network.ErrorManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,8 +70,8 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
             val friends = friendsResult.getOrElse { emptyList() }
             val requests = requestsResult.getOrNull()
 
-            val error = friendsResult.exceptionOrNull()?.message
-                ?: requestsResult.exceptionOrNull()?.message
+            val error = friendsResult.exceptionOrNull()?.let { ErrorManager.normalizeError(it) }
+                ?: requestsResult.exceptionOrNull()?.let { ErrorManager.normalizeError(it) }
 
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
@@ -108,7 +109,7 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
                     _actionMessage.value = REQUEST_SENT
                     loadAll()
                 },
-                onFailure = { _actionMessage.value = it.message ?: "Error" }
+                onFailure = { _actionMessage.value = ErrorManager.normalizeError(it) }
             )
         }
     }
@@ -132,7 +133,7 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
                 },
                 onFailure = {
                     _uiState.value = previous // revertimos
-                    _actionMessage.value = it.message ?: "Error"
+                    _actionMessage.value = ErrorManager.normalizeError(it)
                 }
             )
         }
@@ -153,7 +154,7 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
                 onSuccess = { _actionMessage.value = REJECTED },
                 onFailure = {
                     _uiState.value = previous
-                    _actionMessage.value = it.message ?: "Error"
+                    _actionMessage.value = ErrorManager.normalizeError(it)
                 }
             )
         }
@@ -174,7 +175,7 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
                 onSuccess = { _actionMessage.value = CANCELLED },
                 onFailure = {
                     _uiState.value = previous
-                    _actionMessage.value = it.message ?: "Error"
+                    _actionMessage.value = ErrorManager.normalizeError(it)
                 }
             )
         }
@@ -195,7 +196,7 @@ class FriendsViewModel(application: Application) : AndroidViewModel(application)
                 onSuccess = { _actionMessage.value = REMOVED },
                 onFailure = {
                     _uiState.value = previous
-                    _actionMessage.value = it.message ?: "Error"
+                    _actionMessage.value = ErrorManager.normalizeError(it)
                 }
             )
         }

@@ -11,6 +11,5 @@ data class ExerciseEntity(
     val exercise_description: String,
     val exercise_type: Int,
     val exercise_video: String? = null,
-    val exercise_image: String? = null,
-    val is_favorite: Boolean = false
+    val exercise_image: String? = null
 )

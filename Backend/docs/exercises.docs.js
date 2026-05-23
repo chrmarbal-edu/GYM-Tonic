@@ -66,6 +66,30 @@
 
 /**
  * @swagger
+ * /exercises/type/{type}:
+ *   get:
+ *     summary: Obtener ejercicios por tipo o grupo muscular
+ *     tags: [Ejercicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         description: "Tipo de ejercicio (ej: cardio, pectorales, espalda, biceps, triceps, cuadriceps, femorales, hombros, gemelos, abdominales, fullbody)"
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lista de ejercicios filtrada
+ *       404:
+ *         description: Tipo no encontrado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
  * /exercises/{id}:
  *   get:
  *     summary: Obtener un ejercicio por ID

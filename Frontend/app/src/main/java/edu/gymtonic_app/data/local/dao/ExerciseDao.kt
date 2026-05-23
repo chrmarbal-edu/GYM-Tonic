@@ -11,9 +11,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ExerciseDao {
-    //Obtener favoritas (Flow)
-    @Query("SELECT * FROM exercises WHERE is_favorite = 1")
-    fun getFavoriteExercise(): Flow<List<ExerciseEntity>>
 
     @Query("SELECT * FROM exercises")
     suspend fun getAllExercises(): List<ExerciseEntity>

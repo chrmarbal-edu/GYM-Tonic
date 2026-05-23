@@ -60,6 +60,13 @@ fun TrainingScreen(
     val strings = LocalStrings.current
     val colors = LocalColors.current
 
+    val categoriesCount = listOf(
+        recentRoutines.isNotEmpty(),
+        personalRoutines.isNotEmpty(),
+        groupRoutines.isNotEmpty(),
+        allRoutines.isNotEmpty()
+    ).count { it }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -73,7 +80,7 @@ fun TrainingScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = strings.trainingCategoriesAvailable(3),
+                text = strings.trainingCategoriesAvailable(categoriesCount),
                 color = colors.textSubtle,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,

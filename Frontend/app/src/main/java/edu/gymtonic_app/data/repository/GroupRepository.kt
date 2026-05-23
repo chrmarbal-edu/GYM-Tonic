@@ -6,6 +6,7 @@ import edu.gymtonic_app.data.remote.remoteModel.group.CreateGroupRoutineRequest
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
+import edu.gymtonic_app.core.network.ErrorManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -60,10 +61,7 @@ class GroupRepository(
 			)
 			val response = groupRemoteDataSource.createGroup(request)
 			if (!response.isSuccessful) {
-				val errorBody = response.errorBody()?.string().orEmpty()
-				throw Exception(
-					"No se pudo crear el grupo (HTTP ${response.code()}): ${response.message()} $errorBody"
-				)
+				throw Exception(ErrorManager.parseResponseError(response))
 			}
 			response.body()?.toGroupDto()
 				?: throw Exception("No se pudo crear el grupo (respuesta vacía)")
@@ -80,8 +78,7 @@ class GroupRepository(
 		return runCatching {
 			val response = groupRemoteDataSource.leaveGroup(groupId)
 			if (!response.isSuccessful) {
-				val errorBody = response.errorBody()?.string().orEmpty()
-				throw Exception("Error al salir del grupo (HTTP ${response.code()}): ${response.message()} $errorBody")
+				throw Exception(ErrorManager.parseResponseError(response))
 			}
 			Unit
 		}
@@ -130,8 +127,7 @@ class GroupRepository(
 		return runCatching {
 			val response = groupRemoteDataSource.deleteGroup(id)
 			if (!response.isSuccessful) {
-				val errorBody = response.errorBody()?.string().orEmpty()
-				throw Exception("Error al eliminar grupo (HTTP ${response.code()}): ${response.message()} $errorBody")
+				throw Exception(ErrorManager.parseResponseError(response))
 			}
 			Unit
 		}
@@ -141,17 +137,13 @@ class GroupRepository(
 		if (response.isSuccessful) {
 			return response.body() ?: throw Exception("$defaultMessage (body vacío)")
 		}
-
-		val errorBody = response.errorBody()?.string().orEmpty()
-		throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+		throw Exception(ErrorManager.parseResponseError(response))
 	}
 
 	private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
 		if (response.isSuccessful) {
 			return response.body() ?: emptyList()
 		}
-
-		val errorBody = response.errorBody()?.string().orEmpty()
-		throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+		throw Exception(ErrorManager.parseResponseError(response))
 	}
 }

@@ -45,6 +45,7 @@
  *               - type
  *               - points
  *               - objetive
+ *               - goal
  *             properties:
  *               name:
  *                 type: string
@@ -58,6 +59,10 @@
  *               objetive:
  *                 type: string
  *                 description: Objetivo de la misión
+ *               goal:
+ *                 type: number
+ *                 description: Meta numérica de la misión
+ *                 example: 10
  *     responses:
  *       200:
  *         description: Misión creada exitosamente
@@ -125,6 +130,9 @@
  *               objetive:
  *                 type: string
  *                 description: Objetivo de la misión
+ *               goal:
+ *                 type: number
+ *                 description: Meta numérica de la misión
  *     responses:
  *       200:
  *         description: Misión actualizada exitosamente

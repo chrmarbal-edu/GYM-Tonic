@@ -15,6 +15,7 @@ import com.google.gson.Gson
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
+import edu.gymtonic_app.core.network.ErrorManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -43,7 +44,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
                 val response = authRepository.login(request)
                 handleLoginResponse(response)
             } catch (e: Exception){
-                _loginState.value = LoginState.Error(e.message ?: "Error al hacer el login")
+                _loginState.value = LoginState.Error(ErrorManager.normalizeError(e))
             }
         }
     }
@@ -58,7 +59,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
                 handleSocialLoginResponse(result)
             } catch (e: Exception) {
                 Log.e("LoginViewModel", "Error in googleLogin", e)
-                _loginState.value = LoginState.Error(e.message ?: "Error al iniciar sesión con Google")
+                _loginState.value = LoginState.Error(ErrorManager.normalizeError(e))
             }
         }
     }
@@ -73,7 +74,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
                 handleSocialLoginResponse(result)
             } catch (e: Exception) {
                 Log.e("LoginViewModel", "Error in facebookLogin", e)
-                _loginState.value = LoginState.Error(e.message ?: "Error al iniciar sesión con Facebook")
+                _loginState.value = LoginState.Error(ErrorManager.normalizeError(e))
             }
         }
     }
@@ -115,7 +116,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
                     onSuccess()
                 }
                 .onFailure { e ->
-                    _loginState.value = LoginState.Error(e.message ?: "Error al iniciar recuperación")
+                    _loginState.value = LoginState.Error(ErrorManager.normalizeError(e))
                 }
         }
     }
@@ -130,7 +131,7 @@ class LoginViewModel(application: Application): AndroidViewModel(application){
                 }
                 .onFailure { e ->
                     Log.e("LoginViewModel", "Error al cambiar contraseña", e)
-                    _loginState.value = LoginState.Error(e.message ?: "Código incorrecto o expirado")
+                    _loginState.value = LoginState.Error(ErrorManager.normalizeError(e))
                 }
         }
     }

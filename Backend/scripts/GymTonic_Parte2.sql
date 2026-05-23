@@ -49,7 +49,7 @@ CREATE TABLE dbo.Routines (
     routine_is_group_routine INT NOT NULL CONSTRAINT DF_Routines_is_group_routine DEFAULT (0),
     routine_groupid INT NULL,
     CONSTRAINT PK_Routines PRIMARY KEY (routine_id),
-    CONSTRAINT FK_Routines_Creator FOREIGN KEY (routine_creator_id) REFERENCES dbo.Users(user_id) ON DELETE SET NULL
+    CONSTRAINT FK_Routines_Creator FOREIGN KEY (routine_creator_id) REFERENCES dbo.Users(user_id) ON DELETE NO ACTION
 );
 GO
 
@@ -72,12 +72,12 @@ CREATE TABLE dbo.Groups (
     group_points      INT               DEFAULT 0 NOT NULL,
     group_creator_id  INT               NOT NULL,
     CONSTRAINT PK_Groups PRIMARY KEY (group_id),
-    CONSTRAINT FK_Groups_Creator FOREIGN KEY (group_creator_id) REFERENCES dbo.Users(user_id)
+    CONSTRAINT FK_Groups_Creator FOREIGN KEY (group_creator_id) REFERENCES dbo.Users(user_id) ON DELETE CASCADE
 );
 GO
 
 ALTER TABLE dbo.Routines ADD CONSTRAINT FK_Routines_Group
-    FOREIGN KEY (routine_groupid) REFERENCES dbo.Groups (group_id) ON DELETE SET NULL;
+    FOREIGN KEY (routine_groupid) REFERENCES dbo.Groups (group_id) ON DELETE NO ACTION;
 GO
 
 /* ============================================================
@@ -91,8 +91,8 @@ CREATE TABLE dbo.Routine_X_Exercise (
     routine_x_exercise_reps NVARCHAR(50) NULL,
     routine_x_exercise_sets INT NULL,
     CONSTRAINT PK_Routine_X_Exercise PRIMARY KEY (routine_x_exercise_id),
-    FOREIGN KEY (routine_x_exercise_routineid)  REFERENCES dbo.Routines(routine_id),
-    FOREIGN KEY (routine_x_exercise_exerciseid) REFERENCES dbo.Exercises(exercise_id)
+    FOREIGN KEY (routine_x_exercise_routineid)  REFERENCES dbo.Routines(routine_id) ON DELETE CASCADE,
+    FOREIGN KEY (routine_x_exercise_exerciseid) REFERENCES dbo.Exercises(exercise_id) ON DELETE CASCADE
 );
 GO
 
@@ -101,8 +101,8 @@ CREATE TABLE dbo.User_X_Routine (
     user_x_routine_userid INT NOT NULL,
     user_x_routine_routineid INT NOT NULL,
     CONSTRAINT PK_User_X_Routine PRIMARY KEY (user_x_routine_id),
-    FOREIGN KEY (user_x_routine_userid)  REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (user_x_routine_routineid) REFERENCES dbo.Routines(routine_id)
+    FOREIGN KEY (user_x_routine_userid)  REFERENCES dbo.Users(user_id) ON DELETE NO ACTION,
+    FOREIGN KEY (user_x_routine_routineid) REFERENCES dbo.Routines(routine_id) ON DELETE CASCADE
 );
 GO
 
@@ -112,8 +112,8 @@ CREATE TABLE dbo.Group_x_user (
     Group_x_user_userid INT NOT NULL,
     Group_x_user_range INT NOT NULL,
     CONSTRAINT PK_Group_x_user PRIMARY KEY (Group_x_user_id),
-    FOREIGN KEY (Group_x_user_groupid) REFERENCES dbo.Groups(group_id),
-    FOREIGN KEY (Group_x_user_userid)  REFERENCES dbo.Users(user_id)
+    FOREIGN KEY (Group_x_user_groupid) REFERENCES dbo.Groups(group_id) ON DELETE CASCADE,
+    FOREIGN KEY (Group_x_user_userid)  REFERENCES dbo.Users(user_id) ON DELETE NO ACTION
 );
 GO
 
@@ -122,8 +122,8 @@ CREATE TABLE dbo.Friends (
     friend_userid1 INT NOT NULL,
     friend_userid2 INT NOT NULL,
     CONSTRAINT PK_Friends PRIMARY KEY (friend_id),
-    FOREIGN KEY (friend_userid1) REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (friend_userid2) REFERENCES dbo.Users(user_id)
+    FOREIGN KEY (friend_userid1) REFERENCES dbo.Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_userid2) REFERENCES dbo.Users(user_id) ON DELETE NO ACTION
 );
 GO
 
@@ -133,8 +133,8 @@ CREATE TABLE dbo.Frequest (
     frequest_receiver INT NOT NULL,
     frequest_status   INT NOT NULL,
     CONSTRAINT PK_Frequest PRIMARY KEY (frequest_id),
-    FOREIGN KEY (frequest_sender)   REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (frequest_receiver) REFERENCES dbo.Users(user_id)
+    FOREIGN KEY (frequest_sender)   REFERENCES dbo.Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (frequest_receiver) REFERENCES dbo.Users(user_id) ON DELETE NO ACTION
 );
 GO
 
@@ -148,8 +148,8 @@ CREATE TABLE dbo.User_X_Mission (
     user_x_mission_points_deducted BIT DEFAULT 0 NOT NULL,
     user_x_mission_completed_date DATE NULL,
     CONSTRAINT PK_User_X_Mission PRIMARY KEY (user_x_mission_id),
-    FOREIGN KEY (user_x_mission_userid)    REFERENCES dbo.Users(user_id),
-    FOREIGN KEY (user_x_mission_missionid) REFERENCES dbo.Missions(mission_id)
+    FOREIGN KEY (user_x_mission_userid)    REFERENCES dbo.Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_x_mission_missionid) REFERENCES dbo.Missions(mission_id) ON DELETE CASCADE
 );
 GO
 
@@ -310,6 +310,13 @@ VALUES
     (8,7,'2026-12-31', 1, 1),
     (9,1,'2026-12-31', 0, 0),
     (9,4,'2026-07-07', 0, 4);
+GO
+
+-- Rellenar misiones ya completadas que no tienen fecha (se asume hoy como fecha de completación)
+UPDATE dbo.User_X_Mission
+SET user_x_mission_completed_date = CAST(GETDATE() AS DATE)
+WHERE user_x_mission_completed = 1
+  AND user_x_mission_completed_date IS NULL;
 GO
 
 PRINT 'GymTonic - BD creada y poblada correctamente.';

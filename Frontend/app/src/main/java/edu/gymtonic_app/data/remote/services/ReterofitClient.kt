@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import java.io.IOException
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -91,9 +92,25 @@ object RetrofitClient {
         chain.proceed(newRequest)
     }
 
+    private val networkErrorInterceptor = Interceptor { chain ->
+        try {
+            chain.proceed(chain.request())
+        } catch (e: IOException) {
+            val msg = e.message ?: ""
+            if (msg.contains("Failed to connect", ignoreCase = true) ||
+                msg.contains("Unable to resolve host", ignoreCase = true) ||
+                msg.contains("route to host", ignoreCase = true) ||
+                msg.contains("Connection refused", ignoreCase = true)) {
+                throw IOException("No tienes conexión a internet", e)
+            }
+            throw e
+        }
+    }
+
     val apiService: ApiService by lazy {
         val okHttpClient = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(networkErrorInterceptor)
             .build()
 
         Retrofit.Builder()

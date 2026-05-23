@@ -9,6 +9,8 @@ function applyUploadedMedia(target, files) {
         target.image = `images/exercises/${files.image[0].filename}`
     }
 }
+const { deleteResourceFile } = require("../utils/fileUtils") 
+const { handleSqlError } = require("../utils/sqlErrors")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -23,7 +25,7 @@ function wrapAsync(fn) {
 exports.findAllExercises = wrapAsync(async function(req, res, next) {
     await exercisesModel.findAll(async function(err, datosExercises) {
         if(err){
-            next(new AppError(err, 400))
+            next(new AppError(handleSqlError(err), 400))
         } else{
             res.status(200).json(datosExercises)
         }
@@ -36,7 +38,7 @@ exports.findExerciseById = wrapAsync(async function (req, res, next) {
 
     await exercisesModel.findById(id, function(err, datosExercise){
         if(err){
-            return next(new AppError(err, 404))
+            return next(new AppError(handleSqlError(err), 404))
         }
 
         if(!datosExercise || (Array.isArray(datosExercise) && datosExercise.length == 0)){
@@ -93,7 +95,7 @@ exports.findExercisesByType = wrapAsync(async function(req, res, next) {
 
     await exercisesModel.findByType(typeCode, function (err, datosExercises) {
         if(err){
-            next(new AppError(err, 404))
+            next(new AppError(handleSqlError(err), 404))
         } else{
             res.status(200).json(datosExercises)
         }
@@ -116,7 +118,7 @@ exports.createExercise = wrapAsync(async function(req, res, next) {
 
     await exercisesModel.create(newExercise, function(err, datosEjercicioCreado){
         if(err){
-            next(new AppError(err, 500))
+            next(new AppError(handleSqlError(err), 500))
         } else{
             res.status(201).json(datosEjercicioCreado)
         }
@@ -132,7 +134,7 @@ exports.updateExerciseById = wrapAsync(async function (req, res, next) {
     // BUSCAMOS EL EJERCICIO
     await exercisesModel.findById(id, async function (err, exerciseFounded) {
         if(err){
-            next(new AppError(err, 500))
+            next(new AppError(handleSqlError(err), 500))
         } else{
             if(!exerciseFounded || exerciseFounded.length == 0){
                 next(new AppError("No se ha encontrado el ejercicio", 404))
@@ -169,7 +171,7 @@ exports.updateExerciseById = wrapAsync(async function (req, res, next) {
             // ACTUALIZAMOS EJERCICIO
             await exercisesModel.updateById(id, exerciseFounded, function (err, datosEjercicioActualizado) {
                 if(err){
-                    next(new AppError(err, 500))
+                    next(new AppError(handleSqlError(err), 500))
                 } else{
                     res.status(200).json(datosEjercicioActualizado)
                 }
@@ -184,6 +186,20 @@ exports.deleteExerciseById = wrapAsync(async function (req, res, next) {
     const userLogued = req.userLogued
 
     if(userLogued && userLogued.user_role == 1){
+        const exerciseFounded = await new Promise((resolve, reject) => {
+            exercisesModel.findById(id, (err, data) => {
+                if (err) reject(err)
+                else resolve(data)
+            })
+        }).catch(err => {
+            // If exercise not found, still proceed with DB delete attempt, but don't try to delete files.
+            console.warn(`Exercise with ID ${id} not found for file deletion check. Error: ${err.message || err}`);
+            return null;
+        });
+
+        if (exerciseFounded && exerciseFounded.exercise_image) await deleteResourceFile(exerciseFounded.exercise_image);
+        if (exerciseFounded && exerciseFounded.exercise_video) await deleteResourceFile(exerciseFounded.exercise_video);
+
         await exercisesModel.delete(id, function(err, datosEjercicioEliminado){
             if(err){
                 next(new AppError("Error al eliminar el ejercicio", 500))

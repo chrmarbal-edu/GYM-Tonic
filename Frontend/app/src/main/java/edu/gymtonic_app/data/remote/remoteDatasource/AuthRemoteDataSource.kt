@@ -8,6 +8,7 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.services.RetrofitClient
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterRequest
 import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
+import edu.gymtonic_app.core.network.ErrorManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -24,9 +25,7 @@ class AuthRemoteDataSource {
             return response.body() ?: throw Exception("Respuesta vacia del servidor")
         }
 
-        val errorBody = response.errorBody()?.string()
-        Log.e(tag, "Error login: ${response.code()} ${response.message()} | $errorBody")
-        throw Exception("Error en login: ${response.message()}")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun googleLogin(idToken: String): Any {
@@ -37,9 +36,7 @@ class AuthRemoteDataSource {
             return response.body() ?: throw Exception("Respuesta vacía del servidor")
         }
 
-        val errorBody = response.errorBody()?.string()
-        Log.e(tag, "Error googleLogin: ${response.code()} ${response.message()} | $errorBody")
-        throw Exception("Error en googleLogin: ${response.code()} - $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun facebookLogin(accessToken: String): Any {
@@ -50,9 +47,7 @@ class AuthRemoteDataSource {
             return response.body() ?: throw Exception("Respuesta vacía del servidor")
         }
 
-        val errorBody = response.errorBody()?.string()
-        Log.e(tag, "Error facebookLogin: ${response.code()} ${response.message()} | $errorBody")
-        throw Exception("Error en facebookLogin: ${response.code()} - $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun register(
@@ -108,9 +103,7 @@ class AuthRemoteDataSource {
             return response.body() ?: throw Exception("Respuesta vacía del servidor")
         }
 
-        val errorBody = response.errorBody()?.string()
-        Log.e(tag, "Error register: ${response.code()} ${response.message()} | $errorBody")
-        throw Exception("Error en register: ${response.message()}")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun recoverAccount(email: String, newPassword: String): edu.gymtonic_app.data.remote.remoteModel.user.RecoverResponse {
@@ -120,18 +113,14 @@ class AuthRemoteDataSource {
             return response.body() ?: throw Exception("Respuesta vacía del servidor")
         }
 
-        val errorBody = response.errorBody()?.string()
-        Log.e(tag, "Error recoverAccount: ${response.code()} ${response.message()} | $errorBody")
-        throw Exception("Error al recuperar cuenta")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun changePassword(code: String, recoveryToken: String) {
         val request = edu.gymtonic_app.data.remote.remoteModel.user.ChangePasswordRequest(code, recoveryToken)
         val response = api.changePassword(request)
         if (!response.isSuccessful) {
-            val errorBody = response.errorBody()?.string()
-            Log.e(tag, "Error changePassword: ${response.code()} ${response.message()} | $errorBody")
-            throw Exception("Código incorrecto o expirado")
+            throw Exception(ErrorManager.parseResponseError(response))
         }
     }
 
@@ -139,9 +128,7 @@ class AuthRemoteDataSource {
         val response = api.logout()
         if (response.isSuccessful) return
 
-        val errorBody = response.errorBody()?.string()
-        Log.e(tag, "Error logout: ${response.code()} ${response.message()} | $errorBody")
-        throw Exception("Error en logout: ${response.message()}")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 }
 

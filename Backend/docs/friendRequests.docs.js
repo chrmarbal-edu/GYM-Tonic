@@ -59,6 +59,31 @@
 
 /**
  * @swagger
+ * /friendRequests/user/{userId}:
+ *   get:
+ *     summary: Obtener solicitudes de amistad de un usuario (entrantes y salientes)
+ *     tags: [Solicitudes de Amistad]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Objeto con listas 'incoming' y 'outgoing'
+ *       401:
+ *         description: Token inválido
+ *       403:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
  * /friendRequests/accept/{id}:
  *   patch:
  *     summary: Aceptar una solicitud de amistad

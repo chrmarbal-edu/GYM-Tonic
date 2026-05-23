@@ -9,6 +9,7 @@ import edu.gymtonic_app.data.remote.remoteDatasource.user.UsersRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.auth.LoginResponse
 import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.data.util.MediaCacheManager
+import edu.gymtonic_app.core.network.ErrorManager
 import java.io.File
 
 class UserRepository(
@@ -36,7 +37,7 @@ class UserRepository(
                 // 3. RETORNAMOS la versión de la API (con URL) para que si hay internet se use la URL
                 userDtoFromApi
             } else {
-                userLocalDataSource?.getUserById(id)?.toDto() ?: throw Exception("Error al obtener usuario: ${response.code()}")
+                userLocalDataSource?.getUserById(id)?.toDto() ?: throw Exception(ErrorManager.parseResponseError(response))
             }
         } catch (e: Exception) {
             Log.d("UserRepository", "Error fetching from API, loading from cache for ID: $id")
@@ -67,7 +68,7 @@ class UserRepository(
             }
             loginResponse
         }
-        else throw Exception("Error al actualizar usuario: ${response.code()}")
+        else throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun updateUserWithFile(
@@ -100,7 +101,7 @@ class UserRepository(
             }
             loginResponse
         }
-        else throw Exception("Error al actualizar usuario con archivo: ${response.code()}")
+        else throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun deleteUser(id: Int): Result<Unit> = runCatching {
@@ -109,6 +110,6 @@ class UserRepository(
             userLocalDataSource?.deleteUserById(id)
             Unit
         }
-        else throw Exception("Error al eliminar usuario: ${response.code()}")
+        else throw Exception(ErrorManager.parseResponseError(response))
     }
 }

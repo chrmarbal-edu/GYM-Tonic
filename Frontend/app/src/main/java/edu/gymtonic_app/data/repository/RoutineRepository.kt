@@ -5,6 +5,7 @@ import android.util.Log
 import edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource
 import edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource
 import edu.gymtonic_app.data.local.localDatasource.routineExercise.RoutineExerciseInsert
+import edu.gymtonic_app.data.local.localDatasource.routine.RecentRoutineLocalDataSource
 import edu.gymtonic_app.data.local.localDatasource.routineExercise.RoutineExerciseLocalDataSource
 import edu.gymtonic_app.data.mapper.toDto
 import edu.gymtonic_app.data.mapper.toEntity
@@ -13,8 +14,13 @@ import com.google.gson.Gson
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingCategoryDto
+import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
 import edu.gymtonic_app.data.util.MediaCacheManager
+import edu.gymtonic_app.core.network.ErrorManager
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -27,8 +33,10 @@ class RoutineRepository(
     private val routineLocalDataSource: RoutineLocalDataSource? = null,
     private val exerciseLocalDataSource: ExerciseLocalDataSource? = null,
     private val routineExerciseLocalDataSource: RoutineExerciseLocalDataSource? = null,
+    private val recentRoutineLocalDataSource: RecentRoutineLocalDataSource? = null,
     private val context: Context? = null
 ) {
+
     suspend fun getRoutinesFromApi(userId: Int? = null): Result<List<RoutineDto>> {
         return runCatching {
             try {
@@ -36,11 +44,9 @@ class RoutineRepository(
                     response = routineRemoteDataSource.getRoutines(),
                     defaultMessage = "No se pudieron obtener las rutinas"
                 )
-                // Cache personal routines with actual owner ID
+                // Cache routines with actual owner ID
                 userId?.let { uid ->
-                    // Only cache routines that are NOT from a group
-                    val routinesToCache = remoteRoutines.filter { it.routine_groupid == null }
-                    routineLocalDataSource?.insertRoutines(routinesToCache.map { it.toEntity(uid) })
+                    routineLocalDataSource?.insertRoutines(remoteRoutines.map { it.toEntity(uid) })
                 }
                 remoteRoutines
             } catch (e: Exception) {
@@ -87,7 +93,9 @@ class RoutineRepository(
                                     edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto(
                                         routine_id = entity.routine_id,
                                         routine_name = entity.routine_name,
-                                        routine_image = entity.routine_image
+                                        routine_image = entity.routine_image,
+                                        routine_creator_id = entity.routine_creator_id,
+                                        routine_groupid = entity.routine_groupid
                                     )
                                 }
                         )
@@ -99,8 +107,21 @@ class RoutineRepository(
         }
     }
 
-    fun getRecentRoutines(): kotlinx.coroutines.flow.Flow<List<edu.gymtonic_app.data.local.localModel.rutine.RoutineEntity>> {
-        return routineLocalDataSource?.getRecentRoutines() ?: kotlinx.coroutines.flow.flowOf(emptyList())
+    fun getRecentRoutines(userId: Int, isOffline: Boolean = false): Flow<List<TrainingRoutineDto>> {
+        return recentRoutineLocalDataSource?.getRecentRoutines(userId)?.map { entities ->
+            entities.filter { 
+                // Si estamos offline, NO mostramos rutinas de grupo en recientes
+                if (isOffline) it.routineGroupId == null else true
+            }.map {
+                TrainingRoutineDto(
+                    routine_id = it.routineId,
+                    routine_name = it.routineName,
+                    routine_image = it.routineImage,
+                    routine_creator_id = it.routineCreatorId,
+                    routine_groupid = it.routineGroupId
+                )
+            }
+        } ?: flowOf(emptyList())
     }
 
     suspend fun getRoutineByNameFromApi(name: String): Result<RoutineDto> {
@@ -125,39 +146,46 @@ class RoutineRepository(
                         routineLocalDataSource.updateRoutine(localRoutine.copy(last_visited = System.currentTimeMillis()))
                     }
 
-                    // Cache only if it's NOT a group routine
-                    if (remoteRoutine.routine_groupid == null) { 
-                        Log.d("RoutineRepository", "Caching routine: ${remoteRoutine.routine_id}")
-                        context?.let { ctx ->
-                            val localRoutineImg = MediaCacheManager.downloadAndCache(ctx, remoteRoutine.routine_image)
-                            val updatedWithVisited = remoteRoutine.toEntity(userId ?: 0).copy(
-                                routine_image = localRoutineImg,
-                                last_visited = System.currentTimeMillis()
+                    // Cache routine (personal or group)
+                    Log.d("RoutineRepository", "Caching routine: ${remoteRoutine.routine_id}")
+                    context?.let { ctx ->
+                        val localRoutineImg = MediaCacheManager.downloadAndCache(ctx, remoteRoutine.routine_image)
+                        val updatedWithVisited = remoteRoutine.toEntity(userId ?: 0).copy(
+                            routine_image = localRoutineImg,
+                            last_visited = System.currentTimeMillis()
+                        )
+                        
+                        routineLocalDataSource?.insertRoutines(listOf(updatedWithVisited))
+
+                        // Guardar en ROOM para que persista por usuario
+                        recentRoutineLocalDataSource?.addRecentRoutine(
+                            userId = userId ?: 0,
+                            routineId = remoteRoutine.routine_id,
+                            name = remoteRoutine.routine_name ?: "Rutina",
+                            image = remoteRoutine.routine_image,
+                            creatorId = remoteRoutine.routine_creator_id,
+                            groupId = remoteRoutine.routine_groupid
+                        )
+                        
+                        remoteRoutine.exercises?.forEach { exDto ->
+                            val localExImg = MediaCacheManager.downloadAndCache(ctx, exDto.exercise_image)
+                            val localExVid = MediaCacheManager.downloadAndCache(ctx, exDto.exercise_video)
+                            
+                            val exEntity = edu.gymtonic_app.data.local.localModel.ExerciseEntity(
+                                exercise_id = exDto.exercise_id,
+                                exercise_name = exDto.exercise_name ?: "",
+                                exercise_description = exDto.exercise_description ?: "",
+                                exercise_type = exDto.exercise_type,
+                                exercise_image = localExImg,
+                                exercise_video = localExVid
                             )
+                            exerciseLocalDataSource?.insertExercise(exEntity)
                             
-                            routineLocalDataSource?.insertRoutines(listOf(updatedWithVisited))
-                            
-                            remoteRoutine.exercises?.forEach { exDto ->
-                                val localExImg = MediaCacheManager.downloadAndCache(ctx, exDto.exercise_image)
-                                val localExVid = MediaCacheManager.downloadAndCache(ctx, exDto.exercise_video)
-                                
-                                val exEntity = edu.gymtonic_app.data.local.localModel.ExerciseEntity(
-                                    exercise_id = exDto.exercise_id,
-                                    exercise_name = exDto.exercise_name ?: "",
-                                    exercise_description = exDto.exercise_description ?: "",
-                                    exercise_type = exDto.exercise_type,
-                                    exercise_image = localExImg,
-                                    exercise_video = localExVid,
-                                    is_favorite = exerciseLocalDataSource?.getExerciseById(exDto.exercise_id)?.is_favorite ?: false
-                                )
-                                exerciseLocalDataSource?.insertExercise(exEntity)
-                                
-                                routineExerciseLocalDataSource?.linkExerciseToRoutine(
-                                    routineId = routineId,
-                                    exerciseId = exDto.exercise_id,
-                                    reps = exDto.reps ?: ""
-                                )
-                            }
+                            routineExerciseLocalDataSource?.linkExerciseToRoutine(
+                                routineId = routineId,
+                                exerciseId = exDto.exercise_id,
+                                reps = exDto.reps ?: ""
+                            )
                         }
                     }
                     remoteRoutine
@@ -179,15 +207,28 @@ class RoutineRepository(
             routineLocalDataSource?.getRoutineById(routineId)
         } ?: return null
         
-        // Final privacy check: only return if not from group and (predefined or belongs to user)
-        if (localRoutine.routine_groupid != null) return null
+        // Final privacy check: 
+        // 1. If it's a group routine, it was cached because the user had access to it.
+        // 2. If it's a predefined routine (creator_id == null), everyone can see it.
+        // 3. If it's a personal routine, it must belong to the user.
 
         val isPredefined = localRoutine.routine_creator_id == null
+        val isGroup = localRoutine.routine_groupid != null
         val isOwner = userId != null && localRoutine.routine_creator_id == userId
         
-        if (!isPredefined && !isOwner) return null
+        if (!isPredefined && !isGroup && !isOwner) return null
 
         val routineDto = localRoutine.toDto()
+
+        // Update Recents in ROOM (even when loading from cache)
+        recentRoutineLocalDataSource?.addRecentRoutine(
+            userId = userId ?: 0,
+            routineId = localRoutine.routine_id,
+            name = localRoutine.routine_name,
+            image = localRoutine.routine_image,
+            creatorId = localRoutine.routine_creator_id,
+            groupId = localRoutine.routine_groupid
+        )
         
         // Fetch linked exercises from Room
         val linkedExercises = routineExerciseLocalDataSource?.getExercisesForRoutine(routineId)?.first() ?: emptyList()
@@ -273,13 +314,11 @@ class RoutineRepository(
                     ),
                     defaultMessage = "No se pudo crear la rutina"
                 ).also { detail ->
-                    // Cache the new routine ONLY if it's not a group routine
-                    if (detail.routine_groupid == null) {
-                        context?.let { ctx ->
-                            val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
-                            val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
-                            routineLocalDataSource?.insertRoutines(listOf(entity))
-                        }
+                    // Cache the new routine
+                    context?.let { ctx ->
+                        val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
+                        val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
+                        routineLocalDataSource?.insertRoutines(listOf(entity))
                     }
                 }
             } else {
@@ -292,13 +331,11 @@ class RoutineRepository(
                     ),
                     defaultMessage = "No se pudo actualizar la rutina con id=$id"
                 ).also { detail ->
-                    // Cache the updated routine ONLY if it's not a group routine
-                    if (detail.routine_groupid == null) {
-                        context?.let { ctx ->
-                            val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
-                            val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
-                            routineLocalDataSource?.insertRoutines(listOf(entity))
-                        }
+                    // Cache the updated routine
+                    context?.let { ctx ->
+                        val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
+                        val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
+                        routineLocalDataSource?.insertRoutines(listOf(entity))
                     }
                 }
             }
@@ -309,10 +346,7 @@ class RoutineRepository(
         return runCatching {
             val response = routineRemoteDataSource.deleteRoutine(routineId)
             if (!response.isSuccessful) {
-                val errorBody = response.errorBody()?.string().orEmpty()
-                throw Exception(
-                    "Error al eliminar rutina (HTTP ${response.code()}): ${response.message()} $errorBody"
-                )
+                throw Exception(ErrorManager.parseResponseError(response))
             }
             Unit
         }
@@ -322,15 +356,13 @@ class RoutineRepository(
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("$defaultMessage (body vacío)")
         }
-        val errorBody = response.errorBody()?.string().orEmpty()
-        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
         if (response.isSuccessful) {
             return response.body() ?: emptyList()
         }
-        val errorBody = response.errorBody()?.string().orEmpty()
-        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 }

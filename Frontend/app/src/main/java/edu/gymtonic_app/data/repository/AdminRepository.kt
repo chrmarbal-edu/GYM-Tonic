@@ -9,6 +9,7 @@ import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.core.UserRoles
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
 import edu.gymtonic_app.data.remote.services.RetrofitClient
+import edu.gymtonic_app.core.network.ErrorManager
 import com.google.gson.Gson
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -22,7 +23,7 @@ class AdminRepository {
 
     suspend fun fetchUsers(): Result<List<UserDto>> = runCatching {
         val response = api.getUsersFull()
-        if (!response.isSuccessful) throw Exception(response.message() ?: "Error al cargar usuarios")
+        if (!response.isSuccessful) throw Exception(ErrorManager.parseResponseError(response))
         response.body()
             .orEmpty()
             .filter { it.userRole == UserRoles.USER }
@@ -36,7 +37,7 @@ class AdminRepository {
 
     suspend fun deleteUser(id: Int): Result<Unit> = runCatching {
         val response = api.deleteUser(id)
-        if (!response.isSuccessful) throw Exception(response.message() ?: "No se pudo eliminar")
+        if (!response.isSuccessful) throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun fetchRoutines(): Result<List<RoutineDto>> = runCatching {
@@ -99,7 +100,7 @@ class AdminRepository {
 
     suspend fun deleteRoutine(id: Int): Result<Unit> = runCatching {
         val response = api.deleteRoutine(id)
-        if (!response.isSuccessful) throw Exception(response.message() ?: "No se pudo eliminar")
+        if (!response.isSuccessful) throw Exception(ErrorManager.parseResponseError(response))
     }
 
     suspend fun fetchExercises(): Result<List<ExerciseDto>> = runCatching {

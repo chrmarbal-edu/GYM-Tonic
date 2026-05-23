@@ -12,6 +12,7 @@ import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserMissionsResponseDto
 import edu.gymtonic_app.data.remote.remoteModel.week.WeeklyCalendarDayDto
+import edu.gymtonic_app.core.network.ErrorManager
 import retrofit2.Response
 
 class UserMissionsRepository(
@@ -191,15 +192,13 @@ class UserMissionsRepository(
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("$defaultMessage (body vacío)")
         }
-        val errorBody = response.errorBody()?.string().orEmpty()
-        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
         if (response.isSuccessful) {
             return response.body() ?: emptyList()
         }
-        val errorBody = response.errorBody()?.string().orEmpty()
-        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 }

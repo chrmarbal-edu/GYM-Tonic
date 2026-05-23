@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,8 +28,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +62,30 @@ fun RegisterScreen2(
     val context = LocalContext.current
     val bg = Brush.verticalGradient(colors.gradientColors)
 
-    var fechaNacimiento by remember { mutableStateOf("") }
+    val isSpanish = strings.language == "ES"
+
+    var fechaNacimientoValue by remember { mutableStateOf(TextFieldValue("")) }
+    
+    LaunchedEffect(isSpanish) {
+        val currentText = fechaNacimientoValue.text
+        if (currentText.isBlank()) return@LaunchedEffect
+        
+        // Convert between formats on the fly
+        if (isSpanish) { // EN -> ES
+            val parts = currentText.split("-")
+            if (parts.size == 3) {
+                val newText = "${parts[2]}/${parts[1]}/${parts[0]}"
+                fechaNacimientoValue = TextFieldValue(newText, TextRange(newText.length))
+            }
+        } else { // ES -> EN
+            val parts = currentText.split("/")
+            if (parts.size == 3) {
+                val newText = "${parts[2]}-${parts[1]}-${parts[0]}"
+                fechaNacimientoValue = TextFieldValue(newText, TextRange(newText.length))
+            }
+        }
+    }
+
     var altura by remember { mutableStateOf("") }
     var peso by remember { mutableStateOf("") }
     var objetivo by remember { mutableStateOf("") }
@@ -96,8 +122,13 @@ fun RegisterScreen2(
     var dropdownExpanded by remember { mutableStateOf(false) }
 
     fun validateForm(): Boolean {
-        val fechaRegex = Regex("""\d{4}-\d{2}-\d{2}""")
-        fechaError = !fechaNacimiento.matches(fechaRegex)
+        val rawDate = fechaNacimientoValue.text
+        val fechaRegex = if (isSpanish) {
+            Regex("""\d{2}/\d{2}/\d{4}""")
+        } else {
+            Regex("""\d{4}-\d{2}-\d{2}""")
+        }
+        fechaError = !rawDate.matches(fechaRegex)
         alturaError = altura.isBlank()
         pesoError = peso.isBlank()
         objetivoError = objetivo.isBlank()
@@ -217,16 +248,20 @@ fun RegisterScreen2(
                             pictureUri = null
                             pictureBitmap = null
                         }) {
-                            Icon(Icons.Default.AddAPhoto, contentDescription = "Default", tint = Color.Gray) // O un icono de borrar
+                            Icon(Icons.Default.Delete, contentDescription = "Remove Photo", tint = Color.Gray)
                         }
                     }
 
                     FechaNacimientoField(
                         label = strings.birthDate,
                         formatHint = strings.birthDateFormat,
-                        fecha = fechaNacimiento,
-                        onFechaChange = { fechaNacimiento = it; fechaError = false },
-                        isError = fechaError
+                        fechaValue = fechaNacimientoValue,
+                        onFechaValueChange = { 
+                            fechaNacimientoValue = it
+                            fechaError = false 
+                        },
+                        isError = fechaError,
+                        isSpanish = isSpanish
                     )
 
                     Spacer(Modifier.height(18.dp))
@@ -237,7 +272,8 @@ fun RegisterScreen2(
                         onValueChange = { altura = it; alturaError = false },
                         placeholder = "185",
                         isError = alturaError,
-                        errorText = strings.requiredField
+                        errorText = strings.requiredField,
+                        keyboardType = KeyboardType.Number
                     )
 
                     Spacer(Modifier.height(18.dp))
@@ -248,7 +284,8 @@ fun RegisterScreen2(
                         onValueChange = { peso = it; pesoError = false },
                         placeholder = "79",
                         isError = pesoError,
-                        errorText = strings.requiredField
+                        errorText = strings.requiredField,
+                        keyboardType = KeyboardType.Number
                     )
 
                     Spacer(Modifier.height(22.dp))
@@ -294,6 +331,14 @@ fun RegisterScreen2(
                             if (validateForm()) {
                                 val objetivoValue = objetivos.indexOf(objetivo)
                                 
+                                val dateToSubmit = if (isSpanish) {
+                                    // Convert dd/mm/yyyy to yyyy-mm-dd
+                                    val parts = fechaNacimientoValue.text.split("/")
+                                    if (parts.size == 3) "${parts[2]}-${parts[1]}-${parts[0]}" else fechaNacimientoValue.text
+                                } else {
+                                    fechaNacimientoValue.text
+                                }
+
                                 val imageFile = when {
                                     pictureBitmap != null -> createTempFile(context, pictureBitmap!!)
                                     pictureUri != null -> uriToFile(context, pictureUri!!)
@@ -304,7 +349,7 @@ fun RegisterScreen2(
                                     username = username,
                                     name = fullName,
                                     password = password.trim(),
-                                    birthdate = fechaNacimiento,
+                                    birthdate = dateToSubmit,
                                     email = email,
                                     height = altura.toDouble(),
                                     weight = peso.toDouble(),
@@ -361,28 +406,110 @@ fun RegisterScreen2(
 fun FechaNacimientoField(
     label: String,
     formatHint: String,
-    fecha: String,
-    onFechaChange: (String) -> Unit,
-    isError: Boolean
+    fechaValue: TextFieldValue,
+    onFechaValueChange: (TextFieldValue) -> Unit,
+    isError: Boolean,
+    isSpanish: Boolean
 ) {
-    UnderlineLabeledField(
+    val separator = if (isSpanish) "/" else "-"
+    val placeholder = if (isSpanish) "dd/mm/yyyy" else "yyyy-mm-dd"
+
+    UnderlineLabeledFieldValue(
         label = label,
-        value = fecha,
-        onValueChange = {
-            val digits = it.filter { c -> c.isDigit() }
-            var formatted = ""
+        value = fechaValue,
+        onValueChange = { newValue ->
+            val digits = newValue.text.filter { it.isDigit() }
+            val isDeleting = newValue.text.length < fechaValue.text.length
+            val formatted = StringBuilder()
+
             for (i in digits.indices) {
-                formatted += digits[i]
-                if (i == 3 || i == 5) formatted += "-"
+                if (i >= 8) break
+                formatted.append(digits[i])
+                if (isSpanish) {
+                    if (i == 1 || i == 3) {
+                        // Eager separator: add it if there's more text OR if we just finished the block and NOT deleting
+                        if (i < digits.length - 1 || (!isDeleting && i == digits.length - 1)) {
+                            formatted.append(separator)
+                        }
+                    }
+                } else {
+                    if (i == 3 || i == 5) {
+                        if (i < digits.length - 1 || (!isDeleting && i == digits.length - 1)) {
+                            formatted.append(separator)
+                        }
+                    }
+                }
             }
-            if (formatted.length <= 10) onFechaChange(formatted)
+
+            val finalStr = formatted.toString()
+            onFechaValueChange(
+                TextFieldValue(
+                    text = finalStr,
+                    selection = TextRange(finalStr.length)
+                )
+            )
         },
-        placeholder = "yyyy-MM-dd",
+        placeholder = placeholder,
         isError = isError,
         errorText = formatHint,
-        visualTransformation = VisualTransformation.None,
         keyboardType = KeyboardType.Number
     )
+}
+
+@Composable
+fun UnderlineLabeledFieldValue(
+    label: String,
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    placeholder: String,
+    isError: Boolean = false,
+    errorText: String? = null,
+    keyboardType: KeyboardType = KeyboardType.Text
+) {
+    val colors = LocalColors.current
+
+    Text(
+        text = label,
+        modifier = Modifier.fillMaxWidth(),
+        color = colors.fieldIndicator,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold
+    )
+
+    Spacer(Modifier.height(8.dp))
+
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = colors.textPrimary,
+            fontSize = 16.sp
+        ),
+        placeholder = {
+            Text(text = placeholder, color = colors.textSecondary.copy(alpha = 0.5f))
+        },
+        isError = isError,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            errorContainerColor = Color.Transparent,
+            focusedIndicatorColor = colors.accent,
+            unfocusedIndicatorColor = colors.fieldIndicator.copy(alpha = 0.5f),
+            errorIndicatorColor = Color.Red
+        )
+    )
+
+    if (isError && errorText != null) {
+        Text(
+            text = errorText,
+            color = Color.Red,
+            fontSize = 11.sp,
+            modifier = Modifier.padding(top = 4.dp)
+        )
+    }
 }
 
 private fun createTempFile(context: android.content.Context, bitmap: Bitmap): File {

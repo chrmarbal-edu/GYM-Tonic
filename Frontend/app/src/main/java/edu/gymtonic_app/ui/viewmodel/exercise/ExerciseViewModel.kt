@@ -5,13 +5,18 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.repository.ExerciseRepository
 import edu.gymtonic_app.data.repository.RepositoryProvider
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class FavoriteExercisePayload(
@@ -33,6 +38,7 @@ sealed class ExerciseUiState {
 class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
     private val exerciseRepository: ExerciseRepository
+    private val sessionManager = SessionManager(application.sessionDataStore)
 
     private val _uiState = MutableStateFlow<ExerciseUiState>(ExerciseUiState.Idle)
     val uiState: StateFlow<ExerciseUiState> = _uiState.asStateFlow()
@@ -46,16 +52,22 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     private val _allExercises = MutableStateFlow<List<ExerciseDto>>(emptyList())
     val allExercises: StateFlow<List<ExerciseDto>> = _allExercises.asStateFlow()
 
+    private var favoritesJob: Job? = null
+
     init {
         exerciseRepository = RepositoryProvider.getExerciseRepository(application)
 
-        observeFavoritesFromRoom()
-        refreshExercises()
+        viewModelScope.launch {
+            val userId = sessionManager.sessionFlow.first().userId ?: 0
+            observeFavoritesFromRoom(userId)
+            refreshExercises()
+        }
     }
 
-    private fun observeFavoritesFromRoom() {
-        viewModelScope.launch {
-            exerciseRepository.getFavExercises().collect { favorites ->
+    private fun observeFavoritesFromRoom(userId: Int) {
+        favoritesJob?.cancel()
+        favoritesJob = viewModelScope.launch {
+            exerciseRepository.getFavExercises(userId).collectLatest { favorites ->
                 _favoritesSet.value = favorites.map { it.exercise_id }.toSet()
                 _favoriteExercises.value = favorites
             }
@@ -92,13 +104,13 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
             exercise_description = payload.description.ifBlank { "Sin descripción" },
             exercise_type = payload.type,
             exercise_video = payload.video,
-            exercise_image = payload.image,
-            is_favorite = true
+            exercise_image = payload.image
         )
 
         viewModelScope.launch {
             runCatching {
-                exerciseRepository.updateFavWord(entity)
+                val userId = sessionManager.sessionFlow.first().userId ?: 0
+                exerciseRepository.updateFavWord(userId, entity)
             }.onFailure { error ->
                 Log.e(TAG, "Error al alternar favorito para exerciseId=${payload.id}", error)
                 _favoritesSet.value = previousFavorites

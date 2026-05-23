@@ -12,6 +12,7 @@ const jwtMW = require("../middlewares/jwt.mw")
 const sql = require("mssql")
 const dbConn = require("../utils/mssql.config")
 const { log } = require("console")
+const { deleteResourceFile } = require("../utils/fileUtils") // Import the new utility
 const {
     normalizeRoutineImageForClient,
 } = require("../utils/routineHelpers.js")
@@ -137,7 +138,7 @@ exports.findAllRoutinesCSR = wrapAsync(async function (req,res,next) {
     // Espera una promesa de lo que devuelva la funciÃ³n "findAll" del modelo.
     await routinesmodel.findAll(async function(err, datosRoutines){
         if(err){
-            next(new AppError(err,400))
+            next(new AppError(handleSqlError(err), 400))
         } else{
             res.status(200).json(datosRoutines)
         }
@@ -262,7 +263,7 @@ exports.findRoutineByIdCSR = wrapAsync(async function (req,res,next){
     }else{
         await routinesmodel.findById(id, async function (err, datosRoutines) {
             if(err){
-                return next(new AppError(err,404))
+                return next(new AppError(handleSqlError(err), 404))
             }
 
             if(!datosRoutines || datosRoutines.length == 0) {
@@ -299,7 +300,7 @@ exports.findRoutineWithExercisesByIdCSR = wrapAsync(async function (req,res,next
     await routinesmodel.findByIdWithExercises(id, async function (err, datosRoutine) {
         if (err) {
             const isNotFound = err?.err === "No hay datos"
-            return next(new AppError(isNotFound ? "Rutina no encontrada" : err, isNotFound ? 404 : 500))
+            return next(new AppError(handleSqlError(err), isNotFound ? 404 : 500))
         }
 
         await assertCanViewRoutine(userLogued, {
@@ -340,7 +341,7 @@ exports.findRoutineByNameCSR = wrapAsync(async function (req,res,next){
             const isNotFound = err?.err === "No hay datos"
             const statusCode = isNotFound ? 404 : 500
             const message = isNotFound ? "Rutina no encontrada" : "Error al buscar rutina"
-            return next(new AppError(message, statusCode))
+            return next(new AppError(handleSqlError(err), statusCode))
         }
 
         if(!datosRoutine || (Array.isArray(datosRoutine) && datosRoutine.length == 0)){
@@ -438,7 +439,7 @@ exports.updateRoutineCSR = wrapAsync(async function (req, res, next) {
         }
 
         await routinesmodel.updateById(routineId, updateRoutine, async function (errUpdate) {
-            if (errUpdate) return next(new AppError(errUpdate, 500))
+            if (errUpdate) return next(new AppError(handleSqlError(errUpdate), 500))
 
             if (exercises !== null) {
                 await replaceRoutineExercises(routineId, exercises)
@@ -510,7 +511,7 @@ exports.createRoutineCSR = wrapAsync(async function (req, res, next) {
     }
 
     await routinesmodel.create(newRoutineData, async function (err, createdRoutine) {
-        if (err) return next(new AppError(err, 500))
+        if (err) return next(new AppError(handleSqlError(err), 500))
 
         await replaceRoutineExercises(createdRoutine.routine_id, exercises)
 
@@ -545,7 +546,7 @@ exports.deleteRoutineCSR = wrapAsync(async function (req, res, next) {
         await assertCanManageRoutine(userLogued, existingRoutine)
 
         await routinesmodel.delete(routineId, function (errDel) {
-            if (errDel) return next(new AppError(errDel, 500))
+            if (errDel) return next(new AppError(handleSqlError(errDel), 500))
             return res.status(200).json({ msg: "Rutina eliminada correctamente" })
         })
     })

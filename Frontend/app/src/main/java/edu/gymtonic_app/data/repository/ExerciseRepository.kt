@@ -10,6 +10,7 @@ import edu.gymtonic_app.data.remote.remoteDatasource.ExerciseRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseRequest
 import edu.gymtonic_app.data.util.MediaCacheManager
+import edu.gymtonic_app.core.network.ErrorManager
 import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
@@ -20,29 +21,28 @@ class ExerciseRepository(
 ) {
 
 	//region Room
-	fun getFavExercises(): Flow<List<ExerciseEntity>> {
-		return exerciseLocalDataSource.getExercises()
+	fun getFavExercises(userId: Int): Flow<List<ExerciseEntity>> {
+		return exerciseLocalDataSource.getFavoriteExercises(userId)
 	}
 
-	suspend fun updateFavWord(exercise: ExerciseEntity) {
+	suspend fun updateFavWord(userId: Int, exercise: ExerciseEntity) {
 		val existing: ExerciseEntity? = exerciseLocalDataSource.getExerciseById(exercise.exercise_id)
-		if (existing != null) {
-			// Si ya existe, simplemente alternamos el flag de favorito. 
-			// No lo borramos porque podría estar siendo usado por una rutina cacheada.
-			val updated = existing.copy(is_favorite = !existing.is_favorite)
-			Log.d("ExerciseRepository", "Updating favorite state for ${exercise.exercise_id} to ${updated.is_favorite}")
-			exerciseLocalDataSource.insertExercise(updated)
-		} else {
-			// Si no existe, lo insertamos como favorito y descargamos media
+		
+		// 1. Aseguramos que el ejercicio base esté cacheado
+		if (existing == null) {
 			val cachedExercise = context?.let { ctx ->
 				val localImg = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_image)
 				val localVid = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_video)
-				exercise.copy(exercise_image = localImg, exercise_video = localVid, is_favorite = true)
-			} ?: exercise.copy(is_favorite = true)
+				exercise.copy(exercise_image = localImg, exercise_video = localVid)
+			} ?: exercise
 			
-			Log.d("ExerciseRepository", "Caching new favorite exercise: ${exercise.exercise_id}")
+			Log.d("ExerciseRepository", "Caching base exercise: ${exercise.exercise_id}")
 			exerciseLocalDataSource.insertExercise(cachedExercise)
 		}
+
+		// 2. Alternamos el favorito específico para este usuario
+		Log.d("ExerciseRepository", "Toggling favorite for user $userId and exercise ${exercise.exercise_id}")
+		exerciseLocalDataSource.toggleFavorite(userId, exercise.exercise_id)
 	}
 	//endregion
 
@@ -93,10 +93,7 @@ class ExerciseRepository(
 		return runCatching {
 			val response = exerciseRemoteDataSource.createExercise(request)
 			if (!response.isSuccessful) {
-				val errorBody = response.errorBody()?.string().orEmpty()
-				throw Exception(
-					"Error al crear ejercicio (HTTP ${response.code()}): ${response.message()} $errorBody"
-				)
+				throw Exception(ErrorManager.parseResponseError(response))
 			}
 			Unit
 		}
@@ -106,10 +103,7 @@ class ExerciseRepository(
 		return runCatching {
 			val response = exerciseRemoteDataSource.updateExercise(id, request)
 			if (!response.isSuccessful) {
-				val errorBody = response.errorBody()?.string().orEmpty()
-				throw Exception(
-					"Error al actualizar ejercicio (HTTP ${response.code()}): ${response.message()} $errorBody"
-				)
+				throw Exception(ErrorManager.parseResponseError(response))
 			}
 			Unit
 		}
@@ -119,10 +113,7 @@ class ExerciseRepository(
 		return runCatching {
 			val response = exerciseRemoteDataSource.deleteExercise(id)
 			if (!response.isSuccessful) {
-				val errorBody = response.errorBody()?.string().orEmpty()
-				throw Exception(
-					"Error al eliminar ejercicio (HTTP ${response.code()}): ${response.message()} $errorBody"
-				)
+				throw Exception(ErrorManager.parseResponseError(response))
 			}
 			Unit
 		}
@@ -132,15 +123,13 @@ class ExerciseRepository(
 		if (response.isSuccessful) {
 			return response.body() ?: throw Exception("$defaultMessage (body vacío)")
 		}
-		val errorBody = response.errorBody()?.string().orEmpty()
-		throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+		throw Exception(ErrorManager.parseResponseError(response))
 	}
 
 	private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
 		if (response.isSuccessful) {
 			return response.body() ?: emptyList()
 		}
-		val errorBody = response.errorBody()?.string().orEmpty()
-		throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+		throw Exception(ErrorManager.parseResponseError(response))
 	}
 }

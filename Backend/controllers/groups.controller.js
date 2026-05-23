@@ -92,6 +92,7 @@ const assertGroupMember = async (groupId, userLogued) => {
     const membership = await loadGroupMembership(groupId, Number(userLogued.user_id))
     return membership != null
 }
+
 /* 
 400 - BAD REQUEST (EL SERVIDOR NO PUEDE PROCESAR LA SOLICITUD)
 404 - NOT FOUND (NO EXISTE EN EL SERVIDOR EL RECURSO PEDIDO)
@@ -107,7 +108,7 @@ exports.findAllGroupsCSR = wrapAsync(async function (req,res,next) {
     // Espera una promesa de lo que devuelva la función "findAll" del modelo.
     await groupmodel.findAll(async function(err, datosGroups){
         if(err){
-            next(new AppError(err,400))
+            next(new AppError(handleSqlError(err), 400))
         } else{
             res.status(200).json(datosGroups)
         }
@@ -127,7 +128,7 @@ exports.findGroupByIdCSR = wrapAsync(async function (req,res,next){
     }else{
         await groupmodel.findById(id,function(err,datosGroups){
             if(err){
-                next(new AppError(err,404))
+                next(new AppError(handleSqlError(err), 404))
             } 
 
             if(!datosGroups || datosGroups.length == 0) {
@@ -158,7 +159,7 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
         if(err){
             console.log("ERROR UPDATE GROUP SSR");
 
-            next(new AppError(err, 500))
+            next(new AppError(handleSqlError(err), 500))
         }else{     
             completeGroup = objetoDatos
         }
@@ -177,7 +178,7 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
             if(err){
                 console.log("ERROR UPDATE BY ID SSR");
 
-                next(new AppError(err, 500))
+                next(new AppError(handleSqlError(err), 500))
             } else{
                 res.status(200).json(datosGrupoActualizado);
             }
@@ -195,7 +196,7 @@ exports.findMyGroupsCSR = wrapAsync(async function (req, res, next) {
     const userId = Number(userLogued.user_id)
     await groupmodel.findByUserId(userId, function (err, datosGroups) {
         if (err) {
-            return next(new AppError(err, 400))
+            return next(new AppError(handleSqlError(err), 400))
         }
         return res.status(200).json(datosGroups)
     })
@@ -245,7 +246,7 @@ exports.deleteGroupCSR = wrapAsync(async function (req, res, next) {
     const { id } = req.params;
         await groupmodel.findById(id, async function (err, objetoDatos) {
             if (err) {
-                return next(new AppError("Grupo no encontrado", 404));
+                return next(new AppError(handleSqlError(err), 404));
             }
 
             if (!objetoDatos || objetoDatos.length == 0) {
@@ -253,9 +254,12 @@ exports.deleteGroupCSR = wrapAsync(async function (req, res, next) {
             }
 
             /* <================== PARTE 2 ==================> */
+            // Eliminar imagen del grupo
+            if (objetoDatos.group_image) await deleteResourceFile(objetoDatos.group_image)
+
             await groupmodel.delete(id, function (err, datosGrupoEliminado) {
                 if (err) {
-                    return next(new AppError("Error al eliminar el grupo", 500));
+                    return next(new AppError(handleSqlError(err), 500));
                 }else {
                     return res.status(200).json({ msg: "Grupo eliminado correctamente" });
                 }
@@ -666,6 +670,9 @@ exports.deleteGroupRoutineCSR = wrapAsync(async function (req, res, next) {
             new AppError("La rutina no es una rutina de este grupo o no pertenece al grupo", 403)
         )
     }
+
+    // Eliminar imagen de la rutina antes de borrar de DB
+    if (routine.routine_image) await deleteResourceFile(routine.routine_image)
 
     await fromCallback(userRoutineModel.deleteByRoutineForGroupMembers, groupId, routineId)
     await fromCallback(routineExerciseModel.deleteByRoutineId, routineId)

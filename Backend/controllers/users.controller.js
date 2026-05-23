@@ -8,10 +8,12 @@ const { DateTime } = require("mssql")
 const crypto = require("crypto")
 const nodemailer = require("nodemailer")
 const fs = require("fs")
-const path = require("path")
+const path = require("path") // Keep path for other uses
 const jwt = require("jsonwebtoken")
 const sql = require("mssql")
 const dbConn = require("../utils/mssql.config")
+const { deleteResourceFile } = require("../utils/fileUtils") // Import the new utility
+const { handleSqlError } = require("../utils/sqlErrors")
 
 // Función Para Capturar Errores Asíncronos
 function wrapAsync(fn) {
@@ -19,69 +21,6 @@ function wrapAsync(fn) {
         fn(req, res, next).catch(e => {
             next(e)
         })
-    }
-}
-
-// Configuración Nodemailer
-const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.GOOGLE_APP_PASSWORD
-    }
-})
-
-// Función Para Enviar Correos Electrónicos
-async function sendEmail(to, subject, htmlBody) {
-    await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: to,
-        subject: subject,
-        html: htmlBody,
-        attachments: [
-            {
-                filename: 'gymtonic_logo.png',
-                path: path.join(__dirname, '../public/images/gymtonic_logo.png'), 
-                cid: 'logo_gymtonic'
-            }
-        ]
-    });
-}
-
-function isDefaultProfilePicture(picturePath) {
-    if (!picturePath || typeof picturePath !== "string") {
-        return true
-    }
-    return picturePath.replace(/\\/g, "/").includes("default/user.jpg")
-}
-
-function resolveProfilePictureFilePath(picturePath) {
-    if (!picturePath || isDefaultProfilePicture(picturePath)) {
-        return null
-    }
-
-    let normalized = picturePath.replace(/\\/g, "/")
-    if (normalized.startsWith("public/")) {
-        return normalized
-    }
-    if (!normalized.startsWith("images/")) {
-        normalized = `images/${normalized}`
-    }
-    return path.join("public", normalized).replace(/\\/g, "/")
-}
-
-function deleteProfilePictureFile(picturePath) {
-    const filePath = resolveProfilePictureFilePath(picturePath)
-    if (!filePath) {
-        return
-    }
-
-    try {
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath)
-        }
-    } catch (e) {
-        console.error(`No se pudo eliminar la foto de perfil: ${filePath}`, e)
     }
 }
 
@@ -133,13 +72,43 @@ async function assignMissionsByObjective(userId, objective) {
     }
 }
 
+// Configuración Nodemailer
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.GOOGLE_APP_PASSWORD
+    }
+})
+
+// Función Para Enviar Correos Electrónicos
+async function sendEmail(to, subject, htmlBody) {
+    await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: to,
+        subject: subject,
+        html: htmlBody,
+        attachments: [
+            {
+                filename: 'gymtonic_logo.png',
+                path: path.join(__dirname, '../public/images/gymtonic_logo.png'), 
+                cid: 'logo_gymtonic'
+            }
+        ]
+    });
+}
+
+// Moved isDefaultProfilePicture and deleteProfilePictureFile logic to fileUtils.js
+// and imported deleteResourceFile from there.
+
+
 // #region USERS
 
 /* <=============================== FIND ALL USERS ===============================> */
 exports.findAllUsers = wrapAsync(async function (req,res,next) {
     await userModel.findAll(async function(err, datosUser){
         if(err){
-            next(new AppError(err,400))
+            next(new AppError(handleSqlError(err), 400))
         } else{
             const userLogued = req.userLogued
 
@@ -169,7 +138,7 @@ exports.findUserById = wrapAsync(async function (req,res,next){
 
     await userModel.findById(id,function(err,datosUsuario){
         if(err){
-            next(new AppError(err,404))
+            next(new AppError(handleSqlError(err), 404))
         }
 
         if(!datosUsuario || datosUsuario.length == 0) {
@@ -192,7 +161,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
     // BUSCAMOS USUARIO
     await userModel.findById(id, async function(err,userFounded){
         if(err){
-            next(new AppError(err, 500))
+            next(new AppError(handleSqlError(err), 500))
         }else{       
             console.log(userFounded)
 
@@ -255,7 +224,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             
             // PICTURE
             if (picture === "default") {
-                deleteProfilePictureFile(userFounded.user_picture)
+                await deleteResourceFile(userFounded.user_picture)
                 userFounded.user_picture = "images/users/default/user.jpg"
             } else if (req.file) {
                 // Obtenemos la extensión original del archivo (ej: .jpg, .png)
@@ -263,9 +232,9 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
                 const fileName = `${userFounded.user_username}${extension}`
                 const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
                 const newPicturePath = `images/users/${fileName}`
-
+                
                 if (userFounded.user_picture !== newPicturePath) {
-                    deleteProfilePictureFile(userFounded.user_picture)
+                    await deleteResourceFile(userFounded.user_picture)
                 }
 
                 // Renombramos el archivo físicamente al nombre del usuario en la carpeta destino
@@ -278,7 +247,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             // ACTUALIZAMOS USUARIO
             await userModel.updateById(id, userFounded, async function(err, datosUsuarioActualizado){
                 if(err){
-                    next(new AppError(err, 500))
+                    next(new AppError(handleSqlError(err), 500))
                 } else{
                     if (objectiveChanged) {
                         try {
@@ -377,7 +346,7 @@ exports.register = wrapAsync(async function (req, res, next) {
     if(!req.userLogued || (req.userLogued && req.userLogued.user_role == 1)){
         await userModel.create(newUser, async function(err,datosUsuarioCreado){
             if(err){
-                return next(new AppError(err, 500))
+                return next(new AppError(handleSqlError(err), 500))
             } else{
                 // Autoassign missions
                 try {
@@ -424,7 +393,7 @@ exports.recoverAccount = wrapAsync(async function (req, res, next) {
 
     await userModel.findByEmail(email, async function(err, userFound) {
         if (err) {
-            return next(new AppError(err, 404))
+            return next(new AppError(handleSqlError(err), 404))
         }
 
         const isSamePassword = await bcrypt.compareLogin(newPassword, userFound.user_password)
@@ -515,12 +484,15 @@ exports.deleteUser = wrapAsync(async function (req, res, next) {
                 return next(new AppError("Usuario no encontrado", 404))
             }
 
-            await userModel.delete(id, function (err, datosUsuarioEliminado) {
+            // Eliminar físicamente la foto de perfil si no es la predeterminada
+            await deleteResourceFile(userFounded.user_picture)
+
+            await userModel.delete(Number(id), function (err, datosUsuarioEliminado) {
                 if (err) {
-                    return next(new AppError("Error al eliminar el usuario", 500))
+                    return next(new AppError(handleSqlError(err), 500))
                 } else{
                     // Si se elimina a sí mismo, cerrar sesión
-                    if (userLogued.idUser == id) {
+                    if (userLogued.user_id === Number(id)) {
                         return res.status(200).json({ msg: "Usuario eliminado, sesión destruida" })
                     } else {
                         return res.status(200).json(datosUsuarioEliminado)
@@ -540,7 +512,7 @@ exports.login = wrapAsync(async(req, res, next) => {
     
     await userModel.findByUsername(username, async function(err, userFound) {
         if(err){
-            next(new AppError(err, 404))
+            next(new AppError(handleSqlError(err), 404))
         } else{
             let userFounded = userFound[0]
 
@@ -576,7 +548,7 @@ exports.findAllUserMissions = wrapAsync(async function (req,res,next){
     if(userLogued){
         await userMissionsModel.findAll(function(err,datosUserMissions){
             if(err){
-                next(new AppError(err,400))
+                next(new AppError(handleSqlError(err), 400))
             } else{
                 res.status(200).json(datosUserMissions)
             }
@@ -594,7 +566,7 @@ exports.findUserMissionById = wrapAsync(async function (req,res,next){
     if(userLogued && userLogued.user_role == 1){
         await userMissionsModel.findById(id, function(err,datosUserMission){
             if(err){
-                next(new AppError(err,404))
+                next(new AppError(handleSqlError(err), 404))
             } else{
                 if(!datosUserMission || datosUserMission.length == 0) {
                     return next(new AppError("Usuario no encontrado", 404))
@@ -616,7 +588,7 @@ exports.findUserMissionByUserId = wrapAsync(async function (req,res,next){
     if(userLogued && (userLogued.user_id == userId || userLogued.user_role == 1)){
         await userMissionsModel.findByUserId(userId, function(err, data){
             if(err){
-                return next(new AppError(err,404))
+                return next(new AppError(handleSqlError(err), 404))
             } 
 
             if(!data) {
@@ -639,7 +611,7 @@ exports.findUserMissionByMissionId = wrapAsync(async function (req,res,next){
     if(userLogued){
         await userMissionsModel.findByMissionId(missionId, function(err,datosUserMission){
             if(err){
-                next(new AppError(err,404))
+                next(new AppError(handleSqlError(err), 404))
             } else{
                 if(!datosUserMission || datosUserMission.length == 0) {
                     return next(new AppError("Misión no encontrada", 404))
@@ -669,7 +641,7 @@ exports.createUserMission = wrapAsync(async function (req,res,next){
 
         await userMissionsModel.create(newUserMission, function(err,datosUserMissionCreado){
             if(err){
-                next(new AppError(err, 500))
+                next(new AppError(handleSqlError(err), 500))
             } else{
                 res.status(201).json(datosUserMissionCreado)
             }
@@ -688,7 +660,7 @@ exports.updateUserMission = wrapAsync(async function (req,res,next){
     if(userLogued && userLogued.user_role == 1){
         await userMissionsModel.findById(id, async function(err, missionFound) {
             if(err){
-                return next(new AppError(err, 404))
+                return next(new AppError(handleSqlError(err), 404))
             } else{
                 if(!missionFound || missionFound.length == 0){
                     return next(new AppError("Misión no encontrada", 404))
@@ -719,7 +691,7 @@ exports.updateUserMission = wrapAsync(async function (req,res,next){
 
             await userMissionsModel.updateById(id, updateData, function(err, datosUserMissionActualizada) {
                 if(err){
-                    return next(new AppError(err, 500))
+                    return next(new AppError(handleSqlError(err), 500))
                 } else{
                     res.status(200).json(datosUserMissionActualizada)
                 }
@@ -781,7 +753,7 @@ exports.completeMissionById = wrapAsync(async function (req,res,next){
     // Marcar como completada
     await userMissionsModel.completeMission(id, async function(err, datosUserMissionActualizada) {
         if(err){
-            return next(new AppError(err, 500))
+            return next(new AppError(handleSqlError(err), 500))
         } else{
             try {
                 const userRes = await pool.request()
@@ -861,7 +833,7 @@ exports.updateMissionProgress = wrapAsync(async function (req,res,next){
 
     await userMissionsModel.updateById(id, updatedData, function(err, datosActualizado) {
         if(err){
-            return next(new AppError(err, 500))
+            return next(new AppError(handleSqlError(err), 500))
         } else{
             res.status(200).json(datosActualizado)
         }
@@ -876,7 +848,7 @@ exports.deleteUserMission = wrapAsync(async function (req,res,next){
     if(userLogued && userLogued.user_role == 1){
         await userMissionsModel.delete(id, function(err, datosUserMissionEliminada){
             if(err){
-                next(new AppError(err, 500))
+                next(new AppError(handleSqlError(err), 500))
             } else{
                 res.status(200).json(datosUserMissionEliminada)
             }

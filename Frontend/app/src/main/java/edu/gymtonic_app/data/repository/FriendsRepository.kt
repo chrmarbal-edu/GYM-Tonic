@@ -7,6 +7,7 @@ import edu.gymtonic_app.data.remote.remoteModel.social.FrequestDto
 import edu.gymtonic_app.data.remote.remoteModel.social.FriendRequestWithUserDto
 import edu.gymtonic_app.data.remote.remoteModel.social.FriendRequestsByUserResponse
 import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
+import edu.gymtonic_app.core.network.ErrorManager
 import retrofit2.Response
 
 class FriendsRepository(
@@ -44,7 +45,7 @@ class FriendsRepository(
     suspend fun acceptRequest(requestId: Int): Result<Unit> = runCatching {
         val response = requestsDs.acceptFriendRequest(requestId)
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code()} al aceptar solicitud")
+            throw Exception(ErrorManager.parseResponseError(response))
         }
         Unit
     }
@@ -52,7 +53,7 @@ class FriendsRepository(
     suspend fun rejectRequest(requestId: Int): Result<Unit> = runCatching {
         val response = requestsDs.rejectFriendRequest(requestId)
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code()} al rechazar solicitud")
+            throw Exception(ErrorManager.parseResponseError(response))
         }
         Unit
     }
@@ -61,7 +62,7 @@ class FriendsRepository(
     suspend fun cancelRequest(requestId: Int): Result<Unit> = runCatching {
         val response = requestsDs.deleteFriendRequest(requestId)
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code()} al cancelar solicitud")
+            throw Exception(ErrorManager.parseResponseError(response))
         }
         Unit
     }
@@ -69,7 +70,7 @@ class FriendsRepository(
     suspend fun removeFriend(friendshipId: Int): Result<Unit> = runCatching {
         val response = friendsDs.deleteFriend(friendshipId)
         if (!response.isSuccessful) {
-            throw Exception("HTTP ${response.code()} al eliminar amistad")
+            throw Exception(ErrorManager.parseResponseError(response))
         }
         Unit
     }
@@ -78,16 +79,14 @@ class FriendsRepository(
         if (response.isSuccessful) {
             return response.body() ?: throw Exception("$defaultMessage (body vacio)")
         }
-        val errorBody = response.errorBody()?.string().orEmpty()
-        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     private fun <T> unwrapList(response: Response<List<T>>, defaultMessage: String): List<T> {
         if (response.isSuccessful) {
             return response.body() ?: emptyList()
         }
-        val errorBody = response.errorBody()?.string().orEmpty()
-        throw Exception("$defaultMessage (HTTP ${response.code()}): ${response.message()} $errorBody")
+        throw Exception(ErrorManager.parseResponseError(response))
     }
 
     // Helper para mapear DTO de solicitud a "perfil" del otro usuario.
