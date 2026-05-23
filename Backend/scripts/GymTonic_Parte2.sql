@@ -146,6 +146,7 @@ CREATE TABLE dbo.User_X_Mission (
     user_x_mission_completed BIT DEFAULT 0 NOT NULL,
     user_x_mission_progress INT DEFAULT 0 NOT NULL,
     user_x_mission_points_deducted BIT DEFAULT 0 NOT NULL,
+    user_x_mission_completed_date DATE NULL,
     CONSTRAINT PK_User_X_Mission PRIMARY KEY (user_x_mission_id),
     FOREIGN KEY (user_x_mission_userid)    REFERENCES dbo.Users(user_id),
     FOREIGN KEY (user_x_mission_missionid) REFERENCES dbo.Missions(mission_id)

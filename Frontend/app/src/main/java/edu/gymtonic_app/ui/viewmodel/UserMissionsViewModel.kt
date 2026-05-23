@@ -303,26 +303,47 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 		currentMonth: Int
 	): Map<Int, CalendarDayUiStatus> {
 		val statusMap = mutableMapOf<Int, CalendarDayUiStatus>()
+		val today = java.util.Calendar.getInstance()
 
 		// Sort: not completed first, so completed ones override them
 		val sortedMissions = allMissions.sortedBy { it.completed }
 
 		for (m in sortedMissions) {
-			val dateStr = m.userMissionExpiration // "yyyy-MM-dd"
-			val parts = dateStr.split("-")
-			if (parts.size != 3) continue
+			// Strip time component: "2026-05-20T00:00:00.000Z" → "2026-05-20"
+			fun parseDatePart(raw: String?): Triple<Int, Int, Int>? {
+				if (raw == null) return null
+				val parts = raw.substringBefore("T").substringBefore(" ").split("-")
+				if (parts.size != 3) return null
+				val y = parts[0].toIntOrNull() ?: return null
+				val mo = parts[1].toIntOrNull() ?: return null
+				val d = parts[2].toIntOrNull() ?: return null
+				if (y == 0 || mo == 0 || d == 0) return null
+				return Triple(y, mo, d)
+			}
 
-			val y = parts[0].toIntOrNull() ?: 0
-			val month = parts[1].toIntOrNull() ?: 0
-			val d = parts[2].toIntOrNull() ?: 0
-
-			if (y == currentYear && month == currentMonth) {
-				val dayIdx = d - 1
-				if (m.completed) {
-					statusMap[dayIdx] = CalendarDayUiStatus.DONE
-				} else if (m.expired) {
-					if (statusMap[dayIdx] != CalendarDayUiStatus.DONE) {
-						statusMap[dayIdx] = CalendarDayUiStatus.MISSED
+			if (m.completed) {
+				if (m.completedDate != null) {
+					// Use the actual completion date
+					val (y, month, d) = parseDatePart(m.completedDate) ?: continue
+					if (y == currentYear && month == currentMonth) {
+						statusMap[d - 1] = CalendarDayUiStatus.DONE
+					}
+				} else {
+					// Legacy: no completion date stored → mark today
+					val todayDay = today.get(java.util.Calendar.DAY_OF_MONTH)
+					statusMap[todayDay - 1] = CalendarDayUiStatus.DONE
+				}
+			} else {
+				// Use expiration date to mark missed days
+				val (y, month, d) = parseDatePart(m.userMissionExpiration) ?: continue
+				val expCal = java.util.Calendar.getInstance().apply {
+					set(y, month - 1, d, 23, 59, 59)
+					set(java.util.Calendar.MILLISECOND, 999)
+				}
+				val isExpired = expCal.before(today)
+				if (y == currentYear && month == currentMonth && isExpired) {
+					if (statusMap[d - 1] != CalendarDayUiStatus.DONE) {
+						statusMap[d - 1] = CalendarDayUiStatus.MISSED
 					}
 				}
 			}

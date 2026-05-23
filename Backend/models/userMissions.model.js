@@ -233,13 +233,14 @@ userMission.completeMission = async (id, result) => {
             .input("pts", sql.Int, mInfo.mission_points)
             .query("UPDATE Users SET user_points = user_points + @pts WHERE user_id = @uid")
 
-        // 3. Marcar como completada
+        // 3. Marcar como completada y guardar fecha de hoy
         const response = await pool.request()
             .input("id", sql.Int, id)
             .query(`
-                UPDATE User_X_Mission 
-                SET user_x_mission_completed = 1
-                OUTPUT INSERTED.* 
+                UPDATE User_X_Mission
+                SET user_x_mission_completed = 1,
+                    user_x_mission_completed_date = CAST(GETDATE() AS DATE)
+                OUTPUT INSERTED.*
                 WHERE user_x_mission_id = @id
             `)
         if (result) result(null, response.recordset[0])

@@ -24,6 +24,9 @@ data class UserMissionDto(
     @SerializedName("expired")
     val expired: Boolean = false,
 
+    @SerializedName("user_x_mission_completed_date")
+    val completedDate: String? = null,
+
     @SerializedName("mission_name")
     val missionName: String? = null,
 
