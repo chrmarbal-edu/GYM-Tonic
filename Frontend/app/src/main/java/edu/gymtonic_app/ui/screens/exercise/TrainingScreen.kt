@@ -52,6 +52,7 @@ fun TrainingScreen(
     onCreateRoutine: () -> Unit = {},
     recentRoutines: List<TrainingRoutineDto> = emptyList(),
     personalRoutines: List<TrainingRoutineDto> = emptyList(),
+    groupRoutines: List<TrainingRoutineDto> = emptyList(),
     allRoutines: List<TrainingRoutineDto> = emptyList(),
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {}
@@ -136,7 +137,21 @@ fun TrainingScreen(
                     }
                 }
 
-                // 3. Todas (Catálogo global)
+                // 3. Mis rutinas de grupo
+                if (groupRoutines.isNotEmpty()) {
+                    item {
+                        TrainingSection(
+                            title = strings.trainingGroupRoutines,
+                            routines = groupRoutines,
+                            routinesLabel = strings.trainingRoutines,
+                            tapToOpen = strings.trainingTapToOpen,
+                            onSelect = onSelect,
+                            isLocal = false
+                        )
+                    }
+                }
+
+                // 4. Todas (Catálogo global)
                 if (allRoutines.isNotEmpty()) {
                     item {
                         TrainingSection(
@@ -150,7 +165,7 @@ fun TrainingScreen(
                     }
                 }
 
-                if (recentRoutines.isEmpty() && personalRoutines.isEmpty() && allRoutines.isEmpty() && !isRefreshing) {
+                if (recentRoutines.isEmpty() && personalRoutines.isEmpty() && groupRoutines.isEmpty() && allRoutines.isEmpty() && !isRefreshing) {
                     item {
                         EmptyTrainingState(strings.trainingNoWorkouts)
                     }

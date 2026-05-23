@@ -534,6 +534,7 @@ fun Navigation(navController: NavHostController) {
                     onCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                     recentRoutines = trainingUiState.value.recentRoutines,
                     personalRoutines = trainingUiState.value.personalRoutinesFromCategory,
+                    groupRoutines = trainingUiState.value.groupRoutines,
                     allRoutines = trainingUiState.value.allRoutines,
                     isRefreshing = trainingUiState.value.isRefreshing,
                     onRefresh = { trainingViewModel.refreshCategories() }
@@ -661,6 +662,7 @@ fun Navigation(navController: NavHostController) {
                 onOpenFriend = { friendId ->
                     navController.navigate(Routes.friendDetail(friendId))
                 },
+                onOpenCreateRoutine = { navController.navigate(Routes.CREATE_ROUTINE) },
                 onLogout = onLogout,
                 onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) }

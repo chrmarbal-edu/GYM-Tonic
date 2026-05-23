@@ -21,8 +21,9 @@ import kotlinx.coroutines.launch
 data class TrainingUiState(
     val categories: List<TrainingCategoryDto> = emptyList(),
     val recentRoutines: List<TrainingRoutineDto> = emptyList(),
-    val allRoutines: List<TrainingRoutineDto> = emptyList(),
     val personalRoutinesFromCategory: List<TrainingRoutineDto> = emptyList(),
+    val groupRoutines: List<TrainingRoutineDto> = emptyList(),
+    val allRoutines: List<TrainingRoutineDto> = emptyList(),
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null
 )
@@ -79,12 +80,11 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
             val userGroupsResult = groupRepository.getUserGroups()
             val userGroupIds = userGroupsResult.getOrNull()?.map { it.group_id }?.toSet() ?: emptySet()
 
-            val allRoutines = allRoutinesResult.getOrNull()?.filter { routine ->
-                val isPredefined = routine.routine_creator_id == null
-                val isCreator = routine.routine_creator_id == userId
-                val isFromMyGroup = routine.routine_groupid != null && userGroupIds.contains(routine.routine_groupid)
-                isPredefined || isCreator || isFromMyGroup
-            }?.map {
+            val allRaw = allRoutinesResult.getOrNull() ?: emptyList()
+
+            val groupRoutines = allRaw.filter { routine ->
+                routine.routine_groupid != null && userGroupIds.contains(routine.routine_groupid)
+            }.map {
                 TrainingRoutineDto(
                     routine_id = it.routine_id,
                     routine_name = it.routine_name,
@@ -92,12 +92,29 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
                     routine_creator_id = it.routine_creator_id,
                     routine_groupid = it.routine_groupid
                 )
-            } ?: emptyList()
+            }
+
+            val allRoutines = allRaw.filter { routine ->
+                val isPredefined = routine.routine_creator_id == null
+                val isCreator = routine.routine_creator_id == userId
+                // We show predefined and creator routines in "Todas"
+                // Group routines are separated now
+                isPredefined || isCreator
+            }.map {
+                TrainingRoutineDto(
+                    routine_id = it.routine_id,
+                    routine_name = it.routine_name,
+                    routine_image = it.routine_image,
+                    routine_creator_id = it.routine_creator_id,
+                    routine_groupid = it.routine_groupid
+                )
+            }
 
             _uiState.update {
                 it.copy(
                     categories = emptyList(), // We handle sections manually in the screen
                     allRoutines = allRoutines,
+                    groupRoutines = groupRoutines,
                     personalRoutinesFromCategory = personalRoutinesFromCategory,
                     isRefreshing = false,
                     errorMessage = null

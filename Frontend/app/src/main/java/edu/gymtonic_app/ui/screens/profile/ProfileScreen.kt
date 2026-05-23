@@ -1,5 +1,6 @@
 package edu.gymtonic_app.ui.screens.profile
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -72,6 +73,7 @@ fun ProfileScreen(
     onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
     onOpenFriend: (Int) -> Unit,
+    onOpenCreateRoutine: () -> Unit,
     onLogout: () -> Unit,
     onOpenAccount: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -150,13 +152,15 @@ fun ProfileScreen(
                     val data = state.data
                     ProfileContent(
                         username = data.username,
+                        userPicture = data.userPicture,
                         userPoints = data.userPoints,
-                        routines = data.recentRoutines,
+                        routines = data.myRoutines,
                         groups = data.groups,
                         friends = data.friends,
                         onOpenGroups = onOpenGroups,
                         onOpenGroup = onOpenGroup,
                         onOpenRoutine = onOpenRoutine,
+                        onOpenCreateRoutine = onOpenCreateRoutine,
                         onOpenFriends = onOpenFriends,
                         onOpenFriend = onOpenFriend,
                         onOpenDrawer = { scope.launch { drawerState.open() } }
@@ -170,6 +174,7 @@ fun ProfileScreen(
 @Composable
 private fun ProfileContent(
     username: String,
+    userPicture: String?,
     userPoints: Int,
     routines: List<TrainingRoutineDto>,
     groups: List<GroupDto>,
@@ -177,6 +182,7 @@ private fun ProfileContent(
     onOpenGroups: () -> Unit,
     onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
+    onOpenCreateRoutine: () -> Unit,
     onOpenFriends: () -> Unit,
     onOpenFriend: (Int) -> Unit,
     onOpenDrawer: () -> Unit
@@ -222,22 +228,30 @@ private fun ProfileContent(
                     }
                 }
                 IconButton(onClick = onOpenDrawer) {
-                    Icon(
-                        imageVector = Icons.Outlined.AccountCircle,
+                    val resolvedUrl = MediaUtils.resolveUserPictureUrl(userPicture)
+                    Log.d("ProfileScreen", "Showing profile picture: $resolvedUrl")
+                    AsyncImage(
+                        model = resolvedUrl,
                         contentDescription = strings.profileOpenSettings,
-                        tint = colors.fieldIndicator,
-                        modifier = Modifier.size(34.dp)
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
                     )
                 }
             }
         }
 
         item {
-            SectionCard(title = strings.recentRoutines) {
+            SectionCard(
+                title = strings.myRoutines,
+                actionText = strings.groupsManage,
+                onActionClick = onOpenCreateRoutine
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     if (routines.isEmpty()) {
                         Text(
-                            text = strings.noRecentRoutines,
+                            text = strings.noMyRoutines,
                             color = colors.textSecondary,
                             fontSize = 13.sp
                         )

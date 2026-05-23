@@ -5,6 +5,7 @@ package edu.gymtonic_app.ui.screens.profile
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import edu.gymtonic_app.BuildConfig
+import edu.gymtonic_app.core.MediaUtils
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.components.ToastErrorRetryContent
@@ -94,6 +96,7 @@ fun AccountScreen(
             }
             is AccountUiState.Success -> {
                 val user = state.user
+                val isOAuth = !user.userOauth.isNullOrBlank()
                 
                 var username by remember(user.userId) { mutableStateOf(user.userUsername) }
                 var password by remember { mutableStateOf("") }
@@ -149,7 +152,7 @@ fun AccountScreen(
                                 when {
                                     isDefaultPicture -> {
                                         AsyncImage(
-                                            model = "${BuildConfig.BACKEND_BASE_URL}images/users/default/user.jpg",
+                                            model = "${BuildConfig.BACKEND_BASE_URL.trimEnd('/')}/images/users/default/user.jpg",
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = ContentScale.Crop
@@ -172,8 +175,10 @@ fun AccountScreen(
                                         )
                                     }
                                     else -> {
+                                        val resolvedUrl = MediaUtils.resolveUserPictureUrl(user.userPicture)
+                                        Log.d("AccountScreen", "Showing profile picture: $resolvedUrl")
                                         AsyncImage(
-                                            model = edu.gymtonic_app.core.MediaUtils.resolveUserPictureUrl(user.userPicture),
+                                            model = resolvedUrl,
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = ContentScale.Crop
@@ -194,28 +199,30 @@ fun AccountScreen(
                     item {
                         AccountSectionCard(title = "Datos editables") {
                             EditableField(label = strings.usernameField, value = username, onValueChange = { username = it })
-                            Spacer(Modifier.height(12.dp))
-                            EditableField(
-                                label = strings.password, 
-                                value = password, 
-                                onValueChange = { 
-                                    password = it 
-                                    passwordError = confirmPassword.isNotBlank() && it != confirmPassword
-                                }, 
-                                isPassword = true
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            EditableField(
-                                label = strings.confirmPassword, 
-                                value = confirmPassword, 
-                                onValueChange = { 
-                                    confirmPassword = it 
-                                    passwordError = password.isNotBlank() && it != password
-                                }, 
-                                isPassword = true,
-                                isError = passwordError,
-                                errorText = strings.passwordsNoMatch
-                            )
+                            if (!isOAuth) {
+                                Spacer(Modifier.height(12.dp))
+                                EditableField(
+                                    label = strings.password,
+                                    value = password,
+                                    onValueChange = {
+                                        password = it
+                                        passwordError = confirmPassword.isNotBlank() && it != confirmPassword
+                                    },
+                                    isPassword = true
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                EditableField(
+                                    label = strings.confirmPassword,
+                                    value = confirmPassword,
+                                    onValueChange = {
+                                        confirmPassword = it
+                                        passwordError = password.isNotBlank() && it != password
+                                    },
+                                    isPassword = true,
+                                    isError = passwordError,
+                                    errorText = strings.passwordsNoMatch
+                                )
+                            }
                             Spacer(Modifier.height(12.dp))
                             EditableField(label = strings.height, value = height, onValueChange = { height = it }, isNumber = true)
                             Spacer(Modifier.height(12.dp))

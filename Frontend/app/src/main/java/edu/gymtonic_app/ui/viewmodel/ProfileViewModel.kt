@@ -22,10 +22,12 @@ import kotlinx.coroutines.launch
 
 data class ProfileData(
 	val username: String,
+	val userPicture: String? = null,
+	val isOAuth: Boolean = false,
 	val userPoints: Int,
 	val objective: Int,
 	val streakLabel: String,
-	val recentRoutines: List<TrainingRoutineDto>,
+	val myRoutines: List<TrainingRoutineDto>,
 	val groups: List<GroupDto>,
 	val friends: List<UserSummaryDto> = emptyList()
 )
@@ -63,10 +65,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
 			var points = 0
 			var objective = 0
+			var userPicture: String? = null
+			var isOAuth = false
+
 			if (userId != null) {
 				userRepository.getUserById(userId).onSuccess { user ->
 					points = user.userPoints
 					objective = user.userObjective
+					userPicture = user.userPicture
+					isOAuth = !user.userOauth.isNullOrBlank()
 				}
 			}
 
@@ -75,28 +82,39 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val streakDone = weekDays.take(7).count { it.didWorkout }
 			val streakLabel = "$streakDone/7 Logrados"
 
-			val routinesResult = routineRepository.getRoutineCategoriesFromApi()
-			// Ensure personal routines are updated in cache with correct userId
-			if (userId != null) {
+			// Fetch my routines from API
+			val routinesResult = if (userId != null) {
 				routineRepository.getRoutinesFromApi(userId)
+			} else {
+				Result.success(emptyList())
 			}
+			
 			val groupsResult = groupRepository.getUserGroups()
 			val friendsResult = if (userId != null) friendsRepository.getFriendsForUser(userId) else null
 
-			val routines = routinesResult.getOrDefault(emptyList())
+			val routinesDto = routinesResult.getOrDefault(emptyList())
 			val groups = groupsResult.getOrDefault(emptyList())
 			val friends = friendsResult?.getOrDefault(emptyList()) ?: emptyList()
 
-			val category = routines.firstOrNull { it.id == "recent" } ?: routines.firstOrNull()
-			val recentRoutines = category?.routines.orEmpty().take(3)
+			val myRoutines = routinesDto.filter { it.routine_creator_id == userId }.take(3).map {
+				TrainingRoutineDto(
+					routine_id = it.routine_id,
+					routine_name = it.routine_name,
+					routine_image = it.routine_image,
+					routine_creator_id = it.routine_creator_id,
+					routine_groupid = it.routine_groupid
+				)
+			}
 
 			_uiState.value = ProfileUiState.Success(
 				ProfileData(
 					username = username,
+					userPicture = userPicture,
+					isOAuth = isOAuth,
 					userPoints = points,
 					objective = objective,
 					streakLabel = streakLabel,
-					recentRoutines = recentRoutines,
+					myRoutines = myRoutines,
 					groups = groups,
 					friends = friends
 				)

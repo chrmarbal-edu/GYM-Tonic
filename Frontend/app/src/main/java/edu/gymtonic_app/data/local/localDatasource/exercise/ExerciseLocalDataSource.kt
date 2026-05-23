@@ -17,9 +17,6 @@ class ExerciseLocalDataSource(
 
 	suspend fun insertExercises(exercises: List<ExerciseEntity>) = exerciseDao.insertExercises(exercises)
 
-	//obtener favoritas por id
-	suspend fun getFavExerciseById(exercise_id: Int): ExerciseEntity? = exerciseDao.getExerciseById(exercise_id)
-
 	//insertar favorita
 	suspend fun insertExercise(exercise: ExerciseEntity): Long = exerciseDao.insertExercise(exercise)
 

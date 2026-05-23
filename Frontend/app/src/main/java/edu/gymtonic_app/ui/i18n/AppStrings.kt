@@ -116,8 +116,8 @@ data class ProfileStrings(
     val profileOpenSettings: String,
     val weeklyStreak: String,
     val viewWeek: String,
-    val recentRoutines: String,
-    val noRecentRoutines: String,
+    val myRoutines: String,
+    val noMyRoutines: String,
     val myGroups: String,
     val noGroups: String,
     val openLabel: String
@@ -425,8 +425,8 @@ data class AppStrings(
     val profileOpenSettings get() = profile.profileOpenSettings
     val weeklyStreak get() = profile.weeklyStreak
     val viewWeek get() = profile.viewWeek
-    val recentRoutines get() = profile.recentRoutines
-    val noRecentRoutines get() = profile.noRecentRoutines
+    val myRoutines get() = profile.myRoutines
+    val noMyRoutines get() = profile.noMyRoutines
     val myGroups get() = profile.myGroups
     val noGroups get() = profile.noGroups
     val openLabel get() = profile.openLabel

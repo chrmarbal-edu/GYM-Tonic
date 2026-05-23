@@ -29,9 +29,9 @@ import edu.gymtonic_app.data.local.localModel.userRoutine.UserRoutineEntity
         GroupUserEntity::class,
         FriendEntity::class,
         FrequestEntity::class,
-        UserMissionEntity::class
+        UserMissionEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class GymTonicDatabase : RoomDatabase() {

@@ -20,17 +20,21 @@ class UserRepository(
         try {
             val response = usersRemoteDataSource.getUserById(id)
             if (response.isSuccessful) {
-                var userDto = response.body()!!
+                val userDtoFromApi = response.body()!!
                 
-                // Caching with media
+                // 1. Intentamos cachear la imagen en segundo plano
+                var localPicturePath: String? = null
                 context?.let { ctx ->
-                    val localPicture = MediaCacheManager.downloadAndCache(ctx, userDto.userPicture)
-                    userDto = userDto.copy(userPicture = localPicture)
+                    localPicturePath = MediaCacheManager.downloadAndCache(ctx, userDtoFromApi.userPicture)
                 }
 
-                Log.d("UserRepository", "Caching user data for ID: ${userDto.userId}")
-                userLocalDataSource?.upsertUser(userDto.toEntity())
-                userDto
+                // 2. Guardamos en la DB local la versión con la ruta de CACHÉ (para cuando estemos offline)
+                Log.d("UserRepository", "Caching user data for ID: ${userDtoFromApi.userId}")
+                val entityToCache = userDtoFromApi.toEntity().copy(user_picture = localPicturePath ?: userDtoFromApi.userPicture)
+                userLocalDataSource?.upsertUser(entityToCache)
+                
+                // 3. RETORNAMOS la versión de la API (con URL) para que si hay internet se use la URL
+                userDtoFromApi
             } else {
                 userLocalDataSource?.getUserById(id)?.toDto() ?: throw Exception("Error al obtener usuario: ${response.code()}")
             }

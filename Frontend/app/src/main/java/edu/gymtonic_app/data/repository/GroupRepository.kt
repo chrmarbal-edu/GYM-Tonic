@@ -90,38 +90,33 @@ class GroupRepository(
 	suspend fun addGroupRoutine(
 		groupId: Int,
 		name: String,
-		exerciseIds: List<Int>,
+		exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
 		imageFile: File? = null
 	): Result<RoutineDto> {
 		return runCatching {
-			if (imageFile == null) {
-				val request = CreateGroupRoutineRequest(
-					name = name.trim(),
-					exercise_ids = exerciseIds
-				)
-				unwrapOne(
-					groupRemoteDataSource.addGroupRoutine(groupId, request),
-					"No se pudo añadir la rutina al grupo"
-				)
-			} else {
-				val gson = com.google.gson.Gson()
-				val exerciseIdsBody = gson.toJson(exerciseIds)
-					.toRequestBody("application/json".toMediaTypeOrNull())
-				val imagePart = okhttp3.MultipartBody.Part.createFormData(
+			val gson = com.google.gson.Gson()
+			// El backend para grupos espera solo una lista de IDs de ejercicios
+			val exercisesJson = gson.toJson(exercises.map { it.exercise_id })
+			val exercisesBody =
+				exercisesJson.toRequestBody("text/plain".toMediaTypeOrNull())
+
+			val imagePart = imageFile?.let {
+				okhttp3.MultipartBody.Part.createFormData(
 					"image",
-					imageFile.name,
-					imageFile.asRequestBody("image/*".toMediaTypeOrNull())
-				)
-				unwrapOne(
-					groupRemoteDataSource.addGroupRoutineMultipart(
-						id = groupId,
-						name = name.trim().toRequestBody("text/plain".toMediaTypeOrNull()),
-						exerciseIds = exerciseIdsBody,
-						image = imagePart
-					),
-					"No se pudo añadir la rutina al grupo"
+					it.name,
+					it.asRequestBody("image/*".toMediaTypeOrNull())
 				)
 			}
+
+			unwrapOne(
+				groupRemoteDataSource.addGroupRoutineMultipart(
+					id = groupId,
+					name = name.trim().toRequestBody("text/plain".toMediaTypeOrNull()),
+					exerciseIds = exercisesBody,
+					image = imagePart
+				),
+				"No se pudo añadir la rutina al grupo"
+			)
 		}
 	}
 

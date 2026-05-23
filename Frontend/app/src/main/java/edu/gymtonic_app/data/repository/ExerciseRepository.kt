@@ -25,19 +25,23 @@ class ExerciseRepository(
 	}
 
 	suspend fun updateFavWord(exercise: ExerciseEntity) {
-		val state: ExerciseEntity? = exerciseLocalDataSource.getFavExerciseById(exercise.exercise_id)
-		if (state == null) {
-			// When making favorite, we download media
+		val existing: ExerciseEntity? = exerciseLocalDataSource.getExerciseById(exercise.exercise_id)
+		if (existing != null) {
+			// Si ya existe, simplemente alternamos el flag de favorito. 
+			// No lo borramos porque podría estar siendo usado por una rutina cacheada.
+			val updated = existing.copy(is_favorite = !existing.is_favorite)
+			Log.d("ExerciseRepository", "Updating favorite state for ${exercise.exercise_id} to ${updated.is_favorite}")
+			exerciseLocalDataSource.insertExercise(updated)
+		} else {
+			// Si no existe, lo insertamos como favorito y descargamos media
 			val cachedExercise = context?.let { ctx ->
 				val localImg = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_image)
 				val localVid = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_video)
 				exercise.copy(exercise_image = localImg, exercise_video = localVid, is_favorite = true)
 			} ?: exercise.copy(is_favorite = true)
 			
-			Log.d("ExerciseRepository", "Caching favorite exercise: ${exercise.exercise_id}")
+			Log.d("ExerciseRepository", "Caching new favorite exercise: ${exercise.exercise_id}")
 			exerciseLocalDataSource.insertExercise(cachedExercise)
-		} else {
-			exerciseLocalDataSource.deleteExercise(exercise)
 		}
 	}
 	//endregion

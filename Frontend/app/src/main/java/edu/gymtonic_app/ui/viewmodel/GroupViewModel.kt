@@ -183,13 +183,13 @@ class GroupViewModel(application: Application) : AndroidViewModel(application) {
     fun addGroupRoutine(
         groupId: Int,
         name: String,
-        exerciseIds: List<Int>,
+        exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
         imageFile: java.io.File? = null,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
-            val result = groupRepository.addGroupRoutine(groupId, name, exerciseIds, imageFile)
+            val result = groupRepository.addGroupRoutine(groupId, name, exercises, imageFile)
             result.fold(
                 onSuccess = {
                     _actionMessage.value = "Rutina compartida con el grupo"
