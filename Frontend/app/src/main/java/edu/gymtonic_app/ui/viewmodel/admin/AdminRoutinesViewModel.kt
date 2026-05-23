@@ -1,25 +1,49 @@
 package edu.gymtonic_app.ui.viewmodel.admin
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.repository.AdminRepository
+import edu.gymtonic_app.data.repository.GroupRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 
-class AdminRoutinesViewModel : ViewModel() {
+class AdminRoutinesViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AdminRepository()
+    private val groupRepository = GroupRepository()
+    private val sessionManager = SessionManager(application.sessionDataStore)
 
     private val _listState = MutableStateFlow(AdminListUiState<RoutineDto>())
     val listState: StateFlow<AdminListUiState<RoutineDto>> = _listState.asStateFlow()
 
     private val _detailState = MutableStateFlow(AdminDetailUiState<RoutineDetailDto>())
     val detailState: StateFlow<AdminDetailUiState<RoutineDetailDto>> = _detailState.asStateFlow()
+
+    private val _currentUserId = MutableStateFlow<Int?>(null)
+    val currentUserId: StateFlow<Int?> = _currentUserId.asStateFlow()
+
+    private val _userGroupIds = MutableStateFlow<Set<Int>>(emptySet())
+    val userGroupIds: StateFlow<Set<Int>> = _userGroupIds.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val session = sessionManager.sessionFlow.first()
+            _currentUserId.value = session.userId
+            
+            groupRepository.getUserGroups().onSuccess { groups ->
+                _userGroupIds.value = groups.map { it.group_id }.toSet()
+            }
+        }
+    }
 
     fun loadList() {
         viewModelScope.launch {

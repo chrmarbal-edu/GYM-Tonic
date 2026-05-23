@@ -37,14 +37,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import edu.gymtonic_app.core.MediaUtils
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
+import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.components.ToastErrorRetryContent
@@ -67,6 +71,7 @@ fun ProfileScreen(
     onOpenWeek: () -> Unit,
     onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
+    onOpenFriend: (Int) -> Unit,
     onLogout: () -> Unit,
     onOpenAccount: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -148,9 +153,12 @@ fun ProfileScreen(
                         userPoints = data.userPoints,
                         routines = data.recentRoutines,
                         groups = data.groups,
+                        friends = data.friends,
                         onOpenGroups = onOpenGroups,
                         onOpenGroup = onOpenGroup,
                         onOpenRoutine = onOpenRoutine,
+                        onOpenFriends = onOpenFriends,
+                        onOpenFriend = onOpenFriend,
                         onOpenDrawer = { scope.launch { drawerState.open() } }
                     )
                 }
@@ -165,9 +173,12 @@ private fun ProfileContent(
     userPoints: Int,
     routines: List<TrainingRoutineDto>,
     groups: List<GroupDto>,
+    friends: List<UserSummaryDto>,
     onOpenGroups: () -> Unit,
     onOpenGroup: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
+    onOpenFriends: () -> Unit,
+    onOpenFriend: (Int) -> Unit,
     onOpenDrawer: () -> Unit
 ) {
     val strings = LocalStrings.current
@@ -257,6 +268,31 @@ private fun ProfileContent(
                             GroupRow(
                                 group = group,
                                 onClick = { onOpenGroup(group.group_id) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            SectionCard(
+                title = strings.friendsTitle,
+                actionText = strings.groupsManage,
+                onActionClick = onOpenFriends
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (friends.isEmpty()) {
+                        Text(
+                            text = strings.friendsEmptyFriends,
+                            color = colors.textSecondary,
+                            fontSize = 13.sp
+                        )
+                    } else {
+                        friends.take(4).forEach { friend ->
+                            FriendRow(
+                                friend = friend,
+                                onClick = { onOpenFriend(friend.userId) }
                             )
                         }
                     }
@@ -374,12 +410,23 @@ private fun GroupRow(
             modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val resolvedUrl = MediaUtils.resolveBackendMediaUrl(group.group_image)
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(colors.surfaceAccent)
-            )
+                    .background(colors.surfaceAccent),
+                contentAlignment = Alignment.Center
+            ) {
+                if (resolvedUrl != null) {
+                    AsyncImage(
+                        model = resolvedUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -390,6 +437,52 @@ private fun GroupRow(
                 )
                 Text(
                     text = group.group_description ?: "",
+                    color = colors.textSecondary,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FriendRow(
+    friend: UserSummaryDto,
+    onClick: () -> Unit
+) {
+    val colors = LocalColors.current
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = colors.surfaceCard,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val resolvedUrl = MediaUtils.resolveUserPictureUrl(friend.userPicture)
+            AsyncImage(
+                model = resolvedUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = friend.userName.orEmpty().ifBlank { friend.userUsername.orEmpty() },
+                    color = colors.textPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "@${friend.userUsername.orEmpty()}",
                     color = colors.textSecondary,
                     fontSize = 11.sp,
                     maxLines = 1,

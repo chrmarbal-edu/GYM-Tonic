@@ -7,6 +7,8 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto
+import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
+import edu.gymtonic_app.data.repository.FriendsRepository
 import edu.gymtonic_app.data.repository.GroupRepository
 import edu.gymtonic_app.data.repository.RepositoryProvider
 import edu.gymtonic_app.data.repository.RoutineRepository
@@ -24,7 +26,8 @@ data class ProfileData(
 	val objective: Int,
 	val streakLabel: String,
 	val recentRoutines: List<TrainingRoutineDto>,
-	val groups: List<GroupDto>
+	val groups: List<GroupDto>,
+	val friends: List<UserSummaryDto> = emptyList()
 )
 
 sealed class ProfileUiState {
@@ -40,6 +43,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 	private val userRepository = RepositoryProvider.getUserRepository(application)
 
 	private val groupRepository = GroupRepository()
+	private val friendsRepository = FriendsRepository()
 	private val sessionManager = SessionManager(application.sessionDataStore)
 
 	private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
@@ -77,9 +81,11 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 				routineRepository.getRoutinesFromApi(userId)
 			}
 			val groupsResult = groupRepository.getUserGroups()
+			val friendsResult = if (userId != null) friendsRepository.getFriendsForUser(userId) else null
 
 			val routines = routinesResult.getOrDefault(emptyList())
 			val groups = groupsResult.getOrDefault(emptyList())
+			val friends = friendsResult?.getOrDefault(emptyList()) ?: emptyList()
 
 			val category = routines.firstOrNull { it.id == "recent" } ?: routines.firstOrNull()
 			val recentRoutines = category?.routines.orEmpty().take(3)
@@ -91,7 +97,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 					objective = objective,
 					streakLabel = streakLabel,
 					recentRoutines = recentRoutines,
-					groups = groups
+					groups = groups,
+					friends = friends
 				)
 			)
 		}

@@ -42,6 +42,7 @@ object Routes {
     const val DISCOUNTS = "discounts"
 
     const val FRIENDS = "friends"
+    const val FRIEND_DETAIL = "friend/{friendId}"
 
     // Admin dashboard
     const val ADMIN_ROUTINES = "admin/routines"
@@ -68,6 +69,7 @@ object Routes {
     fun adminMissionEdit(missionId: Int): String = "admin/mission/$missionId"
 
     fun resetPassword(email: String): String = "reset_password?email=$email"
+    fun friendDetail(friendId: Int): String = "friend/$friendId"
 
     fun postLoginDestination(role: Int?): String =
         if (UserRoles.isAdmin(role)) HOME else TRAINING

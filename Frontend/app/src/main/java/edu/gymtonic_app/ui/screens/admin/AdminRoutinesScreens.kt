@@ -59,6 +59,8 @@ fun AdminRoutinesListScreen(
 ) {
     val strings = LocalStrings.current
     val state by viewModel.listState.collectAsState()
+    val userId by viewModel.currentUserId.collectAsState()
+    val userGroupIds by viewModel.userGroupIds.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { viewModel.loadList() }
@@ -68,8 +70,14 @@ fun AdminRoutinesListScreen(
         onBack = onBack,
         onCreateClick = onCreate
     ) {
-        val filteredItems = remember(state.items, searchQuery) {
-            state.items.filter { (it.routine_name ?: "").contains(searchQuery, ignoreCase = true) }
+        val filteredItems = remember(state.items, searchQuery, userId, userGroupIds) {
+            state.items.filter { routine ->
+                val matchesSearch = (routine.routine_name ?: "").contains(searchQuery, ignoreCase = true)
+                val isPredefined = routine.routine_creator_id == null
+                val isCreator = routine.routine_creator_id == userId
+                val isFromMyGroup = routine.routine_groupid != null && userGroupIds.contains(routine.routine_groupid)
+                matchesSearch && (isPredefined || isCreator || isFromMyGroup)
+            }
         }
 
         AdminListContent(

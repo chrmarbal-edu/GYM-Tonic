@@ -8,7 +8,11 @@ data class RoutineDto(
     @SerializedName("routine_name", alternate = ["name", "routineName"])
     val routine_name: String? = null,
     @SerializedName("routine_image", alternate = ["image", "routineImage", "routine_image_url"])
-    val routine_image: String? = null
+    val routine_image: String? = null,
+    @SerializedName("routine_creator_id")
+    val routine_creator_id: Int? = null,
+    @SerializedName("routine_groupid")
+    val routine_groupid: Int? = null
 )
 
 data class RoutineExerciseDto(
@@ -38,6 +42,10 @@ data class RoutineDetailDto(
     val routine_image: String? = null,
     @SerializedName("can_edit")
     val can_edit: Boolean = false,
+    @SerializedName("routine_creator_id")
+    val routine_creator_id: Int? = null,
+    @SerializedName("routine_groupid")
+    val routine_groupid: Int? = null,
     val exercises: List<RoutineExerciseDto>? = null
 ) {
     fun safeExercises(): List<RoutineExerciseDto> = exercises ?: emptyList()

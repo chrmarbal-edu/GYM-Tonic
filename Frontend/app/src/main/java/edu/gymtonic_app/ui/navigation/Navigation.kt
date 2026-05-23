@@ -59,6 +59,7 @@ import edu.gymtonic_app.ui.screens.profile.AccountScreen
 import edu.gymtonic_app.ui.screens.profile.ProfileScreen
 import edu.gymtonic_app.ui.screens.profile.SettingsScreen
 import edu.gymtonic_app.ui.screens.discounts.DiscountsScreen
+import edu.gymtonic_app.ui.screens.friends.FriendDetailScreen
 import edu.gymtonic_app.ui.screens.friends.FriendsScreen
 import edu.gymtonic_app.ui.screens.groups.AddGroupRoutineScreen
 import edu.gymtonic_app.ui.screens.groups.GroupDetailScreen
@@ -657,6 +658,9 @@ fun Navigation(navController: NavHostController) {
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
+                onOpenFriend = { friendId ->
+                    navController.navigate(Routes.friendDetail(friendId))
+                },
                 onLogout = onLogout,
                 onOpenAccount = { navController.navigate(Routes.ACCOUNT) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) }
@@ -762,7 +766,29 @@ fun Navigation(navController: NavHostController) {
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
-                onOpenProfile = onOpenProfileGlobal
+                onOpenProfile = onOpenProfileGlobal,
+                onOpenFriendDetail = { friendId ->
+                    navController.navigate(Routes.friendDetail(friendId))
+                }
+            )
+        }
+
+        composable(
+            route = Routes.FRIEND_DETAIL,
+            arguments = listOf(navArgument("friendId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val friendId = backStackEntry.arguments?.getInt("friendId") ?: return@composable
+            FriendDetailScreen(
+                friendId = friendId,
+                onBack = { navController.popBackStack() },
+                onOpenTraining = onOpenTrainingGlobal,
+                onOpenGroups = onOpenGroupsGlobal,
+                onOpenFriends = onOpenFriendsGlobal,
+                onOpenChallenges = onOpenChallengesGlobal,
+                onOpenProfile = onOpenProfileGlobal,
+                onOpenGroup = { groupId ->
+                    navController.navigate(Routes.groupDetail(groupId))
+                }
             )
         }
     }

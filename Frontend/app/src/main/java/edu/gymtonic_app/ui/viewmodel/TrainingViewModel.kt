@@ -38,7 +38,7 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
         // Observe recent routines automatically for real-time updates
         viewModelScope.launch {
             routineRepository.getRecentRoutines().collect { entities ->
-                val recent = entities.filter { it.last_visited > 0 }.map {
+                val recent = entities.filter { it.last_visited > 0 }.take(3).map {
                     TrainingRoutineDto(
                         routine_id = it.routine_id,
                         routine_name = it.routine_name,
@@ -76,11 +76,21 @@ class TrainingScreenViewModel(application: Application) : AndroidViewModel(appli
             
             // Load global routines (labeled as "Todas")
             val allRoutinesResult = routineRepository.getRoutinesFromApi(userId)
-            val allRoutines = allRoutinesResult.getOrNull()?.map {
+            val userGroupsResult = groupRepository.getUserGroups()
+            val userGroupIds = userGroupsResult.getOrNull()?.map { it.group_id }?.toSet() ?: emptySet()
+
+            val allRoutines = allRoutinesResult.getOrNull()?.filter { routine ->
+                val isPredefined = routine.routine_creator_id == null
+                val isCreator = routine.routine_creator_id == userId
+                val isFromMyGroup = routine.routine_groupid != null && userGroupIds.contains(routine.routine_groupid)
+                isPredefined || isCreator || isFromMyGroup
+            }?.map {
                 TrainingRoutineDto(
                     routine_id = it.routine_id,
                     routine_name = it.routine_name,
-                    routine_image = it.routine_image
+                    routine_image = it.routine_image,
+                    routine_creator_id = it.routine_creator_id,
+                    routine_groupid = it.routine_groupid
                 )
             } ?: emptyList()
 

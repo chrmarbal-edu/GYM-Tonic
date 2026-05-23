@@ -8,7 +8,11 @@ data class TrainingRoutineDto(
     @SerializedName("routine_name", alternate = ["name", "routineName", "title"])
     val routine_name: String? = null,
     @SerializedName("routine_image", alternate = ["image", "routineImage", "img", "imageUrl", "image_url", "routine_image_url"])
-    val routine_image: String? = null
+    val routine_image: String? = null,
+    @SerializedName("routine_creator_id")
+    val routine_creator_id: Int? = null,
+    @SerializedName("routine_groupid")
+    val routine_groupid: Int? = null
 ) {
     fun displayName(): String = routine_name?.takeIf { it.isNotBlank() } ?: "Rutina"
 }

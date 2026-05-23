@@ -247,6 +247,13 @@ val SpanishStrings = AppStrings(
         friendsRemovedMsg = "Amistad eliminada",
         friendsLoadError = "No se pudieron cargar tus amigos"
     ),
+    friendDetail = FriendDetailStrings(
+        title = "Detalle del amigo",
+        points = "Puntos",
+        goal = "Objetivo",
+        sharedGroups = "Grupos en común",
+        noSharedGroups = "No compartís ningún grupo"
+    ),
     admin = AdminStrings(
         adminPanelSubtitle = "PANEL DE ADMINISTRACIÓN",
         adminRoutines = "Rutinas",

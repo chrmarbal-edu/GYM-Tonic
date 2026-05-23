@@ -38,7 +38,9 @@ class RoutineRepository(
                 )
                 // Cache personal routines with actual owner ID
                 userId?.let { uid ->
-                    routineLocalDataSource?.insertRoutines(remoteRoutines.map { it.toEntity(uid) })
+                    // Only cache routines that are NOT from a group
+                    val routinesToCache = remoteRoutines.filter { it.routine_groupid == null }
+                    routineLocalDataSource?.insertRoutines(routinesToCache.map { it.toEntity(uid) })
                 }
                 remoteRoutines
             } catch (e: Exception) {
@@ -46,7 +48,8 @@ class RoutineRepository(
                 val cached = if (userId != null) {
                     routineLocalDataSource?.getRoutinesByOwner(userId)?.first() ?: emptyList()
                 } else {
-                    routineLocalDataSource?.getAllRoutines() ?: emptyList()
+                    // If no userId, only show predefined routines as a safety measure
+                    routineLocalDataSource?.getAllRoutines()?.filter { it.routine_creator_id == null } ?: emptyList()
                 }
                 cached.map { it.toDto() }
             }
@@ -77,13 +80,16 @@ class RoutineRepository(
                         TrainingCategoryDto(
                             id = "recent",
                             title = "Recientes (Offline)",
-                            routines = localRoutines.map { entity ->
-                                edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto(
-                                    routine_id = entity.routine_id,
-                                    routine_name = entity.routine_name,
-                                    routine_image = entity.routine_image
-                                )
-                            }
+                            routines = localRoutines
+                                .sortedByDescending { it.last_visited }
+                                .take(3)
+                                .map { entity ->
+                                    edu.gymtonic_app.data.remote.remoteModel.training.TrainingRoutineDto(
+                                        routine_id = entity.routine_id,
+                                        routine_name = entity.routine_name,
+                                        routine_image = entity.routine_image
+                                    )
+                                }
                         )
                     )
                 } else {
@@ -119,8 +125,8 @@ class RoutineRepository(
                         routineLocalDataSource.updateRoutine(localRoutine.copy(last_visited = System.currentTimeMillis()))
                     }
 
-                    // Cache only if user can edit (is their routine)
-                    if (remoteRoutine.can_edit || remoteRoutine.routine_id > 0) { 
+                    // Cache only if it's NOT a group routine
+                    if (remoteRoutine.routine_groupid == null) { 
                         Log.d("RoutineRepository", "Caching routine: ${remoteRoutine.routine_id}")
                         context?.let { ctx ->
                             val localRoutineImg = MediaCacheManager.downloadAndCache(ctx, remoteRoutine.routine_image)
@@ -157,22 +163,33 @@ class RoutineRepository(
                     remoteRoutine
                 } else {
                     // Fallback on HTTP error
-                    loadRoutineFromCache(routineId) ?: throw Exception("Error API ${response.code()}")
+                    loadRoutineFromCache(routineId, userId) ?: throw Exception("Error API ${response.code()}")
                 }
             } catch (e: Exception) {
                 Log.d("RoutineRepository", "Error fetching routine $routineId, loading from cache")
-                loadRoutineFromCache(routineId) ?: throw e
+                loadRoutineFromCache(routineId, userId) ?: throw e
             }
         }
     }
 
-    private suspend fun loadRoutineFromCache(routineId: Int): RoutineDetailDto? {
-        val localRoutine = routineLocalDataSource?.getRoutineById(routineId) ?: return null
+    private suspend fun loadRoutineFromCache(routineId: Int, userId: Int? = null): RoutineDetailDto? {
+        val localRoutine = if (userId != null) {
+            routineLocalDataSource?.getRoutineByIdForOwner(routineId, userId)
+        } else {
+            routineLocalDataSource?.getRoutineById(routineId)
+        } ?: return null
+        
+        // Final privacy check: only return if not from group and (predefined or belongs to user)
+        if (localRoutine.routine_groupid != null) return null
+
+        val isPredefined = localRoutine.routine_creator_id == null
+        val isOwner = userId != null && localRoutine.routine_creator_id == userId
+        
+        if (!isPredefined && !isOwner) return null
+
         val routineDto = localRoutine.toDto()
         
         // Fetch linked exercises from Room
-        // Note: RoutineExerciseLocalDataSource.getExercisesForRoutine returns a Flow. 
-        // We need to collect it or get the first emission.
         val linkedExercises = routineExerciseLocalDataSource?.getExercisesForRoutine(routineId)?.first() ?: emptyList()
         
         val exercisesDto = linkedExercises.map { rel ->
@@ -192,7 +209,9 @@ class RoutineRepository(
             routine_id = routineDto.routine_id,
             routine_name = routineDto.routine_name,
             routine_image = routineDto.routine_image,
-            can_edit = true,
+            can_edit = isOwner,
+            routine_creator_id = localRoutine.routine_creator_id,
+            routine_groupid = localRoutine.routine_groupid,
             exercises = exercisesDto
         )
     }
@@ -254,11 +273,13 @@ class RoutineRepository(
                     ),
                     defaultMessage = "No se pudo crear la rutina"
                 ).also { detail ->
-                    // Cache the new routine
-                    context?.let { ctx ->
-                        val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
-                        val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
-                        routineLocalDataSource?.insertRoutines(listOf(entity))
+                    // Cache the new routine ONLY if it's not a group routine
+                    if (detail.routine_groupid == null) {
+                        context?.let { ctx ->
+                            val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
+                            val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
+                            routineLocalDataSource?.insertRoutines(listOf(entity))
+                        }
                     }
                 }
             } else {
@@ -271,11 +292,13 @@ class RoutineRepository(
                     ),
                     defaultMessage = "No se pudo actualizar la rutina con id=$id"
                 ).also { detail ->
-                    // Cache the updated routine
-                    context?.let { ctx ->
-                        val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
-                        val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
-                        routineLocalDataSource?.insertRoutines(listOf(entity))
+                    // Cache the updated routine ONLY if it's not a group routine
+                    if (detail.routine_groupid == null) {
+                        context?.let { ctx ->
+                            val localImg = MediaCacheManager.downloadAndCache(ctx, detail.routine_image)
+                            val entity = detail.copy(routine_image = localImg).toEntity(userId ?: 0)
+                            routineLocalDataSource?.insertRoutines(listOf(entity))
+                        }
                     }
                 }
             }

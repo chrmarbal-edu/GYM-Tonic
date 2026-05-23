@@ -255,6 +255,14 @@ data class FriendsStrings(
     val friendsLoadError: String
 )
 
+data class FriendDetailStrings(
+    val title: String,
+    val points: String,
+    val goal: String,
+    val sharedGroups: String,
+    val noSharedGroups: String
+)
+
 data class AdminStrings(
     val adminPanelSubtitle: String,
     val adminRoutines: String,
@@ -306,6 +314,7 @@ data class AppStrings(
     val account: AccountStrings,
     val discounts: DiscountStrings,
     val friends: FriendsStrings,
+    val friendDetail: FriendDetailStrings,
     val admin: AdminStrings
 ) {
     // Delegation getters to keep the old API

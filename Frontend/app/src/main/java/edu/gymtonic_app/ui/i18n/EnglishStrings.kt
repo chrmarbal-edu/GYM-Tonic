@@ -247,6 +247,13 @@ val EnglishStrings = AppStrings(
         friendsRemovedMsg = "Friend removed",
         friendsLoadError = "Could not load your friends"
     ),
+    friendDetail = FriendDetailStrings(
+        title = "Friend detail",
+        points = "Points",
+        goal = "Goal",
+        sharedGroups = "Shared groups",
+        noSharedGroups = "You don't share any groups"
+    ),
     admin = AdminStrings(
         adminPanelSubtitle = "ADMIN DASHBOARD",
         adminRoutines = "Routines",

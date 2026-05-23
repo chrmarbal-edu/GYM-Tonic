@@ -43,13 +43,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import edu.gymtonic_app.core.MediaUtils
 import edu.gymtonic_app.data.remote.remoteModel.social.FriendRequestWithUserDto
 import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import edu.gymtonic_app.ui.components.BottomNavItem
@@ -70,6 +73,7 @@ fun FriendsScreen(
     onOpenFriends: () -> Unit,
     onOpenChallenges: () -> Unit,
     onOpenProfile: () -> Unit,
+    onOpenFriendDetail: (Int) -> Unit,
     viewModel: FriendsViewModel = viewModel()
 ) {
     val strings = LocalStrings.current
@@ -174,7 +178,8 @@ fun FriendsScreen(
                             busyIds = state.busyFriendIds,
                             emptyText = strings.friendsEmptyFriends,
                             removeLabel = strings.friendsRemoveAction,
-                            onRemove = { friendshipId -> viewModel.removeFriend(friendshipId) }
+                            onRemove = { friendshipId -> viewModel.removeFriend(friendshipId) },
+                            onClickFriend = onOpenFriendDetail
                         )
                         1 -> RequestsList(
                             requests = state.incoming,
@@ -223,7 +228,8 @@ private fun FriendsList(
     busyIds: Set<Int>,
     emptyText: String,
     removeLabel: String,
-    onRemove: (Int) -> Unit
+    onRemove: (Int) -> Unit,
+    onClickFriend: (Int) -> Unit
 ) {
     if (friends.isEmpty()) {
         CenteredText(emptyText)
@@ -238,6 +244,7 @@ private fun FriendsList(
         items(friends, key = { it.friendId ?: it.userId }) { friend ->
             UserRow(
                 user = friend,
+                onClick = { onClickFriend(friend.userId) },
                 trailing = {
                     OutlinedButton(
                         onClick = { friend.friendId?.let(onRemove) },
@@ -305,13 +312,16 @@ private fun RequestsList(
 @Composable
 private fun UserRow(
     user: UserSummaryDto,
+    onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit
 ) {
     val colors = LocalColors.current
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = colors.surfaceCard,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -344,29 +354,21 @@ private fun UserRow(
 @Composable
 private fun Avatar(url: String?) {
     val colors = LocalColors.current
-    // Solo intentamos cargar URLs http(s). El backend guarda rutas relativas
-    // tipo "public/images/users/.." que Coil no resuelve; en ese caso
-    // mostramos directamente el icono por defecto.
-    val isRemote = url?.startsWith("http") == true
+    val resolvedUrl = MediaUtils.resolveUserPictureUrl(url)
     Box(
         modifier = Modifier
             .size(42.dp)
             .background(colors.surfaceMain, CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        if (isRemote) {
-            AsyncImage(
-                model = url,
-                contentDescription = null,
-                modifier = Modifier.size(42.dp)
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = null,
-                tint = colors.textSecondary
-            )
-        }
+        AsyncImage(
+            model = resolvedUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+        )
     }
 }
 
