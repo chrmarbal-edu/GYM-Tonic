@@ -174,6 +174,8 @@ fun Navigation(navController: NavHostController) {
 
     val onLogout: () -> Unit = {
         loginViewModel.resetLoginState()
+        registerViewModel.resetToIdle()
+        registerViewModel.clearSocialData()
         googleAuthHelper.signOut(coroutineScope)
         homeViewModel.logout(
             onLoggedOut = {
@@ -204,6 +206,7 @@ fun Navigation(navController: NavHostController) {
                 
                 // 1. Limpiamos TODOS los ViewModels de autenticación
                 loginViewModel.resetLoginState()
+                registerViewModel.resetToIdle()
                 registerViewModel.prepareSocialRegistration("", "", "", "")
                 googleAuthHelper.signOut(coroutineScope)
                 
