@@ -77,6 +77,8 @@ import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
 import androidx.compose.runtime.DisposableEffect
 import edu.gymtonic_app.ui.viewmodel.UserMissionsViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
 @Composable
 @Suppress("UNUSED_PARAMETER")
 fun Navigation(navController: NavHostController) {
@@ -91,6 +93,9 @@ fun Navigation(navController: NavHostController) {
     val loginViewModel: LoginViewModel = viewModel()
     val registerViewModel: RegisterViewModel = viewModel()
     val homeViewModel: HomeViewModel = viewModel()
+    val application = context.applicationContext as android.app.Application
+    val sharedExerciseViewModel: ExerciseViewModel =
+        viewModel(factory = ExerciseViewModelFactory(application))
 
     val sessionState = sessionManager.sessionFlow.collectAsState(initial = null)
     val isAdmin = UserRoles.isAdmin(sessionState.value?.role)
@@ -661,7 +666,8 @@ fun Navigation(navController: NavHostController) {
                 onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
-                showBottomBar = false
+                showBottomBar = false,
+                viewModel = sharedExerciseViewModel
             )
         }
 

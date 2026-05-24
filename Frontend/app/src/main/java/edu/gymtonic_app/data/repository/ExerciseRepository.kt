@@ -27,22 +27,28 @@ class ExerciseRepository(
 
 	suspend fun updateFavWord(userId: Int, exercise: ExerciseEntity) {
 		val existing: ExerciseEntity? = exerciseLocalDataSource.getExerciseById(exercise.exercise_id)
-		
-		// 1. Aseguramos que el ejercicio base esté cacheado
+
+		// 1. Insertar el ejercicio base inmediatamente para no bloquear el guardado del favorito
 		if (existing == null) {
-			val cachedExercise = context?.let { ctx ->
-				val localImg = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_image)
-				val localVid = MediaCacheManager.downloadAndCache(ctx, exercise.exercise_video)
-				exercise.copy(exercise_image = localImg, exercise_video = localVid)
-			} ?: exercise
-			
-			Log.d("ExerciseRepository", "Caching base exercise: ${exercise.exercise_id}")
-			exerciseLocalDataSource.insertExercise(cachedExercise)
+			exerciseLocalDataSource.insertExercise(exercise)
 		}
 
-		// 2. Alternamos el favorito específico para este usuario
-		Log.d("ExerciseRepository", "Toggling favorite for user $userId and exercise ${exercise.exercise_id}")
+		// 2. Guardar/quitar el favorito de forma inmediata
 		exerciseLocalDataSource.toggleFavorite(userId, exercise.exercise_id)
+
+		// 3. Actualizar la caché de media en segundo plano (no bloquea el favorito)
+		if (existing == null && context != null) {
+			try {
+				val localImg = MediaCacheManager.downloadAndCache(context, exercise.exercise_image)
+				val localVid = MediaCacheManager.downloadAndCache(context, exercise.exercise_video)
+				if (localImg != exercise.exercise_image || localVid != exercise.exercise_video) {
+					// Actualizar solo los campos de media sin tocar user_favorite_exercises
+					exerciseLocalDataSource.updateExerciseMedia(exercise.exercise_id, localImg, localVid)
+				}
+			} catch (e: Exception) {
+				// Si falla el caché de media el favorito ya está guardado, no hacer rollback
+			}
+		}
 	}
 	//endregion
 

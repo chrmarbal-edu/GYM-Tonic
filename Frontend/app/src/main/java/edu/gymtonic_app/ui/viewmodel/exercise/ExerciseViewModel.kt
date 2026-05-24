@@ -59,6 +59,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
 
         viewModelScope.launch {
             val userId = sessionManager.sessionFlow.first().userId ?: 0
+            Log.d(TAG, "INIT: userId=$userId, observando favoritos desde Room")
             observeFavoritesFromRoom(userId)
             refreshExercises()
         }
@@ -68,6 +69,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         favoritesJob?.cancel()
         favoritesJob = viewModelScope.launch {
             exerciseRepository.getFavExercises(userId).collectLatest { favorites ->
+                Log.d(TAG, "ROOM emite favoritos: ${favorites.map { it.exercise_id }} para userId=$userId")
                 _favoritesSet.value = favorites.map { it.exercise_id }.toSet()
                 _favoriteExercises.value = favorites
             }
@@ -110,9 +112,11 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             runCatching {
                 val userId = sessionManager.sessionFlow.first().userId ?: 0
+                Log.d(TAG, "TOGGLE: guardando favorito exerciseId=${payload.id} para userId=$userId")
                 exerciseRepository.updateFavWord(userId, entity)
+                Log.d(TAG, "TOGGLE: guardado correctamente, favoritesSet=${_favoritesSet.value}")
             }.onFailure { error ->
-                Log.e(TAG, "Error al alternar favorito para exerciseId=${payload.id}", error)
+                Log.e(TAG, "TOGGLE FAILED: rollback exerciseId=${payload.id}", error)
                 _favoritesSet.value = previousFavorites
             }
         }

@@ -5,7 +5,6 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import edu.gymtonic_app.data.local.localModel.ExerciseEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -21,9 +20,12 @@ interface ExerciseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExercises(exercises: List<ExerciseEntity>)
 
-    //Insertar (suspend)
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    //Insertar (suspend) — IGNORE para no borrar favoritos por CASCADE
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertExercise(exercise: ExerciseEntity): Long
+
+    @Query("UPDATE exercises SET exercise_image = :image, exercise_video = :video WHERE exercise_id = :exerciseId")
+    suspend fun updateExerciseMedia(exerciseId: Int, image: String?, video: String?)
 
     //Borrar (suspend), devuelve el id del elemento eliminado
     @Delete

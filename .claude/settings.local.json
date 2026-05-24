@@ -14,7 +14,9 @@
       "Read(//tmp/**)",
       "Bash(sed -n '/register = RegisterStrings/,/^ \\)/p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/EnglishStrings.kt)",
       "Bash(awk '{print $1}')",
-      "Bash(sed -n '/register = RegisterStrings/,/^ \\)/p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/SpanishStrings.kt)"
+      "Bash(sed -n '/register = RegisterStrings/,/^ \\)/p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/SpanishStrings.kt)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(xargs grep -l \"favorite\")"
     ]
   }
 }

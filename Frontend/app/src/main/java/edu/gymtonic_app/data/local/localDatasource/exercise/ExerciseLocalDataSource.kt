@@ -39,6 +39,9 @@ class ExerciseLocalDataSource(
 	//insertar ejercicio base
 	suspend fun insertExercise(exercise: ExerciseEntity): Long = exerciseDao.insertExercise(exercise)
 
+	suspend fun updateExerciseMedia(exerciseId: Int, image: String?, video: String?) =
+		exerciseDao.updateExerciseMedia(exerciseId, image, video)
+
 	//eliminar ejercicio base
 	suspend fun deleteExercise(exercise: ExerciseEntity): Int = exerciseDao.deleteExercise(exercise)
 }
