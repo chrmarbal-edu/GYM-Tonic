@@ -85,12 +85,8 @@ class UserMissionsViewModel(application: Application) : AndroidViewModel(applica
 		viewModelScope.launch {
 			val userId = sessionManager.sessionFlow.first().userId
 			if (userId == null) {
-				_uiState.update {
-					it.copy(
-						isRefreshing = false,
-						errorMessage = "No hay sesión activa"
-					)
-				}
+				// No disparamos error con mensaje para evitar Toasts durante logout/delete
+				_uiState.update { it.copy(isRefreshing = false) }
 				return@launch
 			}
 

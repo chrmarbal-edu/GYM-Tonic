@@ -60,7 +60,7 @@ async function syncMissionAssignments(missionId, objective, type) {
                 AND NOT EXISTS (SELECT 1 FROM User_X_Mission ux WHERE ux.user_x_mission_userid = u.user_id AND ux.user_x_mission_missionid = @missionId)
             `)
     } catch (err) {
-        console.error("Error inside syncMissionAssignments:", err)
+        console.log("Error inside syncMissionAssignments:", err)
     }
 }
 
@@ -142,7 +142,7 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
                     // Sincronizar asignaciones tras la actualización
                     await syncMissionAssignments(id, updateMission.objective, updateMission.type)
                 } catch (assignErr) {
-                    console.error("Error updating mission assignments:", assignErr)
+                    console.log("Error updating mission assignments:", assignErr)
                 }
                 res.status(200).json(datosMissionActualizada);
             }
@@ -168,8 +168,6 @@ exports.createMissionCSR = wrapAsync(async function (req, res, next) {
         // Realizamos la redirección en la promesa de la creación.
         await missionmodel.create(newMission, async function(err,datosMisionCreada){
             if(err){
-                console.log(err)
-                console.log("ERROR CREATE MISSIONS CSR");
                 return next(new AppError(err, 500))
             } else{
                 // Asignar automáticamente a los usuarios que tengan el mismo objetivo

@@ -63,18 +63,22 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val userId = session.userId
 			val username = session.username ?: "Usuario"
 
+			if (userId == null) {
+				// Si no hay ID, no disparamos error con mensaje para evitar Toasts durante el logout
+				_uiState.value = ProfileUiState.Loading
+				return@launch
+			}
+
 			var points = 0
 			var objective = 0
 			var userPicture: String? = null
 			var isOAuth = false
 
-			if (userId != null) {
-				userRepository.getUserById(userId).onSuccess { user ->
-					points = user.userPoints
-					objective = user.userObjective
-					userPicture = user.userPicture
-					isOAuth = !user.userOauth.isNullOrBlank()
-				}
+			userRepository.getUserById(userId).onSuccess { user ->
+				points = user.userPoints
+				objective = user.userObjective
+				userPicture = user.userPicture
+				isOAuth = !user.userOauth.isNullOrBlank()
 			}
 
 			val weekDaysResult = userMissionsRepository.getWeeklyCalendarDays()
@@ -83,18 +87,14 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 			val streakLabel = "$streakDone/7 Logrados"
 
 			// Fetch my routines from API
-			val routinesResult = if (userId != null) {
-				routineRepository.getRoutinesFromApi(userId)
-			} else {
-				Result.success(emptyList())
-			}
+			val routinesResult = routineRepository.getRoutinesFromApi(userId)
 			
 			val groupsResult = groupRepository.getUserGroups()
-			val friendsResult = if (userId != null) friendsRepository.getFriendsForUser(userId) else null
+			val friendsResult = friendsRepository.getFriendsForUser(userId)
 
 			val routinesDto = routinesResult.getOrDefault(emptyList())
 			val groups = groupsResult.getOrDefault(emptyList())
-			val friends = friendsResult?.getOrDefault(emptyList()) ?: emptyList()
+			val friends = friendsResult.getOrDefault(emptyList())
 
 			val myRoutines = routinesDto.filter { it.routine_creator_id == userId }.take(3).map {
 				TrainingRoutineDto(

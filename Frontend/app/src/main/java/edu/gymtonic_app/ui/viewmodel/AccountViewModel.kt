@@ -121,11 +121,21 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
             val session = sessionManager.sessionFlow.first()
             val userId = session.userId ?: return@launch
 
-            userRepository.deleteUser(userId).onSuccess {
+            val result = userRepository.deleteUser(userId)
+            
+            // Independientemente de si falla (p.ej. 401), si intentamos borrar y no podemos porque no estamos autorizados,
+            // procedemos a limpiar la sesión local.
+            if (result.isSuccess) {
                 sessionManager.clearSession()
                 onDeleted()
-            }.onFailure { e ->
-                _toastMessage.value = e.message ?: "No se pudo eliminar la cuenta"
+            } else {
+                val errorMsg = result.exceptionOrNull()?.message ?: ""
+                if (errorMsg.contains("401") || errorMsg.contains("404") || errorMsg.contains("unauthorized", ignoreCase = true)) {
+                    sessionManager.clearSession()
+                    onDeleted()
+                } else {
+                    _toastMessage.value = result.exceptionOrNull()?.message ?: "No se pudo eliminar la cuenta"
+                }
             }
         }
     }

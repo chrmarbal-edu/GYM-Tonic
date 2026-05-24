@@ -1,17 +1,22 @@
 package edu.gymtonic_app.ui.viewmodel.admin
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
+import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.data.repository.AdminRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AdminUsersViewModel : ViewModel() {
+class AdminUsersViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = AdminRepository()
+    private val sessionManager = SessionManager(application.sessionDataStore)
 
     private val _listState = MutableStateFlow(AdminListUiState<UserDto>())
     val listState: StateFlow<AdminListUiState<UserDto>> = _listState.asStateFlow()
@@ -47,14 +52,30 @@ class AdminUsersViewModel : ViewModel() {
 
     fun deleteUser(id: Int, onSuccess: () -> Unit) {
         viewModelScope.launch {
+            val session = sessionManager.sessionFlow.first()
+            val currentUserId = session.userId
+
             repository.deleteUser(id)
                 .onSuccess {
-                    _detailState.update { it.copy(deleted = true) }
-                    loadList()
-                    onSuccess()
+                    // Si el admin se borra a sí mismo, cerramos sesión y NO cargamos lista
+                    if (id == currentUserId) {
+                        sessionManager.clearSession()
+                        onSuccess() // Esto debería disparar la navegación en la UI
+                    } else {
+                        _detailState.update { it.copy(deleted = true) }
+                        loadList()
+                        onSuccess()
+                    }
                 }
                 .onFailure { e ->
-                    _detailState.update { it.copy(error = e.message) }
+                    // Si falla por autorización, probablemente ya no somos admin o sesión expiró
+                    val errorMsg = e.message ?: ""
+                    if (errorMsg.contains("401") || errorMsg.contains("unauthorized", ignoreCase = true)) {
+                        sessionManager.clearSession()
+                        onSuccess()
+                    } else {
+                        _detailState.update { it.copy(error = e.message) }
+                    }
                 }
         }
     }

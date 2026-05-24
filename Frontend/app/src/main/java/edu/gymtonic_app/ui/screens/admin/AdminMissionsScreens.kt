@@ -29,6 +29,7 @@ fun AdminMissionsListScreen(
 ) {
     val strings = LocalStrings.current
     val state by viewModel.listState.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) { viewModel.loadList() }
 
@@ -37,21 +38,29 @@ fun AdminMissionsListScreen(
         onBack = onBack,
         onCreateClick = onCreate
     ) {
-        AdminListContent(
-            isLoading = state.isLoading,
-            error = state.error,
-            emptyMessage = strings.adminEmptyList,
-            itemsCount = state.items.size,
-            onRetry = { viewModel.loadList() }
-        ) {
-            AdminSimpleList(
-                items = state.items,
-                titleFor = { it.missionName },
-                subtitleFor = {
-                    "${missionTypeLabel(it.missionType)} · ${missionObjectiveLabel(it.missionObjective)} · Meta: ${it.missionGoal ?: 0} · ${it.missionPoints} pts"
-                },
-                onItemClick = { onOpenEdit(it.missionId) }
-            )
+        val filteredItems = remember(state.items, searchQuery) {
+            state.items.filter { it.missionName.contains(searchQuery, ignoreCase = true) }
+        }
+
+        Column(Modifier.fillMaxSize()) {
+            AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+
+            AdminListContent(
+                isLoading = state.isLoading,
+                error = state.error,
+                emptyMessage = strings.adminEmptyList,
+                itemsCount = filteredItems.size,
+                onRetry = { viewModel.loadList() }
+            ) {
+                AdminSimpleList(
+                    items = filteredItems,
+                    titleFor = { it.missionName },
+                    subtitleFor = {
+                        "${missionTypeLabel(it.missionType)} · ${missionObjectiveLabel(it.missionObjective)} · Meta: ${it.missionGoal ?: 0} · ${it.missionPoints} pts"
+                    },
+                    onItemClick = { onOpenEdit(it.missionId) }
+                )
+            }
         }
     }
 }

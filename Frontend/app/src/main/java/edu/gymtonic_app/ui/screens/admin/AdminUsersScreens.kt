@@ -61,15 +61,16 @@ fun AdminUsersListScreen(
             }
         }
 
-        AdminListContent(
-            isLoading = state.isLoading,
-            error = state.error,
-            emptyMessage = strings.adminEmptyList,
-            itemsCount = filteredItems.size,
-            onRetry = { viewModel.loadList() }
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+        Column(Modifier.fillMaxSize()) {
+            AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+
+            AdminListContent(
+                isLoading = state.isLoading,
+                error = state.error,
+                emptyMessage = strings.adminEmptyList,
+                itemsCount = filteredItems.size,
+                onRetry = { viewModel.loadList() }
+            ) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(filteredItems) { user ->
                         AdminUserListItem(

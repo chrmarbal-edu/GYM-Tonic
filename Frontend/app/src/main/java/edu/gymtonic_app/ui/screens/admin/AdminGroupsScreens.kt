@@ -36,15 +36,16 @@ fun AdminGroupsListScreen(
             state.items.filter { (it.group_name ?: "").contains(searchQuery, ignoreCase = true) }
         }
 
-        AdminListContent(
-            isLoading = state.isLoading,
-            error = state.error,
-            emptyMessage = strings.adminEmptyList,
-            itemsCount = filteredItems.size,
-            onRetry = { viewModel.loadList() }
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+        Column(Modifier.fillMaxSize()) {
+            AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+
+            AdminListContent(
+                isLoading = state.isLoading,
+                error = state.error,
+                emptyMessage = strings.adminEmptyList,
+                itemsCount = filteredItems.size,
+                onRetry = { viewModel.loadList() }
+            ) {
                 AdminSimpleList(
                     items = filteredItems,
                     titleFor = { it.group_name ?: "Grupo #${it.group_id}" },

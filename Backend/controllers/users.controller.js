@@ -67,7 +67,7 @@ async function assignMissionsByObjective(userId, objective) {
             }
         }
     } catch (err) {
-        console.error("Error inside assignMissionsByObjective:", err)
+        console.log("Error inside assignMissionsByObjective:", err)
         throw err;
     }
 }
@@ -162,9 +162,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
     await userModel.findById(id, async function(err,userFounded){
         if(err){
             next(new AppError(handleSqlError(err), 500))
-        }else{       
-            console.log(userFounded)
-
+        }else{
             // USERNAME
             if(username && username != ""){
                 userFounded.user_username = username
@@ -224,7 +222,9 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             
             // PICTURE
             if (picture === "default") {
-                await deleteResourceFile(userFounded.user_picture)
+                if (userFounded.user_picture && !userFounded.user_picture.startsWith('http')) {
+                    await deleteResourceFile(userFounded.user_picture)
+                }
                 userFounded.user_picture = "images/users/default/user.jpg"
             } else if (req.file) {
                 // Obtenemos la extensión original del archivo (ej: .jpg, .png)
@@ -233,7 +233,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
                 const targetPath = path.join("public", "images", "users", fileName).replace(/\\/g, "/")
                 const newPicturePath = `images/users/${fileName}`
                 
-                if (userFounded.user_picture !== newPicturePath) {
+                if (userFounded.user_picture !== newPicturePath && !userFounded.user_picture.startsWith('http')) {
                     await deleteResourceFile(userFounded.user_picture)
                 }
 
@@ -257,7 +257,7 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
                                 .query("DELETE FROM User_X_Mission WHERE user_x_mission_userid = @userId AND user_x_mission_completed = 0")
                             await assignMissionsByObjective(id, userFounded.user_objective)
                         } catch (assignErr) {
-                            console.error("Error updating user missions on objective change:", assignErr)
+                            console.log("Error updating user missions on objective change:", assignErr)
                         }
                     }
                     // Si el usuario que está modificando datos es el mismo, actualizamos los datos de la sesión
@@ -309,7 +309,7 @@ exports.register = wrapAsync(async function (req, res, next) {
             emailHtml = emailHtml.replace('{{confirmationCode}}', confirmationCode);
             await sendEmail(email, '¡Confirma tu cuenta en GymTonic!', emailHtml);
         } catch (emailError) {
-            console.error("Error al enviar el correo de confirmación:", emailError);
+            console.log("Error al enviar el correo de confirmación:", emailError);
             return next(new AppError("Error al enviar el correo de confirmación. Por favor, inténtalo de nuevo.", 500));
         }
     }
@@ -352,7 +352,7 @@ exports.register = wrapAsync(async function (req, res, next) {
                 try {
                     await assignMissionsByObjective(datosUsuarioCreado.user_id, datosUsuarioCreado.user_objective)
                 } catch (assignErr) {
-                    console.error("Error auto-assigning missions during registration:", assignErr)
+                    console.log("Error auto-assigning missions during registration:", assignErr)
                 }
                 if(req.userLogued && req.userLogued.user_role == 1){
                     const response = { user: datosUsuarioCreado, token: null }
@@ -428,7 +428,7 @@ exports.recoverAccount = wrapAsync(async function (req, res, next) {
                 expiresAt: new Date(Date.now() + 10 * 60 * 1000)
             })
         } catch (emailError) {
-            console.error("Error al enviar email de recuperación:", emailError)
+            console.log("Error al enviar email de recuperación:", emailError)
             return next(new AppError("Error al enviar el correo de recuperación", 500))
         }
     })
@@ -485,7 +485,9 @@ exports.deleteUser = wrapAsync(async function (req, res, next) {
             }
 
             // Eliminar físicamente la foto de perfil si no es la predeterminada
-            await deleteResourceFile(userFounded.user_picture)
+            if (userFounded.user_picture && !userFounded.user_picture.startsWith('http')) {
+                await deleteResourceFile(userFounded.user_picture)
+            }
 
             await userModel.delete(Number(id), function (err, datosUsuarioEliminado) {
                 if (err) {
@@ -770,7 +772,7 @@ exports.completeMissionById = wrapAsync(async function (req,res,next){
                         .query("UPDATE Users SET user_points = @points WHERE user_id = @userId")
                 }
             } catch (pointsErr) {
-                console.error("Error adding points to user on mission completion:", pointsErr)
+                console.log("Error adding points to user on mission completion:", pointsErr)
             }
 
             res.status(200).json(datosUserMissionActualizada)

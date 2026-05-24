@@ -176,26 +176,43 @@ fun Navigation(navController: NavHostController) {
         loginViewModel.resetLoginState()
         googleAuthHelper.signOut(coroutineScope)
         homeViewModel.logout(
-            onError = { message ->
-                showAppToast(snackbarHostState, coroutineScope, message)
+            onLoggedOut = {
+                navController.navigate(Routes.WELCOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
+            },
+            onError = { _ ->
+                // Incluso si falla el logout remoto (p.ej. porque la cuenta ya no existe),
+                // forzamos la salida al inicio tras limpiar la sesión local.
+                navController.navigate(Routes.WELCOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
         )
     }
 
     LaunchedEffect(sessionState.value?.token) {
         val session = sessionState.value ?: return@LaunchedEffect
-        if (session.token != null) return@LaunchedEffect
-
-        val currentRoute = navController.currentDestination?.route ?: return@LaunchedEffect
-        if (currentRoute in authRoutes) return@LaunchedEffect
-
-        loginViewModel.resetLoginState()
-        googleAuthHelper.signOut(coroutineScope)
-        navController.navigate(Routes.WELCOME) {
-            popUpTo(navController.graph.id) {
-                inclusive = true
+        
+        // Si el token es nulo y no estamos en una ruta de autenticación, salida FORZOSA e INMEDIATA
+        if (session.token == null) {
+            val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+            if (currentRoute !in authRoutes && currentRoute.isNotEmpty()) {
+                Log.d("Navigation", "Sesión nula. Limpiando estados y redirigiendo a WELCOME.")
+                
+                // 1. Limpiamos TODOS los ViewModels de autenticación
+                loginViewModel.resetLoginState()
+                registerViewModel.prepareSocialRegistration("", "", "", "")
+                googleAuthHelper.signOut(coroutineScope)
+                
+                // 2. Navegación atómica: borra TODO el historial
+                navController.navigate(Routes.WELCOME) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
-            launchSingleTop = true
         }
     }
 
@@ -677,11 +694,7 @@ fun Navigation(navController: NavHostController) {
                 onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
                 onOpenProfile = onOpenProfileGlobal,
-                onDeleted = {
-                    navController.navigate(Routes.WELCOME) {
-                        popUpTo(navController.graph.id) { inclusive = true }
-                    }
-                }
+                onDeleted = onLogout // Usamos la misma lógica de logout para navegar al inicio
             )
         }
 

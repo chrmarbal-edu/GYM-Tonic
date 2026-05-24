@@ -58,27 +58,28 @@ fun AdminExercisesListScreen(
         onCreateClick = onCreate
     ) {
         val filteredItems = remember(state.items, searchQuery, selectedType) {
-            state.items.filter { 
+            state.items.filter {
                 it.exercise_name.contains(searchQuery, ignoreCase = true) &&
                 (selectedType == null || it.exercise_type == selectedType)
             }
         }
 
-        AdminListContent(
-            isLoading = state.isLoading,
-            error = state.error,
-            emptyMessage = strings.adminEmptyList,
-            itemsCount = filteredItems.size,
-            onRetry = { viewModel.loadList() }
-        ) {
-            Column(Modifier.fillMaxSize()) {
-                AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
-                AdminTypeFilter(
-                    selectedType = selectedType,
-                    onTypeSelected = { selectedType = it },
-                    options = exerciseTypeOptions
-                )
-                LazyColumn(Modifier.weight(1f)) {
+        Column(Modifier.fillMaxSize()) {
+            AdminSearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+            AdminTypeFilter(
+                selectedType = selectedType,
+                onTypeSelected = { selectedType = it },
+                options = exerciseTypeOptions
+            )
+
+            AdminListContent(
+                isLoading = state.isLoading,
+                error = state.error,
+                emptyMessage = strings.adminEmptyList,
+                itemsCount = filteredItems.size,
+                onRetry = { viewModel.loadList() }
+            ) {
+                LazyColumn(Modifier.fillMaxSize()) {
                     items(filteredItems) { exercise ->
                         AdminExerciseListItem(
                             title = exercise.exercise_name,

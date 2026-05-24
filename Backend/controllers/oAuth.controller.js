@@ -51,7 +51,6 @@ exports.googleLogin = wrapAsync(async function(req, res, next) {
             }
         })
     } catch (error) {
-        console.log(error)
         return next(new AppError("Token de Google inválido", 401))
     }
 })

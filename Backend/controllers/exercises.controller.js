@@ -193,7 +193,7 @@ exports.deleteExerciseById = wrapAsync(async function (req, res, next) {
             })
         }).catch(err => {
             // If exercise not found, still proceed with DB delete attempt, but don't try to delete files.
-            console.warn(`Exercise with ID ${id} not found for file deletion check. Error: ${err.message || err}`);
+            console.log(`Exercise with ID ${id} not found for file deletion check. Error: ${err.message || err}`);
             return null;
         });
 

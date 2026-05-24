@@ -149,16 +149,12 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
     const {id} = req.params
     let { name, description, image, points, creator_id } = req.body
 
-    console.log("id", id);
-
     let completeGroup    
    
     /* <================== PARTE 1 ==================> */
     // Espera una promesa de lo que devuelva la función "findById" del modelo. 
     await groupmodel.findById(id, async function(err,objetoDatos){
         if(err){
-            console.log("ERROR UPDATE GROUP SSR");
-
             next(new AppError(handleSqlError(err), 500))
         }else{     
             completeGroup = objetoDatos
@@ -176,8 +172,6 @@ exports.updateGroupCSR = wrapAsync(async function (req,res, next) {
         // Realizamos la redirección en la promesa de la actualización.
         await groupmodel.updateById(id, updateGroup, function(err, datosGrupoActualizado){
             if(err){
-                console.log("ERROR UPDATE BY ID SSR");
-
                 next(new AppError(handleSqlError(err), 500))
             } else{
                 res.status(200).json(datosGrupoActualizado);
