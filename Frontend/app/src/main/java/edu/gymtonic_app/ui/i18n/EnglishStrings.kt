@@ -65,7 +65,12 @@ val EnglishStrings = AppStrings(
         goalLoseWeight = "Weight loss",
         goalBuildMuscle = "Muscle gain",
         goalPerformance = "Performance / Endurance",
-        signUpButton = "SIGN UP"
+        signUpButton = "SIGN UP",
+        invalidHeight = "Height must be between 130 and 230 cm",
+        invalidWeight = "Weight must be between 40 and 200 kg",
+        invalidAge = "You must be between 14 and 100 years old",
+        invalidEmail = "Invalid email",
+        shortPassword = "Password must be at least 6 characters"
     ),
     training = TrainingStrings(
         trainingTitle = "Workouts",

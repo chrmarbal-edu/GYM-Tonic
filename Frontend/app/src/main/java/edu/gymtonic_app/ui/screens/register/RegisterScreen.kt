@@ -73,24 +73,33 @@ fun RegisterScreen(
     var fullNameError by remember { mutableStateOf(false) }
     var usernameError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
+    var emailFormatError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
+    var passwordLengthError by remember { mutableStateOf(false) }
     var confirmPasswordError by remember { mutableStateOf(false) }
     var passwordsMatchError by remember { mutableStateOf(false) }
 
     fun validateForm(): Boolean {
-        fullNameError = fullName.isBlank()
-        usernameError = username.isBlank()
-        emailError = email.isBlank()
-        passwordError = password.isBlank()
-        confirmPasswordError = confirmPassword.isBlank()
-        passwordsMatchError = password != confirmPassword
+        val isFullNameValid = fullName.isNotBlank()
+        val isUsernameValid = username.isNotBlank()
+        val isEmailNotBlank = email.isNotBlank()
+        val isEmailFormatValid = android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        val isPasswordNotBlank = password.isNotBlank()
+        val isPasswordLengthValid = password.length >= 6
+        val isConfirmPasswordNotBlank = confirmPassword.isNotBlank()
+        val doPasswordsMatch = password == confirmPassword
 
-        return !fullNameError &&
-                !usernameError &&
-                !emailError &&
-                !passwordError &&
-                !confirmPasswordError &&
-                !passwordsMatchError
+        fullNameError = !isFullNameValid
+        usernameError = !isUsernameValid
+        emailError = !isEmailNotBlank
+        emailFormatError = isEmailNotBlank && !isEmailFormatValid
+        passwordError = !isPasswordNotBlank
+        passwordLengthError = isPasswordNotBlank && !isPasswordLengthValid
+        confirmPasswordError = !isConfirmPasswordNotBlank
+        passwordsMatchError = isConfirmPasswordNotBlank && !doPasswordsMatch
+
+        return isFullNameValid && isUsernameValid && isEmailNotBlank && isEmailFormatValid &&
+                isPasswordNotBlank && isPasswordLengthValid && isConfirmPasswordNotBlank && doPasswordsMatch
     }
 
     when (val state = registerState) {
@@ -190,10 +199,18 @@ fun RegisterScreen(
                                 UnderlineLabeledField(
                                     label = strings.email,
                                     value = email,
-                                    onValueChange = { email = it; emailError = false },
+                                    onValueChange = { 
+                                        email = it; 
+                                        emailError = false
+                                        emailFormatError = false 
+                                    },
                                     placeholder = "john@gmail.com",
-                                    isError = emailError,
-                                    errorText = strings.requiredField
+                                    isError = emailError || emailFormatError,
+                                    errorText = when {
+                                        emailError -> strings.requiredField
+                                        emailFormatError -> strings.invalidEmail
+                                        else -> null
+                                    }
                                 )
 
                                 Spacer(Modifier.height(22.dp))
@@ -204,11 +221,16 @@ fun RegisterScreen(
                                     onValueChange = {
                                         password = it.trim()
                                         passwordError = false
+                                        passwordLengthError = false
                                         passwordsMatchError = false
                                     },
                                     placeholder = "********",
-                                    isError = passwordError,
-                                    errorText = strings.requiredField,
+                                    isError = passwordError || passwordLengthError,
+                                    errorText = when {
+                                        passwordError -> strings.requiredField
+                                        passwordLengthError -> strings.shortPassword
+                                        else -> null
+                                    },
                                     isPassword = true
                                 )
 

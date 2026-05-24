@@ -105,6 +105,8 @@ fun AccountScreen(
                 var weight by remember(user.userId) { mutableStateOf(user.userWeight.toInt().toString()) }
                 
                 var passwordError by remember { mutableStateOf(false) }
+                var heightError by remember { mutableStateOf(false) }
+                var weightError by remember { mutableStateOf(false) }
 
                 var pictureBitmap by remember { mutableStateOf<Bitmap?>(null) }
                 var pictureUri by remember { mutableStateOf<Uri?>(null) }
@@ -224,15 +226,46 @@ fun AccountScreen(
                                 )
                             }
                             Spacer(Modifier.height(12.dp))
-                            EditableField(label = strings.height, value = height, onValueChange = { height = it }, isNumber = true)
+                            EditableField(
+                                label = strings.height,
+                                value = height,
+                                onValueChange = { 
+                                    height = it
+                                    heightError = false 
+                                },
+                                isNumber = true,
+                                isError = heightError,
+                                errorText = strings.invalidHeight
+                            )
                             Spacer(Modifier.height(12.dp))
-                            EditableField(label = strings.weight, value = weight, onValueChange = { weight = it }, isNumber = true)
+                            EditableField(
+                                label = strings.weight,
+                                value = weight,
+                                onValueChange = { 
+                                    weight = it
+                                    weightError = false 
+                                },
+                                isNumber = true,
+                                isError = weightError,
+                                errorText = strings.invalidWeight
+                            )
                             
                             Spacer(Modifier.height(20.dp))
                             
                             Button(
                                 onClick = {
                                     if (passwordError) return@Button
+
+                                    val hValue = height.replace(',', '.').toDoubleOrNull()
+                                    val wValue = weight.replace(',', '.').toDoubleOrNull()
+
+                                    val isHValid = hValue != null && hValue in 130.0..230.0
+                                    val isWValid = wValue != null && wValue in 40.0..200.0
+
+                                    heightError = !isHValid
+                                    weightError = !isWValid
+
+                                    if (!isHValid || !isWValid) return@Button
                                     
                                     val imgFile = when {
                                         pictureBitmap != null -> createTempFile(context, pictureBitmap!!)
@@ -242,8 +275,8 @@ fun AccountScreen(
                                     viewModel.updateAccount(
                                         username = username,
                                         password = password,
-                                        height = height.toDoubleOrNull(),
-                                        weight = weight.toDoubleOrNull(),
+                                        height = hValue,
+                                        weight = wValue,
                                         pictureFile = imgFile,
                                         isDefaultPicture = isDefaultPicture
                                     )
