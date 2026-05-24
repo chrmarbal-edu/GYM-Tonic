@@ -40,6 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import edu.gymtonic_app.BuildConfig
 import edu.gymtonic_app.core.MediaUtils
+import edu.gymtonic_app.core.ValidationUtils
 import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.components.ToastErrorRetryContent
@@ -90,7 +91,7 @@ fun AccountScreen(
             }
             is AccountUiState.Error -> {
                 ToastErrorRetryContent(
-                    retryLabel = strings.discountsRetry,
+                    retryLabel = strings.retry,
                     onRetry = { viewModel.loadUser() }
                 )
             }
@@ -105,6 +106,7 @@ fun AccountScreen(
                 var weight by remember(user.userId) { mutableStateOf(user.userWeight.toInt().toString()) }
                 
                 var passwordError by remember { mutableStateOf(false) }
+                var passwordWeakError by remember { mutableStateOf(false) }
 
                 var pictureBitmap by remember { mutableStateOf<Bitmap?>(null) }
                 var pictureUri by remember { mutableStateOf<Uri?>(null) }
@@ -206,9 +208,12 @@ fun AccountScreen(
                                     value = password,
                                     onValueChange = {
                                         password = it
+                                        passwordWeakError = it.isNotBlank() && !ValidationUtils.isPasswordStrong(it)
                                         passwordError = confirmPassword.isNotBlank() && it != confirmPassword
                                     },
-                                    isPassword = true
+                                    isPassword = true,
+                                    isError = passwordWeakError,
+                                    errorText = strings.passwordTooWeak
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 EditableField(
@@ -232,7 +237,7 @@ fun AccountScreen(
                             
                             Button(
                                 onClick = {
-                                    if (passwordError) return@Button
+                                    if (passwordError || passwordWeakError) return@Button
                                     
                                     val imgFile = when {
                                         pictureBitmap != null -> createTempFile(context, pictureBitmap!!)
@@ -248,7 +253,7 @@ fun AccountScreen(
                                         isDefaultPicture = isDefaultPicture
                                     )
                                 },
-                                enabled = !passwordError,
+                                enabled = !passwordError && !passwordWeakError,
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = colors.accent)

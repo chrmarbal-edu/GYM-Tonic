@@ -169,7 +169,7 @@ fun FriendsScreen(
                 when {
                     state.isLoading -> CenteredLoader()
                     state.error != null -> ToastErrorRetryContent(
-                        retryLabel = strings.discountsRetry,
+                        retryLabel = strings.retry,
                         onRetry = { viewModel.refresh() }
                     )
                     else -> when (selectedTab) {
@@ -477,7 +477,7 @@ private fun AddFriendDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(strings.discountsClose)
+                Text(strings.close)
             }
         }
     )

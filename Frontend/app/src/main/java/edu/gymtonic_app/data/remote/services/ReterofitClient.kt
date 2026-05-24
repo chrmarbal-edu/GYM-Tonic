@@ -66,8 +66,10 @@ object RetrofitClient {
         val isFacebookLogin = url.contains("auth/facebookLogin") && originalRequest.method == "POST"
         val isRecoverEndpoint = url.contains("users/recover-account") && originalRequest.method == "POST"
         val isChangePasswordEndpoint = url.contains("users/change-password") && originalRequest.method == "POST"
+        val isCheckEndpoint = url.contains("users/check-") && originalRequest.method == "GET"
 
-        val isExcluded = isLoginEndpoint || isRegisterEndpoint || isGoogleLogin || isFacebookLogin || isRecoverEndpoint || isChangePasswordEndpoint
+        val isExcluded = isLoginEndpoint || isRegisterEndpoint || isGoogleLogin || isFacebookLogin || 
+                         isRecoverEndpoint || isChangePasswordEndpoint || isCheckEndpoint
 
         val newRequest = if (!isExcluded && sessionManager != null) {
             try {
@@ -123,6 +125,12 @@ object RetrofitClient {
 }
 
 interface ApiService {
+
+    @GET("users/check-username/{username}")
+    suspend fun checkUsername(@Path("username") username: String): Response<Map<String, Boolean>>
+
+    @GET("users/check-email/{email}")
+    suspend fun checkEmail(@Path("email") email: String): Response<Map<String, Boolean>>
 
     @POST("auth/googleLogin")
     suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<Any>

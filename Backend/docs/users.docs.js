@@ -233,6 +233,62 @@
 
 /**
  * @swagger
+ * /users/check-username/{username}:
+ *   get:
+ *     summary: Comprobar si un nombre de usuario ya existe
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: El nombre de usuario a comprobar
+ *     responses:
+ *       200:
+ *         description: Resultado de la comprobación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   example: true
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
+ * /users/check-email/{email}:
+ *   get:
+ *     summary: Comprobar si un correo electrónico ya existe
+ *     tags: [Usuarios]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: El correo electrónico a comprobar
+ *     responses:
+ *       200:
+ *         description: Resultado de la comprobación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 exists:
+ *                   type: boolean
+ *                   example: false
+ *       500:
+ *         description: Error interno del servidor
+ */
+
+/**
+ * @swagger
  * /users/{id}:
  *   get:
  *     summary: Obtener un usuario por ID

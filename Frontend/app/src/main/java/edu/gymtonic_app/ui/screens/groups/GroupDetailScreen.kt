@@ -125,7 +125,7 @@ fun GroupDetailScreen(
                 is GroupDetailUiState.Error -> {
                     ObserveToastMessage(message = state.message)
                     ToastErrorRetryContent(
-                        retryLabel = strings.discountsRetry,
+                        retryLabel = strings.retry,
                         onRetry = { viewModel.loadGroupDetail(groupId) }
                     )
                 }

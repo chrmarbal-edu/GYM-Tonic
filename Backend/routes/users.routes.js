@@ -29,14 +29,20 @@ router.post("/login", usersController.login)
 // RECOVER ACCOUNT
 router.post("/recover-account", usersController.recoverAccount)
 
-// CHANGE PASSWORD (Unificado)
+// CHANGE PASSWORD
 router.post("/change-password", usersController.changePassword)
 
 // LOGOUT
 router.get("/logout", jwtMW.authenticate, usersController.logout)
 
-// FIND ALL USERS (sanitiza la respuesta para no-admin dentro del controller)
+// FIND ALL USERS
 router.get("/", jwtMW.authenticate, usersController.findAllUsers)
+
+// COMPROBAR SI EXISTE NOMBRE DE USUARIO
+router.get("/check-username/:username", usersController.checkUsernameExists)
+
+// COMPROBAR SI EXISTE EMAIL
+router.get("/check-email/:email", usersController.checkEmailExists)
 
 // #endregion
 

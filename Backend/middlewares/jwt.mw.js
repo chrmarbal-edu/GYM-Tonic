@@ -34,7 +34,7 @@ exports.authenticate = (req, res, next) => {
             }
         })
     } else{
-        next(new AppError("Token no Proveída", 401))
+        next(new AppError("No tienes acceso", 401))
     }
 }
 

@@ -11,6 +11,9 @@ class AuthRepository(
 	private val authRemoteDataSource: AuthRemoteDataSource = AuthRemoteDataSource(),
 	private val userLocalDataSource: UserLocalDataSource? = null
 ) {
+	suspend fun checkUsername(username: String): Boolean = authRemoteDataSource.checkUsername(username)
+	suspend fun checkEmail(email: String): Boolean = authRemoteDataSource.checkEmail(email)
+
 	suspend fun login(request: LoginRequest): LoginResponse {
 		val response = authRemoteDataSource.login(request)
 		response.data?.let { userData ->

@@ -36,23 +36,23 @@ object ErrorManager {
     }
 
     fun parseResponseError(response: Response<*>): String {
-        val errorBody = response.errorBody()?.string()
+        val errorBody = try { response.errorBody()?.string() } catch (e: Exception) { null }
         Log.e("ErrorManager", "Error en respuesta HTTP ${response.code()}: $errorBody")
         
         return try {
             if (!errorBody.isNullOrBlank()) {
                 val jsonObject = gson.fromJson(errorBody, JsonObject::class.java)
-                if (jsonObject.has("message")) {
-                    jsonObject.get("message").asString
-                } else if (jsonObject.has("error")) {
-                    jsonObject.get("error").asString
-                } else {
-                    getDefaultErrorMessage(response.code())
+                when {
+                    jsonObject.has("message") -> jsonObject.get("message").asString
+                    jsonObject.has("msg") -> jsonObject.get("msg").asString
+                    jsonObject.has("error") -> jsonObject.get("error").asString
+                    else -> getDefaultErrorMessage(response.code())
                 }
             } else {
                 getDefaultErrorMessage(response.code())
             }
         } catch (e: Exception) {
+            Log.e("ErrorManager", "Error al parsear el cuerpo del error", e)
             getDefaultErrorMessage(response.code())
         }
     }

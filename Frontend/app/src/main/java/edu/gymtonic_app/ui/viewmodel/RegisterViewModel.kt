@@ -50,6 +50,25 @@ class RegisterViewModel(application: Application): AndroidViewModel(application)
         socialUserData = null
     }
 
+    fun checkAvailability(
+        username: String,
+        email: String,
+        onResult: (usernameExists: Boolean, emailExists: Boolean) -> Unit
+    ) {
+        viewModelScope.launch {
+            _registerState.value = RegisterState.Loading
+            try {
+                val uExists = authRepository.checkUsername(username)
+                val eExists = authRepository.checkEmail(email)
+                _registerState.value = RegisterState.Idle
+                onResult(uExists, eExists)
+            } catch (e: Exception) {
+                _registerState.value = RegisterState.Error(ErrorManager.normalizeError(e))
+                onResult(false, false)
+            }
+        }
+    }
+
     fun register(
         username: String,
         name: String,

@@ -71,7 +71,7 @@ user.updateById = async function (id, updateUser, result) {
                     .query("SELECT 1 FROM Users WHERE user_username = @username AND user_oauth IS NULL AND user_id <> @currentUserId");
 
                 if (usernameCheck.recordset.length > 0) {
-                    return result("El nombre de usuario ya está en uso por otra cuenta tradicional", null);
+                    return result("El nombre de usuario ya está en uso", null);
                 }
             }
         }
@@ -129,7 +129,7 @@ user.create = async function (newUser, result) {
                 .query("SELECT 1 FROM Users WHERE user_username = @username AND user_oauth IS NULL")
 
             if (usernameCheck.recordset.length > 0) {
-                return result("El nombre de usuario ya está en uso por otra cuenta tradicional", null)
+                return result("El nombre de usuario ya está en uso", null)
             }
         }
 
@@ -236,6 +236,34 @@ user.findOAuthUserByEmail = async function (email, result) {
         } else {
             result(null, null)
         }
+    } catch (err) {
+        result(err, null)
+    }
+}
+
+/* <=============================== EXISTS BY USERNAME ===============================> */
+user.existsByUsername = async function (username, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("username", sql.NVarChar, username)
+            .query("SELECT 1 FROM Users WHERE user_username = @username")
+
+        result(null, response.recordset.length > 0)
+    } catch (err) {
+        result(err, null)
+    }
+}
+
+/* <=============================== EXISTS BY EMAIL ===============================> */
+user.existsByEmail = async function (email, result) {
+    try {
+        const pool = await sql.connect(dbConn)
+        const response = await pool.request()
+            .input("email", sql.NVarChar, email)
+            .query("SELECT 1 FROM Users WHERE user_email = @email")
+
+        result(null, response.recordset.length > 0)
     } catch (err) {
         result(err, null)
     }

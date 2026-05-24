@@ -138,7 +138,7 @@ fun GroupsListScreen(
                 is GroupsListUiState.Error -> {
                     ObserveToastMessage(message = state.message)
                     ToastErrorRetryContent(
-                        retryLabel = strings.discountsRetry,
+                        retryLabel = strings.retry,
                         onRetry = { viewModel.loadGroupsList() }
                     )
                 }

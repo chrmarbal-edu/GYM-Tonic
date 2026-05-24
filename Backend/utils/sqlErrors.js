@@ -19,10 +19,10 @@ const handleSqlError = (err) => {
         case 2601: // Unique Index
             if (message.includes("UQ_Users_username")) return "Ese nombre de usuario ya está registrado."
             if (message.includes("UQ_Users_email")) return "Ese correo electrónico ya está en uso."
-            return "Ya existe un registro con estos datos únicos."
+            return "Ya existe un registro con estos datos."
         case 547: // Foreign Key Constraint
             if (message.includes("DELETE")) return "No se puede eliminar porque existen otros datos asociados (como rutinas o miembros)."
-            return "Hubo un error de relación de datos. Verifica que los IDs sean correctos."
+            return "Error de integridad referencial. Verifica que los IDs sean correctos."
         case 8152: // String or binary data would be truncated
             return "Uno de los campos es demasiado largo. Por favor, acorta el texto."
         default:

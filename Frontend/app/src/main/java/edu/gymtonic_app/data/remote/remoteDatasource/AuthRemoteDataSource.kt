@@ -19,6 +19,22 @@ class AuthRemoteDataSource {
     private val tag = AuthRemoteDataSource::class.java.simpleName
     private val api = RetrofitClient.apiService
 
+    suspend fun checkUsername(username: String): Boolean {
+        val response = api.checkUsername(username)
+        if (response.isSuccessful) {
+            return response.body()?.get("exists") ?: false
+        }
+        return false
+    }
+
+    suspend fun checkEmail(email: String): Boolean {
+        val response = api.checkEmail(email)
+        if (response.isSuccessful) {
+            return response.body()?.get("exists") ?: false
+        }
+        return false
+    }
+
     suspend fun login(request: LoginRequest): LoginResponse {
         val response = api.login(request)
         if (response.isSuccessful) {

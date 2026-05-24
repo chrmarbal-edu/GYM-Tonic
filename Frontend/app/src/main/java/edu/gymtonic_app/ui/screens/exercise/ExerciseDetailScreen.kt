@@ -120,7 +120,7 @@ fun ExerciseDetailScreen(
                 onOpenProfile = onOpenProfile
             ) {
                 ToastErrorRetryContent(
-                    retryLabel = strings.discountsRetry,
+                    retryLabel = strings.retry,
                     onRetry = { resolvedViewModel.loadSpecificExercise(exerciseId) }
                 )
             }

@@ -6,15 +6,6 @@ data class CommonStrings(
     val navTraining: String,
     val navChallenges: String,
     val navProfile: String,
-    val homeSlogan: String,
-    val homePresetWorkouts: String,
-    val homeCreateRoutines: String,
-    val homeTechnogym: String,
-    val homeDiscounts: String,
-    val homeChallenges: String,
-    val homeClientArea: String,
-    val homeGroup: String,
-    val homeFriends: String,
     val weekTitle: String,
     val weeklyGoals: String,
     val myCalendar: String,
@@ -22,6 +13,8 @@ data class CommonStrings(
     val achieved: String,
     val completedLabel: String,
     val completeButton: String,
+    val retry: String,
+    val close: String,
     val calendarDayNames: List<String>,
     val calendarMonthNames: List<String>
 )
@@ -53,6 +46,7 @@ data class RegisterStrings(
     val confirmPassword: String,
     val requiredField: String,
     val passwordsNoMatch: String,
+    val passwordTooWeak: String,
     val nextButton: String,
     val alreadyHaveAccount: String,
     val loginLink: String,
@@ -65,7 +59,9 @@ data class RegisterStrings(
     val goalLoseWeight: String,
     val goalBuildMuscle: String,
     val goalPerformance: String,
-    val signUpButton: String
+    val signUpButton: String,
+    val errorUsernameExists: String,
+    val errorEmailExists: String
 )
 
 data class TrainingStrings(
@@ -169,10 +165,6 @@ data class SettingsStrings(
     val settingsThemeSystem: String,
     val settingsThemeLight: String,
     val settingsThemeDark: String,
-    val settingsUnits: String,
-    val settingsWeight: String,
-    val settingsDistance: String,
-    val settingsMiles: String,
     val settingsLanguage: String,
     val settingsAppLanguage: String,
     val settingsLanguageSpanish: String,
@@ -206,26 +198,6 @@ data class AccountStrings(
     val typeDeleteConfirmWord: String,
     val typeDeleteConfirmLabel: String,
     val deleteAccountButton: String
-)
-
-data class DiscountStrings(
-    val discountsTitle: String,
-    val discountsYourPoints: String,
-    val discountsPointsSuffix: String,
-    val discountsLoading: String,
-    val discountsErrorGeneric: String,
-    val discountsRetry: String,
-    val discountsAvailableTitle: String,
-    val discountsTierLabel: (Int) -> String,
-    val discountsRequiredPoints: (Int) -> String,
-    val discountsPointsToUnlock: (Int) -> String,
-    val discountsUnlocked: String,
-    val discountsClaim: String,
-    val discountsCodeTitle: String,
-    val discountsCodeMessage: String,
-    val discountsCopyCode: String,
-    val discountsCodeCopied: String,
-    val discountsClose: String
 )
 
 data class FriendsStrings(
@@ -312,7 +284,6 @@ data class AppStrings(
     val groups: GroupsStrings,
     val settings: SettingsStrings,
     val account: AccountStrings,
-    val discounts: DiscountStrings,
     val friends: FriendsStrings,
     val friendDetail: FriendDetailStrings,
     val admin: AdminStrings
@@ -323,15 +294,6 @@ data class AppStrings(
     val navTraining get() = common.navTraining
     val navChallenges get() = common.navChallenges
     val navProfile get() = common.navProfile
-    val homeSlogan get() = common.homeSlogan
-    val homePresetWorkouts get() = common.homePresetWorkouts
-    val homeCreateRoutines get() = common.homeCreateRoutines
-    val homeTechnogym get() = common.homeTechnogym
-    val homeDiscounts get() = common.homeDiscounts
-    val homeChallenges get() = common.homeChallenges
-    val homeClientArea get() = common.homeClientArea
-    val homeGroup get() = common.homeGroup
-    val homeFriends get() = common.homeFriends
     val weekTitle get() = common.weekTitle
     val weeklyGoals get() = common.weeklyGoals
     val myCalendar get() = common.myCalendar
@@ -339,6 +301,8 @@ data class AppStrings(
     val achieved get() = common.achieved
     val completedLabel get() = common.completedLabel
     val completeButton get() = common.completeButton
+    val retry get() = common.retry
+    val close get() = common.close
     val calendarDayNames get() = common.calendarDayNames
     val calendarMonthNames get() = common.calendarMonthNames
 
@@ -366,6 +330,7 @@ data class AppStrings(
     val confirmPassword get() = register.confirmPassword
     val requiredField get() = register.requiredField
     val passwordsNoMatch get() = register.passwordsNoMatch
+    val passwordTooWeak get() = register.passwordTooWeak
     val nextButton get() = register.nextButton
     val alreadyHaveAccount get() = register.alreadyHaveAccount
     val loginLink get() = register.loginLink
@@ -379,6 +344,8 @@ data class AppStrings(
     val goalBuildMuscle get() = register.goalBuildMuscle
     val goalPerformance get() = register.goalPerformance
     val signUpButton get() = register.signUpButton
+    val errorUsernameExists get() = register.errorUsernameExists
+    val errorEmailExists get() = register.errorEmailExists
 
     val trainingTitle get() = training.trainingTitle
     val trainingEmpty get() = training.trainingEmpty
@@ -474,10 +441,6 @@ data class AppStrings(
     val settingsThemeSystem get() = settings.settingsThemeSystem
     val settingsThemeLight get() = settings.settingsThemeLight
     val settingsThemeDark get() = settings.settingsThemeDark
-    val settingsUnits get() = settings.settingsUnits
-    val settingsWeight get() = settings.settingsWeight
-    val settingsDistance get() = settings.settingsDistance
-    val settingsMiles get() = settings.settingsMiles
     val settingsLanguage get() = settings.settingsLanguage
     val settingsAppLanguage get() = settings.settingsAppLanguage
     val settingsLanguageSpanish get() = settings.settingsLanguageSpanish
@@ -509,24 +472,6 @@ data class AppStrings(
     val typeDeleteConfirmWord get() = account.typeDeleteConfirmWord
     val typeDeleteConfirmLabel get() = account.typeDeleteConfirmLabel
     val deleteAccountButton get() = account.deleteAccountButton
-
-    val discountsTitle get() = discounts.discountsTitle
-    val discountsYourPoints get() = discounts.discountsYourPoints
-    val discountsPointsSuffix get() = discounts.discountsPointsSuffix
-    val discountsLoading get() = discounts.discountsLoading
-    val discountsErrorGeneric get() = discounts.discountsErrorGeneric
-    val discountsRetry get() = discounts.discountsRetry
-    val discountsAvailableTitle get() = discounts.discountsAvailableTitle
-    val discountsTierLabel get() = discounts.discountsTierLabel
-    val discountsRequiredPoints get() = discounts.discountsRequiredPoints
-    val discountsPointsToUnlock get() = discounts.discountsPointsToUnlock
-    val discountsUnlocked get() = discounts.discountsUnlocked
-    val discountsClaim get() = discounts.discountsClaim
-    val discountsCodeTitle get() = discounts.discountsCodeTitle
-    val discountsCodeMessage get() = discounts.discountsCodeMessage
-    val discountsCopyCode get() = discounts.discountsCopyCode
-    val discountsCodeCopied get() = discounts.discountsCodeCopied
-    val discountsClose get() = discounts.discountsClose
 
     val friendsTitle get() = friends.friendsTitle
     val friendsTabFriends get() = friends.friendsTabFriends

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import edu.gymtonic_app.core.UserRoles
+import edu.gymtonic_app.core.ValidationUtils
 import edu.gymtonic_app.ui.navigation.Routes
 import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.viewmodel.RegisterState
@@ -74,21 +75,30 @@ fun RegisterScreen(
     var usernameError by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
+    var passwordWeakError by remember { mutableStateOf(false) }
     var confirmPasswordError by remember { mutableStateOf(false) }
     var passwordsMatchError by remember { mutableStateOf(false) }
+
+    var usernameExistsError by remember { mutableStateOf(false) }
+    var emailExistsError by remember { mutableStateOf(false) }
 
     fun validateForm(): Boolean {
         fullNameError = fullName.isBlank()
         usernameError = username.isBlank()
         emailError = email.isBlank()
         passwordError = password.isBlank()
+        passwordWeakError = password.isNotBlank() && !ValidationUtils.isPasswordStrong(password)
         confirmPasswordError = confirmPassword.isBlank()
         passwordsMatchError = password != confirmPassword
+
+        usernameExistsError = false
+        emailExistsError = false
 
         return !fullNameError &&
                 !usernameError &&
                 !emailError &&
                 !passwordError &&
+                !passwordWeakError &&
                 !confirmPasswordError &&
                 !passwordsMatchError
     }
@@ -179,10 +189,14 @@ fun RegisterScreen(
                                 UnderlineLabeledField(
                                     label = strings.usernameField,
                                     value = username,
-                                    onValueChange = { username = it; usernameError = false },
+                                    onValueChange = { 
+                                        username = it
+                                        usernameError = false
+                                        usernameExistsError = false 
+                                    },
                                     placeholder = "jhonandres_00",
-                                    isError = usernameError,
-                                    errorText = strings.requiredField
+                                    isError = usernameError || usernameExistsError,
+                                    errorText = if (usernameExistsError) strings.errorUsernameExists else strings.requiredField
                                 )
 
                                 Spacer(Modifier.height(18.dp))
@@ -190,10 +204,14 @@ fun RegisterScreen(
                                 UnderlineLabeledField(
                                     label = strings.email,
                                     value = email,
-                                    onValueChange = { email = it; emailError = false },
+                                    onValueChange = { 
+                                        email = it
+                                        emailError = false
+                                        emailExistsError = false 
+                                    },
                                     placeholder = "john@gmail.com",
-                                    isError = emailError,
-                                    errorText = strings.requiredField
+                                    isError = emailError || emailExistsError,
+                                    errorText = if (emailExistsError) strings.errorEmailExists else strings.requiredField
                                 )
 
                                 Spacer(Modifier.height(22.dp))
@@ -204,11 +222,15 @@ fun RegisterScreen(
                                     onValueChange = {
                                         password = it.trim()
                                         passwordError = false
+                                        passwordWeakError = false
                                         passwordsMatchError = false
                                     },
                                     placeholder = "********",
-                                    isError = passwordError,
-                                    errorText = strings.requiredField,
+                                    isError = passwordError || passwordWeakError,
+                                    errorText = when {
+                                        passwordWeakError -> strings.passwordTooWeak
+                                        else -> strings.requiredField
+                                    },
                                     isPassword = true
                                 )
 
@@ -229,7 +251,17 @@ fun RegisterScreen(
                                 Spacer(Modifier.height(28.dp))
 
                                 Button(
-                                    onClick = { if (validateForm()) showStep2 = true },
+                                    onClick = { 
+                                        if (validateForm()) {
+                                            registerViewModel.checkAvailability(username, email) { uExists, eExists ->
+                                                usernameExistsError = uExists
+                                                emailExistsError = eExists
+                                                if (!uExists && !eExists) {
+                                                    showStep2 = true
+                                                }
+                                            }
+                                        }
+                                    },
                                     modifier = Modifier.fillMaxWidth().height(58.dp),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(
@@ -238,12 +270,20 @@ fun RegisterScreen(
                                     ),
                                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                                 ) {
-                                    Text(
-                                        text = strings.nextButton,
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        letterSpacing = 0.8.sp
-                                    )
+                                    if (registerState is RegisterState.Loading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            strokeWidth = 2.dp,
+                                            color = Color.White
+                                        )
+                                    } else {
+                                        Text(
+                                            text = strings.nextButton,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 0.8.sp
+                                        )
+                                    }
                                 }
 
                                 Spacer(Modifier.height(24.dp))

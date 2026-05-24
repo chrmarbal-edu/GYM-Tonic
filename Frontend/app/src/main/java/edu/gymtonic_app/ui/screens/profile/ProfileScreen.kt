@@ -143,7 +143,7 @@ fun ProfileScreen(
 
                 is ProfileUiState.Error -> {
                     ToastErrorRetryContent(
-                        retryLabel = strings.discountsRetry,
+                        retryLabel = strings.retry,
                         onRetry = { viewModel.loadProfile() }
                     )
                 }

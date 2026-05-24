@@ -84,31 +84,6 @@ fun SettingsScreen(
             }
 
             item {
-                AccountSectionCard(title = strings.settingsUnits) {
-                    var weightUnit by remember { mutableStateOf("kg") }
-                    val weightOptions = listOf("kg", "lbs")
-
-                    SettingsOptionRow(
-                        label = strings.settingsWeight,
-                        currentValue = weightUnit,
-                        options = weightOptions,
-                        selectOption = strings.settingsSelectOption,
-                        onOptionSelected = { weightUnit = it }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    var distanceUnit by remember { mutableStateOf("km") }
-                    val distanceOptions = listOf("km", strings.settingsMiles)
-                    SettingsOptionRow(
-                        label = strings.settingsDistance,
-                        currentValue = distanceUnit,
-                        options = distanceOptions,
-                        selectOption = strings.settingsSelectOption,
-                        onOptionSelected = { distanceUnit = it }
-                    )
-                }
-            }
-
-            item {
                 AccountSectionCard(title = strings.settingsLanguage) {
                     val selectedLanguage = if (currentLanguage == AppLanguage.SPANISH)
                         strings.settingsLanguageSpanish

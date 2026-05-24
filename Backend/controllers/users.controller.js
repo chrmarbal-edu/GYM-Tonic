@@ -201,12 +201,18 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             }
 
             // WEIGHT
-            if(weight && weight > 40 && weight < 200){
+            if (weight !== undefined && weight !== "") {
+                if (weight < 40 || weight > 200) {
+                    return next(new AppError("El peso debe estar entre 40 y 200 kg", 400))
+                }
                 userFounded.user_weight = weight
             }
 
             // HEIGHT
-            if(height && height > 130 && height < 230){
+            if (height !== undefined && height !== "") {
+                if (height < 130 || height > 230) {
+                    return next(new AppError("La altura debe estar entre 130 y 230 cm", 400))
+                }
                 userFounded.user_height = height
             }
 
@@ -293,6 +299,27 @@ exports.register = wrapAsync(async function (req, res, next) {
         } else if(!password.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
             return next(new AppError("La contraseña debe tener al menos un carácter especial",400))
         }
+    }
+
+    // VALIDACIÓN DE ALTURA
+    if (height < 130 || height > 230) {
+        return next(new AppError("La altura debe estar entre 130 y 230 cm", 400))
+    }
+
+    // VALIDACIÓN DE PESO
+    if (weight < 40 || weight > 200) {
+        return next(new AppError("El peso debe estar entre 40 y 200 kg", 400))
+    }
+
+    // VALIDACIÓN DE EDAD (Mínimo 14 años)
+    const birth = new Date(birthdate)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    if (today < new Date(today.getFullYear(), birth.getMonth(), birth.getDate())) {
+        age--
+    }
+    if (age < 14) {
+        return next(new AppError("Debes tener al menos 14 años para registrarte", 400))
     }
     
     let confirmationCode = null;
@@ -537,6 +564,24 @@ exports.login = wrapAsync(async(req, res, next) => {
 /* <=============================== LOGOUT ===============================> */
 exports.logout = wrapAsync(async(req,res,next) => {
     res.status(200).json({msg: "Token Eliminado y Sesión Destruida"})
+})
+
+/* <=============================== CHECK USERNAME EXISTS ===============================> */
+exports.checkUsernameExists = wrapAsync(async function (req, res, next) {
+    const { username } = req.params
+    await userModel.existsByUsername(username, function(err, exists) {
+        if (err) return next(new AppError(handleSqlError(err), 500))
+        res.status(200).json({ exists })
+    })
+})
+
+/* <=============================== CHECK EMAIL EXISTS ===============================> */
+exports.checkEmailExists = wrapAsync(async function (req, res, next) {
+    const { email } = req.params
+    await userModel.existsByEmail(email, function(err, exists) {
+        if (err) return next(new AppError(handleSqlError(err), 500))
+        res.status(200).json({ exists })
+    })
 })
 
 // #endregion

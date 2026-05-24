@@ -262,7 +262,7 @@ fun RoutineCatalogScreen(
                 ) {
                     ObserveToastMessage(message = state.message)
                     ToastErrorRetryContent(
-                        retryLabel = strings.discountsRetry,
+                        retryLabel = strings.retry,
                         onRetry = { viewModel.loadRoutine(routineId, isLocal) }
                     )
                 }
