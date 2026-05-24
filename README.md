@@ -1,799 +1,350 @@
-# GYM-Tonic
+# GYM Tonic 🏋️‍♂️
 
-Documentación técnica integral del proyecto.
-
-Fecha de actualización de esta documentación: **2026-04-28**
-
-## 1) Resumen del proyecto
-
-GYM-Tonic está dividido en dos grandes módulos:
-
-- `Backend/`: API REST en Node.js + Express + SQL Server (`mssql`).
-- `Frontend/`: app Android en Kotlin + Jetpack Compose + Retrofit + Room.
-
-La arquitectura funcional actual del frontend usa enfoque **remote-first con fallback local/mock** en varios casos (especialmente rutinas, training, retos semanales y grupos).
+GYM Tonic es una plataforma integral de fitness diseñada para gestionar rutinas de entrenamiento, ejercicios, retos semanales y comunidades de usuarios a través de una aplicación móvil robusta y un backend escalable.
 
 ---
 
-## 2) Directiva de endpoints acordada (estado actual)
+## 1) Descripción del proyecto
+GYM Tonic permite a los usuarios llevar un control exhaustivo de su actividad física. El sistema está diseñado bajo un enfoque **remote-first**, lo que significa que prioriza la sincronización con la nube pero mantiene capacidades de funcionamiento local mediante mocks y base de datos interna (Room).
 
-Directiva acordada para consumo frontend:
-
-1. `POST users/login`
-2. `POST users`
-3. `GET users/logout`
-4. `GET routines/routines`
-5. `GET routines/routine/{id}`
-
-Estado en código (cumplimiento):
-
-- Backend expone rutas `users` y `routines` bajo `/api/${API_VERSION}`.
-- Frontend consume exactamente esos paths en `ApiService`.
-- Frontend inyecta `Authorization: Bearer <token>` en endpoints protegidos y excluye login/register.
-- `RegisterResponse` soporta dos formas de respuesta (`user` y `data`).
-- DTOs de rutinas adaptados a `snake_case` (`routine_id`, `routine_name`, `exercise_id`, `image_key`).
-
-Nota:
-
-- Aunque esta directiva está integrada, existen otras áreas del backend con deuda técnica y rutas inconsistentes fuera de esta directiva (detalladas en sección de riesgos).
+**Funcionalidades principales:**
+- Gestión y visualización de rutinas de entrenamiento personalizadas.
+- Catálogo detallado de ejercicios con soporte para vídeo (ExoPlayer).
+- Sistema de misiones y retos semanales para fomentar la gamificación.
+- Gestión de grupos y amigos para fomentar la comunidad.
+- Autenticación segura y gestión de perfiles.
 
 ---
 
-## 3) Estructura global de paquetes/carpetas
+## 2) Tecnologías utilizadas
+
+### **Backend**
+- **Entorno:** Node.js + Express.
+- **Base de Datos:** SQL Server (`mssql`).
+- **Seguridad:** JWT (JSON Web Tokens) para sesiones y `bcrypt` para hash de contraseñas.
+- **Documentación:** Swagger (OpenAPI 3.0).
+- **Logs:** Log4js y Morgan.
+- **Correo:** Nodemailer.
+
+### **Frontend**
+- **Lenguaje:** Kotlin + Jetpack Compose.
+- **Arquitectura:** MVVM (Model-View-ViewModel).
+- **Red:** Retrofit 2 + Gson.
+- **Base de Datos Local:** Room.
+- **Persistencia de Sesión:** DataStore (Preferences).
+- **Multimedia:** Coil (imágenes) y Media3/ExoPlayer (vídeos).
+- **Autenticación:** Google Sign-In & Facebook Login.
+
+---
+
+## 3) Arquitectura general del sistema
+
+El proyecto está diseñado bajo una arquitectura de **Sistemas Distribuidos** con un desacoplamiento total entre el cliente (Android) y el servidor (Node.js), siguiendo un enfoque **Remote-First**.
+
+### **Estructura Conceptual**
+
+```mermaid
+graph TD
+    subgraph "Frontend (Android App)"
+        UI[Capa UI: Jetpack Compose] --> VM[ViewModels]
+        VM --> Repo[Repository Mediador]
+        Repo --> Room[(DB Local: Room)]
+        Repo --> Retrofit[Retrofit 2 / API Client]
+    end
+
+    subgraph "Comunicación"
+        Retrofit <-->|HTTPS / JSON / JWT| API[API REST Node.js]
+    end
+
+    subgraph "Backend (Node.js Server)"
+        API --> Routes[Rutas Express]
+        Routes --> Middlewares[Middlewares: Auth & Logs]
+        Middlewares --> Controllers[Controladores]
+        Controllers --> Models[Modelos SQL]
+    end
+
+    subgraph "Persistencia"
+        Models <--> DB[(SQL Server)]
+    end
+```
+
+### **3.1) Arquitectura del Frontend**
+La aplicación móvil implementa el patrón **MVVM (Model-View-ViewModel)** junto con principios de **Clean Architecture**:
+-   **Capa de Presentación:** Desarrollada con Jetpack Compose. Los ViewModels gestionan el estado de la UI y la lógica de interacción.
+-   **Capa de Datos (Repository):** Actúa como *Single Source of Truth*. Gestiona la lógica de sincronización, decidiendo cuándo servir datos de la caché local (**Room**) o realizar una petición remota (**Retrofit 2**).
+-   **Persistencia Local:** Garantiza que la aplicación sea funcional en entornos con conectividad limitada (offline-ready).
+
+### **3.2) Arquitectura del Backend**
+El servidor utiliza el framework **Express** estructurado de forma modular:
+-   **Enrutamiento:** Endpoints versionados (`/api/v1/`) organizados por recursos.
+-   **Seguridad:** Implementación de JWT para la protección de rutas y `bcrypt` para el manejo de credenciales.
+-   **Controladores y Modelos:** Separación clara entre la orquestación de peticiones y el acceso directo a la base de datos **SQL Server**.
+-   **Logs y Errores:** Sistema centralizado de trazabilidad mediante Morgan y Log4js.
+
+---
+
+## 4) Requisitos previos
+
+Para poner en marcha el proyecto, es necesario disponer del siguiente software:
+
+- **Base de Datos:**
+  - **SQL Server Express:** Motor de base de datos.
+  - **SQL Server Management Studio (SSMS):** Interfaz para la gestión de la base de datos.
+- **Backend:**
+  - **Node.js** (v18 o superior).
+- **Frontend:**
+  - **Android Studio** (Ladybug 2024.2.1 o superior).
+  - **JDK 11** o superior.
+- **General:**
+  - **Git** para el control de versiones.
+
+---
+
+## 5) Instalación y Configuración
+
+### **5.1) Configuración de SQL Server**
+Para que el backend pueda comunicarse con SQL Server Express, siga estos pasos críticos:
+
+1.  **Habilitar Protocolos de Red:**
+    - Abra el **Administrador de configuración de SQL Server** (SQL Server Configuration Manager).
+    - Navegue a **Configuración de red de SQL Server** > **Protocolos de SQLEXPRESS**.
+    - Haga clic derecho en **TCP/IP** y seleccione **Habilitar**.
+2.  **Configurar Direcciones IP y Puertos:**
+    - Haga clic derecho en **TCP/IP** y vaya a **Propiedades**.
+    - En la pestaña **Direcciones IP**:
+      - Busque la dirección **127.0.0.1** (Localhost) y cambie **Habilitado** a **Sí**.
+      - Vaya al final de la lista, a la sección **IPAll**.
+      - Establezca **Puerto TCP** como `1433`.
+      - Borre cualquier valor en **Puertos TCP dinámicos** (déjelo vacío).
+3.  **Reiniciar el Servicio:**
+    - En la misma ventana, vaya a **Servicios de SQL Server**.
+    - Haga clic derecho en **SQL Server (SQLEXPRESS)** y seleccione **Reiniciar**.
+4.  **Habilitar Autenticación Mixta:**
+    - Abra **SQL Server Management Studio (SSMS)**.
+    - Conéctese al servidor `localhost\SQLEXPRESS` mediante **Autenticación de Windows**.
+    - Haga clic derecho sobre la conexión del servidor en el Explorador de objetos y seleccione **Propiedades**.
+    - En la sección **Seguridad**, seleccione la opción **Modo de autenticación de Windows y SQL Server**.
+    - Acepte los cambios y vuelva a **Reiniciar el servicio** de SQL Server por última vez.
+
+### **5.2) Preparación del Backend**
+1. Acceder a la carpeta `Backend/`.
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
+3. Configure el archivo `.env` con las credenciales de SQL Server (vea sección 8).
+4. Ejecute los scripts SQL ubicados en `Backend/scripts/` para crear las tablas y datos base.
+
+### **5.3) Preparación del Frontend**
+1. Abra la carpeta `Frontend/` en Android Studio.
+2. Sincronice el proyecto con los archivos Gradle.
+3. Configure el archivo `local.properties` con las URLs del backend (vea sección 8).
+
+
+---
+
+## 6) Ejecución
+
+### **6.1) Backend**
+Para iniciar el servidor en modo desarrollo:
+```bash
+node index.js
+```
+El servidor escuchará por defecto en el puerto `3010`.
+
+### **6.2) Frontend (Android)**
+Puede ejecutar la aplicación de dos formas:
+
+1.  **Emulador:** Inicie un dispositivo virtual desde el Device Manager de Android Studio.
+2.  **Dispositivo Físico:**
+    - Active las **Opciones de desarrollador** en su móvil (Ajustes > Información del teléfono > pulsar 7 veces en "Número de compilación").
+    - Habilite la **Depuración USB** en el menú de opciones de desarrollador.
+    - Conecte el móvil al PC mediante cable USB.
+    - Seleccione su dispositivo en la barra superior de Android Studio y pulse **Run**.
+    - *Nota:* Asegúrese de que el móvil y el PC estén en la misma red si utiliza la IP local del PC en `local.properties`.
+
+
+---
+
+## 7) Estructura del repositorio
 
 ```text
-GYM-Tonic/
+GYM Tonic/
 ├─ Backend/
-│  ├─ index.js
-│  ├─ controllers/
-│  ├─ routes/
-│  ├─ middlewares/
-│  ├─ models/
-│  ├─ utils/
-│  └─ scripts/
+│  ├─ controllers/         # Lógica de los endpoints
+│  ├─ routes/              # Definición de rutas Express
+│  ├─ middlewares/         # Auth, error handling, logs
+│  ├─ models/              # Consultas SQL Server (DAO)
+│  ├─ utils/               # Configuración (DB, JWT, Logger)
+│  ├─ scripts/             # Scripts SQL (.sql y .md)
+│  └─ public/              # Recursos estáticos (imágenes/vídeos)
 └─ Frontend/
    └─ app/src/main/java/edu/gymtonic_app/
-      ├─ MainActivity.kt
-      ├─ data/
-      │  ├─ remote/
-      │  │  ├─ services/
-      │  │  ├─ datasource/
-      │  │  └─ model/
-      │  ├─ repository/
-      │  └─ local/
-      │     ├─ GymTonicDatabase.kt
-      │     ├─ dao/
-      │     ├─ localModel/
-      │     └─ datasource/local/
-      └─ ui/
-         ├─ navigation/
-         ├─ viewmodel/
-         ├─ screens/
-         ├─ components/
-         └─ theme/
+      ├─ data/             # Capa de Datos (Clean Architecture)
+      │  ├─ remote/        # API, DTOs y Fuentes Remotas (Retrofit)
+      │  ├─ local/         # Room DB, Entidades y DAOs
+      │  └─ repository/    # Implementación de repositorios (Single Source of Truth)
+      ├─ ui/               # Capa de Presentación
+      │  ├─ screens/       # Pantallas de la aplicación (Compose)
+      │  ├─ viewmodel/     # Lógica de estado y UI
+      │  ├─ navigation/    # Rutas y grafos de navegación
+      │  ├─ components/    # Componentes Compose reutilizables
+      │  └─ theme/         # Sistema de diseño (Color, Type, Theme)
+      └─ MainActivity.kt   # Punto de entrada y host de navegación
 ```
 
 ---
 
-## 4) Backend documentado (módulo por módulo)
-
-## 4.1 Archivo raíz
-
-### `Backend/index.js`
-
-Responsabilidad:
-
-- Configura Express.
-- Carga middlewares globales (`urlencoded`, `json`, `method-override`, static).
-- Monta rutas por versión de API.
-- Registra `errorHandler`.
-- Arranca servidor.
-
-Montajes relevantes:
-
-- `/api/${API_VERSION}/users`
-- `/api/${API_VERSION}/missions`
-- `/api/${API_VERSION}/routines`
-- `/api/${API_VERSION}/groups`
-- `/api/${API_VERSION}/exercises`
-- `friendsRoutes` está montado actualmente también bajo `/api/${API_VERSION}/exercises` (inconsistencia).
-
-## 4.2 Middlewares
-
-### `Backend/middlewares/jwt.mw.js`
-
-Funciones:
-
-- `authenticate(req,res,next)`: valida JWT en `Authorization: Bearer` o `query.token`; adjunta `req.userLogued`.
-- `createJWT(req,res,next,userData)`: genera token con expiración de 2 días.
-
-### `Backend/middlewares/rutasProtegidas.mw.js`
-
-Funciones:
-
-- `requireAdmin(req,res,next)`: autoriza solo `user_role == 1`.
-
-### `Backend/middlewares/errorHandler.mw.js`
-
-Funciones:
-
-- `errorHandler(err,req,res,next)`: normaliza error, loguea y responde status + mensaje.
-
-## 4.3 Utilidades
-
-### `Backend/utils/AppError.js`
-
-Clase:
-
-- `AppError extends Error`: encapsula `{ error: message }` + `status`.
-
-### `Backend/utils/bcrypt.js`
-
-Funciones:
-
-- `hashPassword`: hash bcrypt (cost 12).
-- `compareLogin`: compara password plana vs hash.
-
-### `Backend/utils/mssql.config.js`
-
-Responsabilidad:
-
-- Exporta configuración SQL Server desde variables de entorno.
-
-### `Backend/utils/logger.js`
-
-Responsabilidad:
-
-- Configuración log4js para access/error logs en `Backend/temp/`.
-
-## 4.4 Rutas y controladores (capas HTTP)
-
-### `Backend/routes/users.routes.js` + `Backend/controllers/users.controller.js`
-
-Endpoints:
-
-1. `GET /users/` (admin)
-2. `POST /users/` (register)
-3. `PATCH /users/:id`
-4. `DELETE /users/:id`
-5. `POST /users/login`
-6. `GET /users/logout`
-7. `GET /users/:id` (admin)
-
-Responsabilidad del controlador:
-
-- CRUD de usuarios.
-- Validaciones de contraseña en register/update.
-- Login + emisión JWT.
-- Logout lógico (respuesta de sesión cerrada).
-
-### `Backend/routes/routines.routes.js` + `Backend/controllers/routines.controller.js`
-
-Endpoints:
-
-1. `GET /routines/routines`
-2. `GET /routines/routine/:id`
-3. `PATCH /routines/routine/:id` (admin)
-4. `DELETE /routines/routine/:id` (admin)
-5. `POST /routines/routine/new` (admin)
-
-Responsabilidad del controlador:
-
-- Listado, detalle y mantenimiento de rutinas.
-- Uso de `routines.model.js`.
-
-### `Backend/routes/missions.routes.js` + `Backend/controllers/missions.controller.js`
-
-Endpoints:
-
-1. `GET /missions/`
-2. `GET /missions/:id`
-3. `PATCH /missions/:id` (admin)
-4. `DELETE /missions/:id` (admin)
-5. `POST /missions/new` (admin)
-
-Responsabilidad:
-
-- Operaciones CRUD de misiones.
-
-### `Backend/routes/groups.routes.js` + `Backend/controllers/groups.controller.js`
-
-Endpoints:
-
-1. `GET /groups/`
-2. `GET /groups/:id`
-3. `PATCH /groups/:id` (admin)
-4. `DELETE /groups/:id` (admin)
-5. `POST /groups/new` (admin)
-
-Responsabilidad:
-
-- Operaciones CRUD de grupos.
-
-### `Backend/routes/exercises.routes.js` + `Backend/controllers/exercises.controller.js`
-
-Endpoints:
-
-1. `GET /exercises/`
-2. `POST /exercises/` (admin)
-3. `PATCH /exercises/:id` (admin)
-4. `DELETE /exercises/:id` (admin)
-5. `GET /exercises/:id`
-
-Responsabilidad:
-
-- CRUD de ejercicios y validaciones básicas.
-
-### `Backend/routes/friends.routes.js` + `Backend/controllers/friends.controller.js`
-
-Endpoints declarados:
-
-1. `GET /friends/` (admin)
-2. `POST /friends/` (admin)
-3. `DELETE /friends/:id`
-4. `GET /friends/user/:userId`
-5. `GET /friends/:id` (admin)
-
-Estado real:
-
-- El router existe, pero en `index.js` está montado bajo prefijo `exercises`, no `friends`.
-- Hay inconsistencias de orden de middlewares y de parámetro (`userId` vs `id`) en controlador.
-
-### `Backend/controllers/friendRequests.controller.js`
-
-Estado:
-
-- Archivo presente pero **sin implementación funcional**.
-
-## 4.5 Modelos de datos (`Backend/models`)
-
-Modelos principales activos:
-
-- `users.model.js`: tabla `Users`.
-- `routines.model.js`: tabla `Routines`.
-- `missions.model.js`: tabla `Missions`.
-- `groups.model.js`: tabla `Groups`.
-- `exercises.model.js`: tabla `Exercises`.
-- `friends.model.js`: tabla `Friends`.
-
-Modelos de relaciones/auxiliares:
-
-- `friendRequests.model.js`
-- `groupUsers.model.js`
-- `routineExercises.model.js`
-- `userMissions.model.js`
-- `userRoutines.model.js`
-
-Observaciones de funcionamiento:
-
-- En varios modelos hay métodos `create` incompletos (se construye SQL pero no se ejecuta query final).
-- En varios modelos auxiliares se exporta `routine` en vez de la entidad real.
-- Existen referencias a variables no definidas (`id`) en create de distintos modelos.
-
-## 4.6 Scripts SQL
-
-- `Backend/scripts/GymTonic_Parte1.sql`
-- `Backend/scripts/GymTonic_Parte2.sql`
-
-Responsabilidad:
-
-- Definición/carga de estructura de base de datos del proyecto.
+## 8) Configuración
+
+### **Backend (.env)**
+Es necesario crear un archivo `.env` en la raíz de `Backend/` con los siguientes parámetros:
+```env
+# PUERTO BACKEND
+PUERTO = 3010
+
+# VERSIÓN API
+API_VERSION = "v1"
+
+# HOST SQL SERVER
+MSSQL_HOST = "localhost"
+
+# USUARIO BASE DE DATOS SQL SERVER
+MSSQL_USER = "gymtonic"
+
+# CONTRASEÑA BASE DE DATOS SQL SERVER
+MSSQL_PASS = "gintonic"
+
+# BASE DE DATOS SQL SERVER
+MSSQL_DATABASE = "GymTonic"
+
+# SECRETO COOKIE DE SESIÓN
+SECRET_SESSION = "7LiiJxqtUVQEUz24AOiS2B9dE2DGwAIQBM7cjr8ArGsx3JG9B7Uodoafkc++DfIOI9FAQ3LGICRDe09UlReEww"
+
+# SECRETO JWT
+SECRET_JWT = "uRudkQgDC8xGNgN+GikUfiKR+bdS4XQcc8cX2e4p8X70VEM2CetPHzDTt1c3WS0e+zrDmiIyeabH3LPFLhLexb15XoyOYz138n6BQRU//xQ"
+
+# OAUTH GOOGLE
+GOOGLE_CLIENT_ID = "540170886214-i4jekcbvenkqn7odf6hlmgs91h3hqqhn.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+
+# CREDENCIALES EMAIL NODEMAILER
+EMAIL_USER = "gymtonic.dam2026@gmail.com"
+GOOGLE_APP_PASSWORD = "bwxu mpiu exlz czpt"
+```
+
+### **Frontend (local.properties)**
+Añadir las siguientes variables para apuntar al backend:
+```properties
+API_BASE_URL=http://{IP_BACKEND}:3010/api/v1/ # SOLO SI SE EJECUTA LA APP DESDE DISPOSITIVO FÍSICO
+BACKEND_BASE_URL = http://{IP_BACKEND}:3010/ # SOLO SI SE EJECUTA LA APP DESDE DISPOSITIVO FÍSICO
+GOOGLE_WEB_CLIENT_ID = 540170886214-i4jekcbvenkqn7odf6hlmgs91h3hqqhn.apps.googleusercontent.com
+FACEBOOK_APP_ID = 987554447067490
+FACEBOOK_CLIENT_TOKEN = 89a8abce6966629ffdaedc2458b384f3
+```
 
 ---
 
-## 5) Frontend documentado (paquete por paquete)
+## 9) Uso del sistema
 
-## 5.1 Arranque de app
+La aplicación está diseñada para ofrecer una experiencia fluida centrada en el progreso del usuario. A continuación se detallan los flujos principales:
 
-### `MainActivity.kt`
+### **9.1) Acceso y Personalización**
+- **Autenticación Multimodal:** El usuario puede registrarse de forma tradicional o utilizar **Google Sign-In / Facebook Login** para un acceso rápido y seguro.
+- **Configuración de Perfil:** Durante el registro o desde el perfil, se pueden gestionar datos como peso, altura y nombre de usuario.
 
-Responsabilidad:
+### **9.2) Entrenamiento y Rutinas**
+- **Explorador de Rutinas:** Acceso a un catálogo de rutinas categorizadas por tipo de entrenamiento (Cardio, Fuerza, Tren Superior, etc.).
+- **Detalle Técnico y Multimedia:** Cada rutina desglosa los ejercicios necesarios, series y repeticiones. Al entrar en un ejercicio, el usuario puede ver un **vídeo demostrativo** y una descripción técnica para asegurar la ejecución correcta.
+- **Gestión de Rutinas:** Los usuarios pueden visualizar tanto rutinas públicas diseñadas por profesionales como rutinas personales.
 
-- Entry point de la app Compose.
-- Inicializa `SessionManager` y lo inyecta en `RetrofitClient.setSessionManager(...)`.
-- Renderiza navegación principal.
+### **9.3) Gamificación y Retos (Misiones)**
+- **Misiones Dinámicas:** El sistema propone retos semanales para fomentar la constancia (ej. "Realiza 3 entrenamientos esta semana").
+- **Seguimiento de Progreso:** Los usuarios pueden visualizar el estado de sus misiones y recibir recompensas visuales al completarlas, integrando mecánicas de juego en la rutina diaria.
 
-## 5.2 Capa `data.remote.services`
+### **9.4) Comunidad y Social**
+- **Grupos de Entrenamiento:** Los usuarios pueden crear o unirse a comunidades (grupos) para compartir rutinas específicas y ver los miembros activos.
+- **Red de Amigos:** Búsqueda activa de otros usuarios para enviar solicitudes de amistad, permitiendo ver sus perfiles públicos y fomentar el entrenamiento social.
 
-### `ReterofitClient.kt`
-
-Clases:
-
-- `object RetrofitClient`
-- `interface ApiService`
-
-Funcionamiento:
-
-- Construye Retrofit con `BASE_URL` desde `BuildConfig`.
-- Añade interceptor de auth:
-  - Inyecta `Authorization: Bearer <token>` cuando hay token.
-  - Excluye `POST users/login` y `POST users`.
-- Define endpoints API consumidos por frontend:
-  - `POST users/login`
-  - `POST users`
-  - `GET users/logout`
-  - `GET routines/routines`
-  - `GET routines/routine/{routineId}`
-
-### `SessionManager.kt` (en `data/remote/services`)
-
-Estado:
-
-- Archivo **placeholder vacío** (solo package).
-
-### `GymTonicApiService.kt`
-
-Estado:
-
-- Archivo **placeholder vacío** (solo package).
-
-## 5.3 Capa `data.remote.datasource`
-
-### `AuthRemoteDataSource.kt`
-
-Clase:
-
-- `AuthRemoteDataSource`
-
-Funcionamiento:
-
-- Llama a login/register/logout vía Retrofit.
-- Maneja éxito/error HTTP y lanza excepciones con logs.
-
-### `RoutineRemoteDataSource.kt`
-
-Clase:
-
-- `RoutineRemoteDataSource`
-
-Funcionamiento:
-
-- Mantiene catálogo mock local (`mockRoutineDetails`).
-- `getRoutinesFromApi()` y `getRoutineByIdFromApi()` hacen remote-first con fallback a mock.
-
-### `TrainingRemoteDataSource.kt`
-
-Clase:
-
-- `TrainingRemoteDataSource`
-
-Funcionamiento:
-
-- Devuelve categorías de entrenamiento mock.
-
-### `WeekRemoteDataSource.kt`
-
-Clase:
-
-- `WeekRemoteDataSource`
-
-Funcionamiento:
-
-- Devuelve objetivos semanales y calendario mock.
-
-### `ExerciseRemoteDataSource.kt`
-
-Clase:
-
-- `ExerciseRemoteDataSource`
-
-Funcionamiento:
-
-- Devuelve detalle de ejercicios mock.
-
-### `GroupRemoteDataSource.kt`
-
-Clase:
-
-- `GroupRemoteDataSource`
-
-Funcionamiento:
-
-- Devuelve grupos mock (lista reducida si no hay sesión).
-
-## 5.4 Capa `data.remote.model`
-
-## 5.4.1 Auth
-
-### `LoginUser.kt`
-
-Data classes:
-
-- `LoginRequest`
-- `LoginResponse`
-- `Data`
-
-Uso:
-
-- Modelo principal usado hoy para login real.
-
-### `SessionManager.kt` (en `data/remote/model/auth`)
-
-Clase:
-
-- `SessionManager`
-
-Funcionamiento:
-
-- DataStore de sesión (`token`, `userId`, `username`, `email`, `role`).
-- API de guardado, lectura (`sessionFlow`) y limpieza.
-
-### `LoginRequest.kt` y `LoginResponse.kt`
-
-Estado:
-
-- Archivos **placeholder vacíos** (solo package).
-
-## 5.4.2 User
-
-### `UserDto.kt`
-
-Data classes:
-
-- `UserDto`
-- `RegisterRequest`
-- `RegisterResponse`
-
-Detalle funcional:
-
-- `RegisterResponse` soporta forma dual:
-  - `{ user: ... }`
-  - `{ data: ... }`
-- Helper:
-  - `resolvedUser()`
-
-### `UserMissionDto.kt` y `UserRoutineDto.kt`
-
-Data classes de relaciones usuario-misión y usuario-rutina.
-
-## 5.4.3 Routine
-
-### `RoutineDto.kt`
-
-Data classes:
-
-- `RoutineDto`
-- `RoutineExerciseDto`
-- `RoutineDetailDto`
-
-Detalle:
-
-- Mapeo `snake_case` para backend SQL (`routine_id`, `routine_name`, etc.).
-- `exercises` nullable.
-- Helper:
-  - `safeExercises()`
-
-### `RoutineDetailData.kt`
-
-Data classes de modelo interno UI:
-
-- `RoutineExerciseData`
-- `RoutineDetailData`
-
-## 5.4.4 Resto de modelos remotos
-
-- `exercise/ExerciseDetailDto.kt`
-- `group/GroupDto.kt`, `GroupUserDto.kt`
-- `social/FriendDto.kt`, `FrequestDto.kt`
-- `training/TrainingCatalogDto.kt`
-- `week/WeeklyGoalDto.kt`, `WeeklyCalendarDayDto.kt`
-
-Todos son data classes de transporte para UI/repositorios.
-
-## 5.5 Capa `data.repository`
-
-### `AuthRepository.kt`
-
-Clase:
-
-- `AuthRepository`
-
-Rol:
-
-- Fachada de login/register/logout sobre `AuthRemoteDataSource`.
-
-### `RoutineRepository.kt`
-
-Clase:
-
-- `RoutineRepository`
-
-Rol:
-
-- Mapeo DTO -> modelo de UI.
-- Estrategia remote-first con fallback.
-- Generación de IDs fallback de ejercicios.
-
-### `ExerciseRepository.kt`
-
-Data class y clase:
-
-- `ExerciseDetailData`
-- `ExerciseRepository`
-
-Rol:
-
-- Mapea ejercicio remoto y aplica fallback inteligente por ID.
-
-### `GroupRepository.kt`
-
-Data class y clase:
-
-- `GroupSummaryData`
-- `GroupRepository`
-
-Rol:
-
-- Mapea grupos remotos a formato de presentación.
-
-### `TrainingRepository.kt`
-
-Clase:
-
-- `TrainingRepository`
-
-Rol:
-
-- Exponer categorías de entrenamiento.
-
-### `WeekRepository.kt`
-
-Clase:
-
-- `WeekRepository`
-
-Rol:
-
-- Exponer objetivos y calendario semanales.
-
-### `UserRepository.kt` y `SocialRepository.kt`
-
-Estado:
-
-- Archivos **placeholder vacíos** (solo package).
-
-## 5.6 Capa `data.local`
-
-### `GymTonicDatabase.kt`
-
-Clase:
-
-- `GymTonicDatabase : RoomDatabase`
-
-Rol:
-
-- Define entidades Room.
-- Expone DAOs.
-- Singleton de base de datos local.
-
-## 5.6.1 Entidades (`data/local/localModel`)
-
-Data classes:
-
-1. `UserEntity`
-2. `ExerciseEntity`
-3. `RoutineEntity`
-4. `MissionEntity`
-5. `GroupEntity`
-6. `RoutineExerciseEntity`
-7. `UserRoutineEntity`
-8. `GroupUserEntity`
-9. `FriendEntity`
-10. `FrequestEntity`
-11. `UserMissionEntity`
-
-Rol:
-
-- Representación local de tablas y relaciones para Room.
-
-## 5.6.2 DAOs (`data/local/dao`)
-
-Interfaces:
-
-1. `UserDao`
-2. `ExerciseDao`
-3. `RoutineDao`
-4. `MissionDao`
-5. `GroupDao`
-6. `RoutineExerciseDao`
-7. `UserRoutineDao`
-8. `GroupUserDao`
-9. `FriendDao`
-10. `FrequestDao`
-11. `UserMissionDao`
-
-Funcionalidad común:
-
-- Consultas `Flow`.
-- CRUD local.
-- Búsquedas, conteos, relaciones cruzadas.
-
-Estado especial:
-
-- `UserMissionDao` está prácticamente vacío/incompleto.
-
-## 5.6.3 Local datasources (`data/local/datasource/local/*`)
-
-Archivos:
-
-1. `user/UserLocalDataSource.kt`
-2. `social/SocialLocalDataSource.kt`
-3. `routine/RoutineLocalDataSource.kt`
-4. `mission/MissionLocalDataSource.kt`
-5. `group/GroupLocalDataSource.kt`
-6. `exercise/ExerciseLocalDataSource.kt`
-
-Estado:
-
-- Son **placeholders con comentarios**, sin implementación concreta.
-
-## 5.7 Capa `ui.navigation`
-
-### `Routes.kt`
-
-Objeto:
-
-- `Routes`
-
-Rol:
-
-- Centraliza rutas estáticas y dinámicas (`routine/{routineId}`, `exercise/{exerciseId}`).
-
-### `Navigation.kt`
-
-Composable:
-
-- `Navigation(...)`
-
-Rol:
-
-- Define NavHost y flujo de pantallas.
-- Determina start destination en base a sesión DataStore.
-- Orquesta logout y navegación bottom/tab.
-
-## 5.8 Capa `ui.viewmodel`
-
-Clases y estados:
-
-1. `LoginViewModel` + `LoginState`
-2. `RegisterViewModel` + `RegisterState`
-3. `HomeViewModel`
-4. `RoutineCatalogViewModel` + `RoutineCatalogUiState` + modelos UI
-5. `TrainingScreenViewModel` + `TrainingUiState` + modelos UI
-6. `WeekChallengesViewModel` + `WeekChallengesUiState` + modelos UI
-7. `ProfileViewModel` + `ProfileUiState` + modelos UI
-8. `ExerciseViewModel` + `ExerciseUiState` + modelo UI
-9. `GroupViewModel` (placeholder vacío)
-
-Patrón común:
-
-- `StateFlow` + `viewModelScope`.
-- Manejo de `loading/success/error`.
-- Conversión de DTOs/repositorios a modelos de UI.
-
-## 5.9 Capa `ui.screens`
-
-Módulos Compose (por feature):
-
-- Login:
-  - `LoginScreen.kt`
-  - `LoginFormScreen.kt`
-- Register:
-  - `RegisterScreen.kt`
-  - `RegisterScreen2.kt`
-- Home:
-  - `MainViewScreen.kt`
-- Training/Exercise:
-  - `TrainingShellScreen.kt`
-  - `TrainingScreen.kt`
-  - `ExerciseDetailScreen.kt`
-- Routines:
-  - `RoutineCatalogScreens.kt`
-  - `RoutineTemplate.kt`
-  - `CreateRoutineScreen.kt`
-- Missions:
-  - `WeekChallengesScreen.kt`
-- Profile:
-  - `ProfileScreen.kt`
-
-## 5.10 `ui.components` y `ui.theme`
-
-- `BottomNavBar.kt`: navegación inferior y selección de tabs.
-- `Color.kt`, `Theme.kt`, `Type.kt`: sistema visual Compose (colores, tipografía, tema).
 
 ---
 
-## 6) Endpoints operativos documentados para frontend
-
-Base URL:
-
-- `http://10.0.2.2:3010/api/v1/` (por defecto en build config).
-
-Endpoints actualmente integrados en frontend:
-
-1. `POST users/login`
-2. `POST users`
-3. `GET users/logout`
-4. `GET routines/routines`
-5. `GET routines/routine/{routineId}`
-
-Reglas de auth actuales:
-
-- `Authorization` se inyecta automáticamente si hay token.
-- Login/register quedan excluidos de auth header.
+## 10) Credenciales de prueba
+Para pruebas iniciales (sujeto a la carga de los scripts SQL):
+- **Admin:** `admin` / `Clase00!`
+- **Usuario:** `carlos_g` / `Clase00!`
 
 ---
 
-## 7) Riesgos y deuda técnica relevante (estado actual)
+## 11) Estado del proyecto
 
-## 7.1 Backend
+### **Endpoints Operativos**
+La aplicación utiliza una API REST versionada (`/api/v1/`). A continuación se detallan los endpoints integrados en el Frontend:
 
-1. `friendsRoutes` montado con prefijo `exercises` en `index.js`.
-2. `friendRequests.controller.js` sin implementación.
-3. Varios modelos auxiliares con `module.exports` incorrecto.
-4. Métodos `create` incompletos en varios modelos.
-5. Referencias a variables no definidas en algunos creates.
-6. Inconsistencias de naming entre algunos controladores y modelos.
+#### **Autenticación y Registro**
+- `POST users`: Registro de usuario (soporta Multipart para foto de perfil).
+- `POST users/login`: Inicio de sesión tradicional.
+- `POST auth/googleLogin`: Login con Google.
+- `POST auth/facebookLogin`: Login con Facebook.
+- `POST users/recover-account`: Recuperación de contraseña.
+- `POST users/change-password`: Cambio de contraseña.
+- `GET users/check-username/{username}`: Verificar disponibilidad de nombre de usuario.
+- `GET users/check-email/{email}`: Verificar disponibilidad de email.
+- `GET users/logout`: Cierre de sesión.
 
-## 7.2 Frontend
+#### **Usuarios**
+- `GET users`: Obtener lista de usuarios (resumen o detallado).
+- `GET users/{id}`: Detalle de un usuario específico.
+- `PATCH users/{id}`: Actualizar perfil (soporta Multipart para foto).
+- `DELETE users/{id}`: Eliminar cuenta.
 
-1. Archivos duplicados/placeholder vacíos en auth/services/repositories.
-2. Fuerte dependencia de datos mock/fallback en varias features.
-3. `GroupViewModel` sin implementación.
-4. Parte de la capa local datasource está declarada pero no implementada.
+#### **Misiones (Retos)**
+- `GET missions`: Lista de todas las misiones.
+- `GET missions/{id}`: Detalle de una misión.
+- `GET users/missions`: Misiones globales de usuarios.
+- `GET users/missions/user/{userId}`: Misiones asignadas a un usuario.
+- `POST users/missions`: Asignar misión a usuario.
+- `PATCH users/missions/{id}/complete`: Marcar misión como completada.
+- `PATCH users/missions/{id}/progress`: Actualizar progreso de una misión.
+
+#### **Ejercicios**
+- `GET exercises`: Catálogo completo de ejercicios.
+- `GET exercises/type/{typeName}`: Filtrar ejercicios por tipo.
+- `GET exercises/{id}`: Detalle de un ejercicio.
+- `POST exercises`: Crear nuevo ejercicio (Admin - soporta Multipart para vídeo/imagen).
+
+#### **Rutinas**
+- `GET routines/routines`: Lista de rutinas públicas.
+- `GET routines/routines/categories`: Categorías de entrenamiento.
+- `GET routines/routine/{id}`: Detalle de una rutina.
+- `GET routines/routine/{id}/with-exercises`: Detalle de rutina con sus ejercicios.
+- `POST routines/routine/new`: Crear nueva rutina (soporta Multipart).
+- `PATCH routines/{id}`: Modificar rutina.
+- `DELETE routines/routine/{id}`: Eliminar rutina.
+
+#### **Grupos**
+- `GET groups`: Lista de grupos públicos.
+- `GET groups/my`: Grupos a los que pertenece el usuario.
+- `GET groups/{id}`: Detalle de un grupo.
+- `GET groups/{id}/members`: Lista de miembros del grupo.
+- `GET groups/{id}/routines`: Rutinas asignadas al grupo.
+- `POST groups/new`: Crear un nuevo grupo.
+- `POST groups/{id}/join`: Unirse a un grupo.
+- `DELETE groups/{id}/leave`: Salir de un grupo.
+- `POST groups/{id}/routines`: Añadir rutina al grupo.
+
+#### **Social (Amigos y Solicitudes)**
+- `GET friends/user/{userId}`: Lista de amigos de un usuario.
+- `DELETE friends/{id}`: Eliminar amigo.
+- `GET friendRequests/user/{userId}`: Solicitudes de amistad recibidas/enviadas.
+- `POST friendRequests`: Enviar solicitud de amistad.
+- `PATCH friendRequests/accept/{id}`: Aceptar solicitud.
+- `PATCH friendRequests/reject/{id}`: Rechazar solicitud.
 
 ---
 
-## 8) Convenciones y notas para desarrollo
-
-1. Mantener contratos backend `snake_case` en DTOs de integración.
-2. Centralizar nuevos endpoints en `ReterofitClient.kt`.
-3. Mantener `SessionManager` de `data/remote/model/auth` como fuente de verdad de sesión.
-4. Si se activa más backend real, migrar gradualmente mocks de `RemoteDataSource` a respuestas API.
-
----
-
-## 9) Índice rápido de clases y objetos (inventario)
-
-## 9.1 Backend
-
-- Clase:
-  - `AppError`
-- Módulos de middleware:
-  - `jwt.mw`, `rutasProtegidas.mw`, `errorHandler.mw`
-- Módulos de ruta:
-  - `users.routes`, `routines.routes`, `missions.routes`, `groups.routes`, `exercises.routes`, `friends.routes`
-- Módulos de controlador:
-  - `users`, `routines`, `missions`, `groups`, `exercises`, `friends`, `friendRequests` (vacío)
-- Módulos de modelo:
-  - `users`, `routines`, `missions`, `groups`, `exercises`, `friends`, `friendRequests`, `groupUsers`, `routineExercises`, `userMissions`, `userRoutines`
-
-## 9.2 Frontend
-
-- Clases/objetos de arranque y red:
-  - `MainActivity`
-  - `RetrofitClient`, `ApiService`
-  - `SessionManager` (auth model)
-- Repositorios:
-  - `AuthRepository`, `RoutineRepository`, `ExerciseRepository`, `GroupRepository`, `TrainingRepository`, `WeekRepository`
-- ViewModels:
-  - `LoginViewModel`, `RegisterViewModel`, `HomeViewModel`, `RoutineCatalogViewModel`, `TrainingScreenViewModel`, `WeekChallengesViewModel`, `ProfileViewModel`, `ExerciseViewModel`
-- Base local:
-  - `GymTonicDatabase`
-  - 11 entidades Room
-  - 11 DAOs
-- Modelos remotos:
-  - auth, user, routine, group, social, exercise, training, week
-
----
-
-## 10) Estado de documentación
-
-Este README describe la implementación real actual del repositorio, incluyendo:
-
-1. Estructura de paquetes.
-2. Funcionamiento por clase/módulo.
-3. Endpoints integrados y directiva vigente.
-4. Riesgos y placeholders existentes.
-
-Si se modifican rutas, modelos o capas de datos, actualizar esta guía en el mismo PR.
+### **Futura Hoja de Ruta (Roadmap)**
+GYM Tonic es un proyecto en desarrollo constante y actualmente no se encuentra al 100% finalizado. Existen diversas funcionalidades planificadas para futuras actualizaciones, entre las que destacan:
+- **Tienda y Descuentos:** Integración de una sección de e-commerce para productos deportivos y un sistema de cupones de descuento para usuarios activos.
+- **Integración con Smartwatch:** Lectura y sincronización de datos biométricos (pasos, pulso, calorías) directamente desde dispositivos wearables.
+- **Chat de Grupos:** Implementación de un sistema de mensajería en tiempo real dentro de los grupos de entrenamiento para mejorar la interacción social.
