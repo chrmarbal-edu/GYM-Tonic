@@ -59,12 +59,11 @@ data class RegisterStrings(
     val goalLoseWeight: String,
     val goalBuildMuscle: String,
     val goalPerformance: String,
-    val signUpButton: String,
     val invalidHeight: String,
     val invalidWeight: String,
     val invalidAge: String,
     val invalidEmail: String,
-    val shortPassword: String
+    val shortPassword: String,
     val signUpButton: String,
     val errorUsernameExists: String,
     val errorEmailExists: String

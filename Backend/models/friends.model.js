@@ -80,8 +80,8 @@ friend.create = async (newFriend, result) => {
         const pool = await sql.connect(dbConn)
 
         const request = pool.request()
-            .input("userId1", sql.VarChar, newFriend.friend_userid1)
-            .input("userId2", sql.VarChar, newFriend.friend_userid2)
+            .input("userId1", sql.Int, newFriend.friend_userid1)
+            .input("userId2", sql.Int, newFriend.friend_userid2)
 
         const sqlQuery = `
             INSERT INTO Friends (

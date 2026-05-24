@@ -115,13 +115,6 @@ fun RegisterScreen(
 
         return isFullNameValid && isUsernameValid && isEmailNotBlank && isEmailFormatValid &&
                 isPasswordNotBlank && isPasswordLengthValid && isConfirmPasswordNotBlank && doPasswordsMatch
-        return !fullNameError &&
-                !usernameError &&
-                !emailError &&
-                !passwordError &&
-                !passwordWeakError &&
-                !confirmPasswordError &&
-                !passwordsMatchError
     }
 
     when (val state = registerState) {
@@ -225,25 +218,20 @@ fun RegisterScreen(
                                 UnderlineLabeledField(
                                     label = strings.email,
                                     value = email,
-                                    onValueChange = { 
-                                        email = it; 
-                                        emailError = false
-                                        emailFormatError = false 
-                                    },
-                                    onValueChange = { 
+                                    onValueChange = {
                                         email = it
                                         emailError = false
-                                        emailExistsError = false 
+                                        emailFormatError = false
+                                        emailExistsError = false
                                     },
                                     placeholder = "john@gmail.com",
-                                    isError = emailError || emailFormatError,
+                                    isError = emailError || emailFormatError || emailExistsError,
                                     errorText = when {
                                         emailError -> strings.requiredField
                                         emailFormatError -> strings.invalidEmail
+                                        emailExistsError -> strings.errorEmailExists
                                         else -> null
                                     }
-                                    isError = emailError || emailExistsError,
-                                    errorText = if (emailExistsError) strings.errorEmailExists else strings.requiredField
                                 )
 
                                 Spacer(Modifier.height(22.dp))
@@ -259,16 +247,12 @@ fun RegisterScreen(
                                         passwordsMatchError = false
                                     },
                                     placeholder = "********",
-                                    isError = passwordError || passwordLengthError,
+                                    isError = passwordError || passwordLengthError || passwordWeakError,
                                     errorText = when {
                                         passwordError -> strings.requiredField
                                         passwordLengthError -> strings.shortPassword
-                                        else -> null
-                                    },
-                                    isError = passwordError || passwordWeakError,
-                                    errorText = when {
                                         passwordWeakError -> strings.passwordTooWeak
-                                        else -> strings.requiredField
+                                        else -> null
                                     },
                                     isPassword = true
                                 )

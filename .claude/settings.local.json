@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(gradlew.bat clean *)",
-      "Bash(Get-ChildItem *)"
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object -First 50 FullName)",
+      "Bash(sed -n '41,70p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/EnglishStrings.kt)",
+      "Bash(sed -n '41,70p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/SpanishStrings.kt)",
+      "Bash(awk ' *)",
+      "Bash(grep -r \"strings\\\\\\\\.routineName\" Frontend/app/src/main/java/edu/gymtonic_app)",
+      "Bash(grep -r \"strings\\\\\\\\.[a-z][a-zA-Z]*\" Frontend/app/src/main/java/edu/gymtonic_app --include=\"*.kt\")",
+      "Bash(kotlinc -nowarn -d /tmp/compile_test.jar Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/*.kt)",
+      "Bash(python3)",
+      "Read(//tmp/**)",
+      "Bash(sed -n '/register = RegisterStrings/,/^ \\)/p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/EnglishStrings.kt)",
+      "Bash(awk '{print $1}')",
+      "Bash(sed -n '/register = RegisterStrings/,/^ \\)/p' Frontend/app/src/main/java/edu/gymtonic_app/ui/i18n/SpanishStrings.kt)"
     ]
   }
 }
