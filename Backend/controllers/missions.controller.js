@@ -10,6 +10,7 @@ const AppError = require("../utils/AppError")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
 const { log } = require("console")
+const { handleSqlError } = require("../utils/sqlErrors")
 
 
 function wrapAsync(fn) {
@@ -79,7 +80,7 @@ exports.findAllMissionsCSR = wrapAsync(async function (req,res,next) {
     // Espera una promesa de lo que devuelva la función "findAll" del modelo.
     await missionmodel.findAll(async function(err, datosMissions){
         if(err){
-            next(new AppError(err,400))
+            next(new AppError(handleSqlError(err), 400))
         } else{
             res.status(200).json(datosMissions)
         }
@@ -99,7 +100,7 @@ exports.findMissionByIdCSR = wrapAsync(async function (req,res,next){
     }else{
         await missionmodel.findById(id,function(err,datosMissions){
             if(err){
-                next(new AppError(err,404))
+                next(new AppError(handleSqlError(err), 404))
             } 
 
             if(!datosMissions || datosMissions.length == 0) {
@@ -121,7 +122,7 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
    
     await missionmodel.findById(id, async function(err, existingMission){
         if(err){
-            next(new AppError(err, 500))
+            next(new AppError(handleSqlError(err), 500))
         } else if (!existingMission || existingMission.length == 0) {
             return next(new AppError("Misión no encontrada", 404))
         }
@@ -136,7 +137,7 @@ exports.updateMissionCSR = wrapAsync(async function (req,res, next) {
         
         await missionmodel.updateById(id, updateMission, async function(err, datosMissionActualizada){
             if(err){
-                next(new AppError(err, 500))
+                next(new AppError(handleSqlError(err), 500))
             } else{
                 try {
                     // Sincronizar asignaciones tras la actualización
@@ -168,7 +169,7 @@ exports.createMissionCSR = wrapAsync(async function (req, res, next) {
         // Realizamos la redirección en la promesa de la creación.
         await missionmodel.create(newMission, async function(err,datosMisionCreada){
             if(err){
-                return next(new AppError(err, 500))
+                return next(new AppError(handleSqlError(err), 500))
             } else{
                 // Asignar automáticamente a los usuarios que tengan el mismo objetivo
                 await syncMissionAssignments(datosMisionCreada.mission_id, datosMisionCreada.mission_objective, datosMisionCreada.mission_type)

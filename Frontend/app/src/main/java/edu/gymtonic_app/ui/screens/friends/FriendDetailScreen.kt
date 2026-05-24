@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -148,12 +149,16 @@ private fun FriendDetailContent(
             text = userName,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            color = colors.textPrimary
+            color = colors.textPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Text(
             text = "@$userUsername",
             fontSize = 16.sp,
-            color = colors.textSecondary
+            color = colors.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
 
         Spacer(Modifier.height(24.dp))
@@ -224,17 +229,26 @@ private fun InfoCard(label: String, value: String, modifier: Modifier = Modifier
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(vertical = 16.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = label, fontSize = 12.sp, color = colors.textSecondary)
+            Text(
+                text = label,
+                fontSize = 12.sp,
+                color = colors.textSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = colors.accent,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Visible,
+                softWrap = false
             )
         }
     }
@@ -264,7 +278,10 @@ private fun SharedGroupRow(group: GroupDto, onClick: () -> Unit) {
             Text(
                 text = group.group_name ?: "",
                 fontWeight = FontWeight.SemiBold,
-                color = colors.textPrimary
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
         }
     }

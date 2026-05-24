@@ -9,6 +9,7 @@ const routinesModel = require("../models/routines.model.js")
 const fs = require("fs").promises
 const path = require("path")
 const AppError = require("../utils/AppError")
+const { deleteResourceFile } = require("../utils/fileUtils")
 const bcrypt = require("../utils/bcrypt")
 const jwtMW = require("../middlewares/jwt.mw")
 const { log } = require("console")
@@ -18,7 +19,7 @@ const {
     normalizeRoutineImageForClient,
     parseExerciseIds
 } = require("../utils/routineHelpers.js")
-const { isInvalidColumnError } = require("../utils/sqlErrors.js")
+const { isInvalidColumnError, handleSqlError } = require("../utils/sqlErrors.js")
 
 
 function wrapAsync(fn) {
@@ -91,6 +92,34 @@ const loadGroupMembership = (groupId, userId) =>
 const assertGroupMember = async (groupId, userLogued) => {
     const membership = await loadGroupMembership(groupId, Number(userLogued.user_id))
     return membership != null
+}
+
+const assertValidExercises = async (exercises) => {
+    const pool = await sql.connect(dbConn)
+    for (const exercise of exercises) {
+        const eid = exercise.exercise_id || exercise.exerciseId || exercise.id
+        if (typeof eid === 'undefined' || !Number.isFinite(Number(eid))) {
+            throw new AppError("Cada ejercicio debe tener un 'exercise_id' numérico válido", 400);
+        }
+        // Normalizamos el ID en el objeto
+        exercise.exercise_id = Number(eid)
+
+        if (!exercise.reps || String(exercise.reps).trim() === '') {
+            throw new AppError(`El ejercicio ${eid} debe tener 'reps' válidas`, 400);
+        }
+        if (!exercise.sets || !Number.isFinite(Number(exercise.sets)) || Number(exercise.sets) <= 0) {
+            throw new AppError(`El ejercicio ${eid} debe tener 'sets' numéricas válidas`, 400);
+        }
+
+        const check = await pool
+            .request()
+            .input("exerciseId", sql.Int, exercise.exercise_id)
+            .query("SELECT 1 FROM Exercises WHERE exercise_id = @exerciseId")
+
+        if (check.recordset.length === 0) {
+            throw new AppError(`El ejercicio ${exercise.exercise_id} no existe`, 400)
+        }
+    }
 }
 
 /* 
@@ -502,8 +531,14 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
     }
 
     const groupId = Number(req.params.id)
-    const { name, routine_image: routineImageBody, exercise_ids: exerciseIdsRaw } = req.body
-    const exerciseIds = parseExerciseIds(exerciseIdsRaw)
+    const { name, routine_image: routineImageBody, exercises: exercisesRaw } = req.body
+
+    let exercises;
+    try {
+        exercises = typeof exercisesRaw === 'string' ? JSON.parse(exercisesRaw) : exercisesRaw;
+    } catch (e) {
+        return next(new AppError("El formato de 'exercises' no es válido. Debe ser un array JSON.", 400));
+    }
 
     if (!Number.isFinite(groupId)) {
         return next(new AppError("group_id inválido", 400))
@@ -513,15 +548,8 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
         return next(new AppError("El nombre de la rutina es obligatorio", 400))
     }
 
-    if (!Array.isArray(exerciseIds) || exerciseIds.length === 0) {
-        return next(
-            new AppError("exercise_ids debe ser un array con al menos un ejercicio", 400)
-        )
-    }
-
-    const normalizedExerciseIds = exerciseIds.map((x) => Number(x))
-    if (normalizedExerciseIds.some((x) => !Number.isFinite(x))) {
-        return next(new AppError("exercise_ids debe contener solo números enteros", 400))
+    if (!Array.isArray(exercises) || exercises.length === 0) {
+        return next(new AppError("La lista de ejercicios no puede estar vacía", 400))
     }
 
     const group = await loadGroup(groupId)
@@ -533,17 +561,13 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
         return next(new AppError("Solo el creador del grupo puede añadir rutinas al grupo", 403))
     }
 
-    const pool = await sql.connect(dbConn)
-    for (const eid of normalizedExerciseIds) {
-        const chk = await pool
-            .request()
-            .input("eid", sql.Int, eid)
-            .query("SELECT 1 FROM Exercises WHERE exercise_id = @eid")
-        if (chk.recordset.length === 0) {
-            return next(new AppError(`El ejercicio ${eid} no existe`, 400))
-        }
+    try {
+        await assertValidExercises(exercises)
+    } catch (err) {
+        return next(err)
     }
 
+    const pool = await sql.connect(dbConn)
     const transaction = new sql.Transaction(pool)
     await transaction.begin()
     try {
@@ -594,13 +618,15 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
         }
         const routineId = routineRow.routine_id
 
-        for (const eid of normalizedExerciseIds) {
+        for (const ex of exercises) {
             const rqEx = new sql.Request(transaction)
             rqEx.input("routineId", sql.Int, routineId)
-            rqEx.input("exerciseId", sql.Int, eid)
+            rqEx.input("exerciseId", sql.Int, ex.exercise_id)
+            rqEx.input("reps", sql.NVarChar, String(ex.reps))
+            rqEx.input("sets", sql.Int, Number(ex.sets))
             await rqEx.query(`
-                INSERT INTO Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid)
-                VALUES (@routineId, @exerciseId)
+                INSERT INTO Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid, routine_x_exercise_reps, routine_x_exercise_sets)
+                VALUES (@routineId, @exerciseId, @reps, @sets)
             `)
         }
 
@@ -623,7 +649,100 @@ exports.addGroupRoutineCSR = wrapAsync(async function (req, res, next) {
         return res.status(201).json(routineRow)
     } catch (e) {
         await transaction.rollback()
-        return next(new AppError(e.message || "Error al crear la rutina de grupo", 500))
+        return next(new AppError(handleSqlError(e), 500))
+    }
+})
+
+// #region UPDATE GROUP ROUTINE (creador del grupo)
+exports.updateGroupRoutineCSR = wrapAsync(async function (req, res, next) {
+    const userLogued = req.userLogued
+    if (!userLogued) return next(new AppError("No estás registrado!", 403))
+
+    const groupId = Number(req.params.id)
+    const routineId = Number(req.params.routineId)
+    const { name, routine_image: routineImageBody, exercises: exercisesRaw } = req.body
+
+    let exercises = null;
+    if (exercisesRaw) {
+        try {
+            exercises = typeof exercisesRaw === 'string' ? JSON.parse(exercisesRaw) : exercisesRaw;
+            await assertValidExercises(exercises);
+        } catch (e) {
+            return next(e instanceof AppError ? e : new AppError("Formato de ejercicios inválido", 400));
+        }
+    }
+
+    if (!Number.isFinite(groupId) || !Number.isFinite(routineId)) {
+        return next(new AppError("Identificadores inválidos", 400))
+    }
+
+    const group = await loadGroup(groupId)
+    if (!group) return next(new AppError("Grupo no encontrado", 404))
+
+    if (!assertGroupCreator(group, userLogued)) {
+        return next(new AppError("Solo el creador del grupo puede editar las rutinas", 403))
+    }
+
+    const routine = await loadRoutine(routineId)
+    if (!routine || Number(routine.routine_groupid) !== groupId) {
+        return next(new AppError("Rutina no encontrada en este grupo", 404))
+    }
+
+    const pool = await sql.connect(dbConn)
+    const transaction = new sql.Transaction(pool)
+    await transaction.begin()
+
+    try {
+        let routineImage = routine.routine_image;
+        if (req.files?.image?.[0]) {
+            // Borrar imagen antigua si existe
+            if (routine.routine_image) await deleteResourceFile(routine.routine_image)
+
+            const file = req.files.image[0];
+            const folderName = group.group_name;
+            const targetDir = path.join("public", "images", "routines", "groups", folderName);
+            await fs.mkdir(targetDir, { recursive: true });
+            const sanitizedName = (name || routine.routine_name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            const fileName = `${sanitizedName}${path.extname(file.originalname)}`;
+            await fs.rename(file.path, path.join(targetDir, fileName));
+            routineImage = `images/routines/groups/${folderName}/${fileName}`.replace(/\\/g, "/");
+        } else if (typeof routineImageBody === "string" && routineImageBody.trim()) {
+            routineImage = routineImageBody.trim();
+        }
+
+        // 1. Actualizar tabla Routines
+        const rqUpdate = new sql.Request(transaction)
+        rqUpdate.input("name", sql.NVarChar(255), name ? name.trim() : routine.routine_name)
+        rqUpdate.input("image", sql.NVarChar(500), routineImage)
+        rqUpdate.input("routineId", sql.Int, routineId)
+        await rqUpdate.query(`
+            UPDATE Routines 
+            SET routine_name = @name, routine_image = @image
+            WHERE routine_id = @routineId
+        `)
+
+        // 2. Actualizar ejercicios (si se enviaron)
+        if (exercises) {
+            const rqDelEx = new sql.Request(transaction)
+            rqDelEx.input("routineId", sql.Int, routineId)
+            await rqDelEx.query("DELETE FROM Routine_X_Exercise WHERE routine_x_exercise_routineid = @routineId")
+
+            for (const ex of exercises) {
+                const rqInsEx = new sql.Request(transaction)
+                rqInsEx.input("routineId", sql.Int, routineId)
+                rqInsEx.input("exerciseId", sql.Int, ex.exercise_id)
+                rqInsEx.input("reps", sql.NVarChar, String(ex.reps))
+                rqInsEx.input("sets", sql.Int, Number(ex.sets))
+                await rqInsEx.query(`INSERT INTO Routine_X_Exercise (routine_x_exercise_routineid, routine_x_exercise_exerciseid, routine_x_exercise_reps, routine_x_exercise_sets) VALUES (@routineId, @exerciseId, @reps, @sets)`)
+            }
+        }
+
+        await transaction.commit()
+        const updated = await fromCallback(routinesModel.findById, routineId)
+        return res.status(200).json(updated)
+    } catch (e) {
+        await transaction.rollback()
+        return next(new AppError(handleSqlError(e), 500))
     }
 })
 

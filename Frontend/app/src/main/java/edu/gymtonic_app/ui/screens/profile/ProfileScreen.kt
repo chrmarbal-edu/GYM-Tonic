@@ -349,14 +349,20 @@ private fun SectionCard(
                     text = title,
                     color = colors.textOnAccent,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
                 if (actionText != null && onActionClick != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = actionText,
                         color = colors.textOnAccent,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.clickable { onActionClick() }
                     )
                 }
@@ -407,6 +413,8 @@ private fun RoutineRow(
                 text = openLabel,
                 fontSize = 11.sp,
                 color = colors.textSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
@@ -435,7 +443,9 @@ private fun GroupRow(
                     text = group.group_name ?: "Grupo sin nombre",
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = group.group_description ?: "",
@@ -481,7 +491,9 @@ private fun FriendRow(
                     text = friend.userName.orEmpty().ifBlank { friend.userUsername.orEmpty() },
                     color = colors.textPrimary,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = "@${friend.userUsername.orEmpty()}",
@@ -510,6 +522,11 @@ private fun DrawerActionRow(
     ) {
         Icon(imageVector = icon, contentDescription = label)
         Spacer(modifier = Modifier.width(10.dp))
-        Text(text = label, fontSize = 15.sp)
+        Text(
+            text = label,
+            fontSize = 15.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }

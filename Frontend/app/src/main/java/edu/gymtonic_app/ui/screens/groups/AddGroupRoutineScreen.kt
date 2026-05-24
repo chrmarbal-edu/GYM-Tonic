@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -28,6 +30,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -67,6 +70,9 @@ import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.screens.admin.uriToUploadFile
 import edu.gymtonic_app.ui.screens.routines.AddExerciseDetailsDialog
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
+import edu.gymtonic_app.ui.screens.admin.exerciseTypeOptions
+import edu.gymtonic_app.ui.screens.admin.AdminTypeFilter
+import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +106,7 @@ fun AddGroupRoutineScreen(
     var routineImageLabel by remember { mutableStateOf<String?>(null) }
     val selectedExercises = remember { mutableStateListOf<RoutineExerciseDto>() }
     var searchQuery by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf<Int?>(null) }
     
     var exerciseToConfigure by remember { mutableStateOf<ExerciseDto?>(null) }
     var favoritesExpanded by rememberSaveable { mutableStateOf(true) }
@@ -176,16 +183,24 @@ fun AddGroupRoutineScreen(
         favoriteExercises.map { it.exercise_id }.toSet()
     }
 
-    val filteredFavorites = remember(allExercises, searchQuery, favoriteIds) {
-        val base = if (searchQuery.isBlank()) allExercises
-        else allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
-        base.filter { it.exercise_id in favoriteIds }
+    val filteredExercises = remember(allExercises, searchQuery, selectedType) {
+        allExercises.filter { exercise ->
+            val matchesSearch = if (searchQuery.isBlank()) true
+            else exercise.exercise_name.contains(searchQuery, ignoreCase = true)
+            
+            val matchesType = if (selectedType == null) true
+            else exercise.exercise_type == selectedType
+            
+            matchesSearch && matchesType
+        }
     }
 
-    val filteredOthers = remember(allExercises, searchQuery, favoriteIds) {
-        val base = if (searchQuery.isBlank()) allExercises
-        else allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
-        base.filter { it.exercise_id !in favoriteIds }
+    val filteredFavorites = remember(filteredExercises, favoriteIds) {
+        filteredExercises.filter { it.exercise_id in favoriteIds }
+    }
+
+    val filteredOthers = remember(filteredExercises, favoriteIds) {
+        filteredExercises.filter { it.exercise_id !in favoriteIds }
     }
 
     TrainingShellScreen(
@@ -252,6 +267,12 @@ fun AddGroupRoutineScreen(
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AdminTypeFilter(
+                        selectedType = selectedType,
+                        onTypeSelected = { selectedType = it },
+                        options = exerciseTypeOptions
+                    )
                 }
 
                 if (filteredFavorites.isNotEmpty()) {
@@ -283,10 +304,23 @@ fun AddGroupRoutineScreen(
                             key = { "fav_${it.exercise_id}" }
                         ) { exercise ->
                             val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
-                            ExerciseRow(
-                                exercise = exercise,
+                            edu.gymtonic_app.ui.components.SelectableExerciseRow(
+                                name = exercise.exercise_name,
+                                image = exercise.exercise_image,
                                 selected = isSelected,
-                                onToggle = { toggleSelection(exercise) }
+                                isFavorite = true,
+                                onToggle = { toggleSelection(exercise) },
+                                onToggleFavorite = {
+                                    exerciseViewModel.onToggleFavorite(
+                                        FavoriteExercisePayload(
+                                            id = exercise.exercise_id,
+                                            name = exercise.exercise_name,
+                                            description = exercise.exercise_description,
+                                            type = exercise.exercise_type,
+                                            image = exercise.exercise_image
+                                        )
+                                    )
+                                }
                             )
                         }
                     }
@@ -306,10 +340,23 @@ fun AddGroupRoutineScreen(
                         key = { it.exercise_id }
                     ) { exercise ->
                         val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
-                        ExerciseRow(
-                            exercise = exercise,
+                        edu.gymtonic_app.ui.components.SelectableExerciseRow(
+                            name = exercise.exercise_name,
+                            image = exercise.exercise_image,
                             selected = isSelected,
-                            onToggle = { toggleSelection(exercise) }
+                            isFavorite = false,
+                            onToggle = { toggleSelection(exercise) },
+                            onToggleFavorite = {
+                                exerciseViewModel.onToggleFavorite(
+                                    FavoriteExercisePayload(
+                                        id = exercise.exercise_id,
+                                        name = exercise.exercise_name,
+                                        description = exercise.exercise_description,
+                                        type = exercise.exercise_type,
+                                        image = exercise.exercise_image
+                                    )
+                                )
+                            }
                         )
                     }
                 }
@@ -341,61 +388,6 @@ fun AddGroupRoutineScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ExerciseRow(
-    exercise: ExerciseDto,
-    selected: Boolean,
-    onToggle: () -> Unit
-) {
-    val colors = LocalColors.current
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = colors.surfaceCard,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Surface(
-                modifier = Modifier.size(64.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = colors.surfaceMain
-            ) {
-                AsyncImage(
-                    model = edu.gymtonic_app.core.MediaUtils.resolveBackendMediaUrl(exercise.exercise_image),
-                    contentDescription = exercise.exercise_name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exercise.exercise_name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = colors.textPrimary
-                )
-            }
-
-            TextButton(onClick = onToggle) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = if (selected) colors.accent else Color(0xFF9EA3AF)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = if (selected) "Añadido" else "Añadir")
             }
         }
     }

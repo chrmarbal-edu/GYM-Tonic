@@ -30,4 +30,7 @@ interface ExerciseDao {
     //Borrar (suspend), devuelve el id del elemento eliminado
     @Delete
     suspend fun deleteExercise(exercise: ExerciseEntity): Int
+
+    @Query("DELETE FROM exercises WHERE exercise_id = :id")
+    suspend fun deleteExerciseById(id: Int): Int
 }

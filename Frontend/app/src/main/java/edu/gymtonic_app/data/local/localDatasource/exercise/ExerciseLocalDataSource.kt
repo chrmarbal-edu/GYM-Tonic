@@ -44,4 +44,6 @@ class ExerciseLocalDataSource(
 
 	//eliminar ejercicio base
 	suspend fun deleteExercise(exercise: ExerciseEntity): Int = exerciseDao.deleteExercise(exercise)
+
+	suspend fun deleteExerciseById(id: Int): Int = exerciseDao.deleteExerciseById(id)
 }

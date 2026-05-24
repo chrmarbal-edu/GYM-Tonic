@@ -85,6 +85,8 @@ fun TrainingScreen(
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
 
@@ -210,14 +212,20 @@ private fun TrainingSection(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
+
+                Spacer(Modifier.width(8.dp))
 
                 Text(
                     text = routinesLabel(routines.size),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.textSecondary
+                    color = colors.textSecondary,
+                    maxLines = 1
                 )
             }
 
@@ -309,7 +317,8 @@ private fun TrainingCard(
                 text = tapToOpen,
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
-                maxLines = 1
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

@@ -17,7 +17,12 @@ import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
-class AdminRepository {
+class AdminRepository(
+    private val routineLocalDataSource: edu.gymtonic_app.data.local.localDatasource.routine.RoutineLocalDataSource? = null,
+    private val routineExerciseLocalDataSource: edu.gymtonic_app.data.local.localDatasource.routineExercise.RoutineExerciseLocalDataSource? = null,
+    private val recentRoutineLocalDataSource: edu.gymtonic_app.data.local.localDatasource.routine.RecentRoutineLocalDataSource? = null,
+    private val exerciseLocalDataSource: edu.gymtonic_app.data.local.localDatasource.exercise.ExerciseLocalDataSource? = null
+) {
 
     private val api = RetrofitClient.apiService
 
@@ -56,7 +61,8 @@ class AdminRepository {
         id: Int?,
         name: String,
         exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
-        imageFile: File?
+        imageFile: File?,
+        groupId: Int? = null
     ): Result<RoutineDetailDto> = runCatching {
         val gson = Gson()
         // Enviamos la lista completa de objetos para incluir reps y series
@@ -87,12 +93,22 @@ class AdminRepository {
             if (response.isSuccessful && response.body() != null) response.body()!!
             else throw Exception(response.message() ?: "No se pudo crear la rutina")
         } else {
-            val response = api.updateRoutineMultipart(
-                routineId = id,
-                name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
-                exercises = exercisesBody,
-                image = imagePart
-            )
+            val response = if (groupId != null) {
+                api.updateGroupRoutineMultipart(
+                    id = groupId,
+                    routineId = id,
+                    name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    exercises = exercisesBody,
+                    image = imagePart
+                )
+            } else {
+                api.updateRoutineMultipart(
+                    routineId = id,
+                    name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                    exercises = exercisesBody,
+                    image = imagePart
+                )
+            }
             if (response.isSuccessful && response.body() != null) response.body()!!
             else throw Exception(response.message() ?: "No se pudo actualizar")
         }
@@ -101,6 +117,10 @@ class AdminRepository {
     suspend fun deleteRoutine(id: Int): Result<Unit> = runCatching {
         val response = api.deleteRoutine(id)
         if (!response.isSuccessful) throw Exception(ErrorManager.parseResponseError(response))
+        // Cleanup local DB
+        routineLocalDataSource?.deleteRoutineById(id)
+        routineExerciseLocalDataSource?.deleteAllExercisesForRoutine(id)
+        recentRoutineLocalDataSource?.deleteRecentByRoutineId(id)
     }
 
     suspend fun fetchExercises(): Result<List<ExerciseDto>> = runCatching {
@@ -171,6 +191,7 @@ class AdminRepository {
     suspend fun deleteExercise(id: Int): Result<Unit> = runCatching {
         val response = api.deleteExercise(id)
         if (!response.isSuccessful) throw Exception(response.message() ?: "No se pudo eliminar")
+        exerciseLocalDataSource?.deleteExerciseById(id)
     }
 
     suspend fun fetchGroups(): Result<List<GroupDto>> = runCatching {

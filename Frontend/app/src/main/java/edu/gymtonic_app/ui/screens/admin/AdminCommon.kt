@@ -15,12 +15,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -202,6 +205,7 @@ fun AdminUserListItem(
     title: String,
     subtitle: String,
     imageUrl: String,
+    points: Int? = null,
     onClick: () -> Unit
 ) {
     val colors = LocalColors.current
@@ -243,6 +247,14 @@ fun AdminUserListItem(
                     fontSize = 13.sp
                 )
             }
+            if (points != null) {
+                Text(
+                    text = points.toString(),
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    color = colors.accent
+                )
+            }
         }
     }
 }
@@ -252,6 +264,8 @@ fun AdminExerciseListItem(
     title: String,
     subtitle: String,
     imageUrl: String?,
+    isFavorite: Boolean? = null,
+    onToggleFavorite: (() -> Unit)? = null,
     onClick: () -> Unit
 ) {
     val colors = LocalColors.current
@@ -281,12 +295,28 @@ fun AdminExerciseListItem(
                 )
             }
             Column(Modifier.weight(1f)) {
-                Text(
-                    title,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary,
-                    fontSize = 16.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        title,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textPrimary,
+                        fontSize = 16.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isFavorite != null && onToggleFavorite != null) {
+                        IconButton(
+                            onClick = onToggleFavorite,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Favorito",
+                                tint = if (isFavorite) Color(0xFFE91E63) else colors.textSecondary.copy(alpha = 0.4f),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
                 Text(
                     subtitle,
                     color = colors.textSecondary,

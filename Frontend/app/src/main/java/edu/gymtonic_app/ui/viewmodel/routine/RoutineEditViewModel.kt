@@ -13,6 +13,7 @@ import edu.gymtonic_app.data.remote.remoteDatasource.RoutineRemoteDataSource
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto
+import edu.gymtonic_app.data.repository.RepositoryProvider
 
 import edu.gymtonic_app.data.repository.RoutineRepository
 
@@ -46,15 +47,7 @@ data class RoutineEditUiState(
 
 class RoutineEditViewModel(application: Application) : AndroidViewModel(application) {
 
-
-
-    private val routineRepository = RoutineRepository(
-
-        routineRemoteDataSource = RoutineRemoteDataSource()
-
-    )
-
-
+    private val routineRepository = RepositoryProvider.getRoutineRepository(application)
 
     private val _state = MutableStateFlow(RoutineEditUiState())
 
@@ -91,29 +84,24 @@ class RoutineEditViewModel(application: Application) : AndroidViewModel(applicat
 
 
     fun save(
-
         routineId: Int,
-
         @Suppress("UNUSED_PARAMETER") isLocal: Boolean,
-
         name: String,
-
         exercises: List<RoutineExerciseDto>,
-
         imageFile: File?,
-
+        groupId: Int? = null,
         onSuccess: () -> Unit
-
     ) {
-
         viewModelScope.launch {
-
             _state.update { it.copy(isSaving = true, error = null) }
 
-
-
-            routineRepository.saveRoutineWithFiles(routineId, name, exercises, imageFile)
-
+            routineRepository.saveRoutineWithFiles(
+                id = routineId,
+                name = name,
+                exercises = exercises,
+                imageFile = imageFile,
+                groupId = groupId
+            )
                 .onSuccess { updated ->
 
                     _state.update { it.copy(isSaving = false, routine = updated) }

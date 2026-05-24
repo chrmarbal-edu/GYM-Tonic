@@ -8,7 +8,9 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupDto
 import edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
+import edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto
 import edu.gymtonic_app.data.repository.GroupRepository
+import edu.gymtonic_app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +47,7 @@ sealed class GroupDetailUiState {
 class GroupViewModel(application: Application) : AndroidViewModel(application) {
 
     private val groupRepository = GroupRepository()
+    private val userRepository = UserRepository()
     private val sessionManager = SessionManager(application.sessionDataStore)
 
     private val _listState = MutableStateFlow<GroupsListUiState>(GroupsListUiState.Loading)
@@ -140,10 +143,25 @@ class GroupViewModel(application: Application) : AndroidViewModel(application) {
             val myGroupIds = myGroupsResult.getOrNull().orEmpty().map { it.group_id }.toSet()
             val isMember = myGroupIds.contains(groupId)
 
-            val members = if (isMember) {
-                groupRepository.getGroupMembers(groupId).getOrElse { emptyList() }
+            val membersResult = if (isMember) {
+                groupRepository.getGroupMembers(groupId)
             } else {
-                emptyList()
+                Result.success(emptyList<GroupUserDto>())
+            }
+
+            val usersResult = if (isMember) {
+                userRepository.getUsers()
+            } else {
+                Result.success(emptyList<UserSummaryDto>())
+            }
+
+            val members = membersResult.getOrElse { emptyList() }.map { member ->
+                val userInfo = usersResult.getOrNull()?.find { it.userId == member.userId }
+                member.copy(
+                    userUsername = member.userUsername ?: userInfo?.userUsername,
+                    userName = member.userName ?: userInfo?.userName,
+                    userPicture = member.userPicture ?: userInfo?.userPicture
+                )
             }
 
             val routines = if (isMember) {

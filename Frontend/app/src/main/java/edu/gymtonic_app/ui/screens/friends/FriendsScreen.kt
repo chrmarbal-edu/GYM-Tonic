@@ -157,7 +157,9 @@ fun FriendsScreen(
                                 Text(
                                     text = if (count > 0) "$title ($count)" else title,
                                     fontSize = 13.sp,
-                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         )
@@ -457,12 +459,16 @@ private fun AddFriendDialog(
                                             text = user.userName.orEmpty()
                                                 .ifBlank { user.userUsername.orEmpty() },
                                             fontWeight = FontWeight.SemiBold,
-                                            color = colors.textPrimary
+                                            color = colors.textPrimary,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                         Text(
                                             text = "@${user.userUsername.orEmpty()}",
                                             fontSize = 12.sp,
-                                            color = colors.textSecondary
+                                            color = colors.textSecondary,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                     TextButton(onClick = { onSend(user) }) {

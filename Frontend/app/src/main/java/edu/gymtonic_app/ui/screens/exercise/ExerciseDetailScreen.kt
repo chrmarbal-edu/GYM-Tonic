@@ -1,6 +1,7 @@
 package edu.gymtonic_app.ui.screens.exercise
 
 import android.app.Application
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +45,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -296,7 +302,7 @@ fun ExerciseDetailScreen(
 @Composable
 fun VideoPlayer(videoUrl: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val exoPlayer = remember {
+    val exoPlayer = remember(videoUrl) {
         ExoPlayer.Builder(context).build().apply {
             val mediaItem = MediaItem.fromUri(videoUrl)
             setMediaItem(mediaItem)
@@ -306,20 +312,67 @@ fun VideoPlayer(videoUrl: String, modifier: Modifier = Modifier) {
         }
     }
 
+    // Estado para ocultar el componente visualmente de forma instantánea
+    var isVisible by remember { mutableStateOf(true) }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, exoPlayer) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_PAUSE -> {
+                    isVisible = false
+                    exoPlayer.pause()
+                }
+                Lifecycle.Event.ON_STOP -> {
+                    isVisible = false
+                    exoPlayer.stop()
+                }
+                Lifecycle.Event.ON_RESUME -> {
+                    isVisible = true
+                    exoPlayer.play()
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            isVisible = false
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
     DisposableEffect(exoPlayer) {
         onDispose {
+            // Detener todo y limpiar el surface para que no quede el último frame
+            exoPlayer.stop()
+            exoPlayer.clearMediaItems()
+            exoPlayer.setVideoSurface(null)
             exoPlayer.release()
         }
     }
 
-    AndroidView(
-        factory = { ctx ->
-            PlayerView(ctx).apply {
-                player = exoPlayer
-                useController = false
-                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
-            }
-        },
+    Box(
         modifier = modifier
-    )
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.Black) // Fondo negro sólido
+    ) {
+        if (isVisible) {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        player = exoPlayer
+                        useController = false
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                        setBackgroundColor(android.graphics.Color.BLACK)
+                        setShutterBackgroundColor(android.graphics.Color.BLACK)
+                    }
+                },
+                modifier = Modifier.fillMaxSize(),
+                onRelease = { playerView ->
+                    playerView.player = null
+                    playerView.visibility = android.view.View.GONE
+                }
+            )
+        }
+    }
 }

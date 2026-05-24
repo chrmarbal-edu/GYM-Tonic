@@ -2,7 +2,7 @@ package edu.gymtonic_app.core.network
 
 import android.util.Log
 import com.google.gson.Gson
-import com.google.gson.JsonObject
+import com.google.gson.JsonElement
 import retrofit2.Response
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -17,13 +17,13 @@ object ErrorManager {
         var current: Throwable? = throwable
         while (current != null) {
             val msg = current.message ?: ""
-            if (msg.contains("No tienes conexión a internet", ignoreCase = true) ||
-                current is UnknownHostException ||
-                current is ConnectException || 
-                msg.contains("Failed to connect", ignoreCase = true) ||
-                msg.contains("Unable to resolve host", ignoreCase = true) ||
-                msg.contains("route to host", ignoreCase = true) ||
-                msg.contains("Connection refused", ignoreCase = true)) {
+            if ((msg.contains("No tienes conexión a internet", ignoreCase = true)) ||
+                (current is UnknownHostException) ||
+                (current is ConnectException) || 
+                (msg.contains("Failed to connect", ignoreCase = true)) ||
+                (msg.contains("Unable to resolve host", ignoreCase = true)) ||
+                (msg.contains("route to host", ignoreCase = true)) ||
+                (msg.contains("Connection refused", ignoreCase = true))) {
                 return "No tienes conexión a internet"
             }
             current = current.cause
@@ -36,31 +36,60 @@ object ErrorManager {
     }
 
     fun parseResponseError(response: Response<*>): String {
-        val errorBody = try { response.errorBody()?.string() } catch (e: Exception) { null }
+        val errorBody = try { response.errorBody()?.string() } catch (_: Exception) { null }
         Log.e("ErrorManager", "Error en respuesta HTTP ${response.code()}: $errorBody")
         
+        if (errorBody.isNullOrBlank()) {
+            return getDefaultErrorMessage(response.code())
+        }
+
+        val trimmedBody = errorBody.trim()
+        if (trimmedBody.startsWith("<!DOCTYPE", ignoreCase = true) || 
+            trimmedBody.startsWith("<html", ignoreCase = true)) {
+            Log.e("ErrorManager", "Cuerpo del error es HTML, no se puede parsear como JSON")
+            return getDefaultErrorMessage(response.code())
+        }
+
         return try {
-            if (!errorBody.isNullOrBlank()) {
-                val jsonObject = gson.fromJson(errorBody, JsonObject::class.java)
+            val jsonElement = gson.fromJson(errorBody, JsonElement::class.java)
+            if (jsonElement.isJsonObject) {
+                val jsonObject = jsonElement.asJsonObject
                 when {
-                    jsonObject.has("message") -> jsonObject.get("message").asString
-                    jsonObject.has("msg") -> jsonObject.get("msg").asString
-                    jsonObject.has("error") -> jsonObject.get("error").asString
+                    jsonObject.has("message") -> jsonObject["message"]?.asString
+                    jsonObject.has("msg") -> jsonObject["msg"]?.asString
+                    jsonObject.has("error") -> {
+                        val errorElem = jsonObject["error"]
+                        when {
+                            errorElem?.isJsonObject == true -> {
+                                val errorObj = errorElem.asJsonObject
+                                if (errorObj.has("message")) errorObj["message"]?.asString
+                                else errorElem.toString()
+                            }
+                            errorElem?.isJsonPrimitive == true -> errorElem.asString
+                            else -> errorElem?.toString()
+                        }
+                    }
+                    jsonObject.has("detail") -> {
+                        val detailElem = jsonObject["detail"]
+                        if (detailElem?.isJsonPrimitive == true) detailElem.asString else detailElem?.toString()
+                    }
                     else -> getDefaultErrorMessage(response.code())
-                }
+                } ?: getDefaultErrorMessage(response.code())
+            } else if (jsonElement.isJsonPrimitive) {
+                jsonElement.asString
             } else {
                 getDefaultErrorMessage(response.code())
             }
         } catch (e: Exception) {
             Log.e("ErrorManager", "Error al parsear el cuerpo del error", e)
-            getDefaultErrorMessage(response.code())
+            if (errorBody.length < 100) errorBody else getDefaultErrorMessage(response.code())
         }
     }
 
     private fun getDefaultErrorMessage(code: Int): String {
         return when (code) {
             400 -> "Solicitud incorrecta"
-            401 -> "No autorizado"
+            401 -> "Usuario y/o contraseña incorrectos"
             403 -> "Acceso denegado"
             404 -> "Recurso no encontrado"
             500 -> "Error interno del servidor"

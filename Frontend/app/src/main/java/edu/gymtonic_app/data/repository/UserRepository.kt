@@ -17,6 +17,12 @@ class UserRepository(
     private val userLocalDataSource: UserLocalDataSource? = null,
     private val context: Context? = null
 ) {
+    suspend fun getUsers(): Result<List<edu.gymtonic_app.data.remote.remoteModel.user.UserSummaryDto>> = runCatching {
+        val response = usersRemoteDataSource.getUsers()
+        if (response.isSuccessful) response.body() ?: emptyList()
+        else throw Exception(ErrorManager.parseResponseError(response))
+    }
+
     suspend fun getUserById(id: Int): Result<UserDto> = runCatching {
         try {
             val response = usersRemoteDataSource.getUserById(id)
@@ -74,13 +80,14 @@ class UserRepository(
     suspend fun updateUserWithFile(
         id: Int,
         username: String?,
-        password: String?,
+        currentPassword: String?,
+        newPassword: String?,
         height: Double?,
         weight: Double?,
         objective: Int?,
         pictureFile: File?
     ): Result<LoginResponse> = runCatching {
-        val response = usersRemoteDataSource.updateUserWithFile(id, username, password, height, weight, objective, pictureFile)
+        val response = usersRemoteDataSource.updateUserWithFile(id, username, currentPassword, newPassword, height, weight, objective, pictureFile)
         if (response.isSuccessful) {
             val loginResponse = response.body()!!
             loginResponse.data?.let { userData ->

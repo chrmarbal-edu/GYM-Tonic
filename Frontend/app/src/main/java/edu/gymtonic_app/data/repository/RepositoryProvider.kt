@@ -31,7 +31,8 @@ object RepositoryProvider {
         val routineExLocal = RoutineExerciseLocalDataSource(database.routineExerciseDao())
         val recentRoutineLocal = RecentRoutineLocalDataSource(database.recentRoutineDao())
         val remoteDataSource = RoutineRemoteDataSource()
-        return RoutineRepository(remoteDataSource, localDataSource, exerciseLocal, routineExLocal, recentRoutineLocal, context)
+        val groupRemote = edu.gymtonic_app.data.remote.remoteDatasource.GroupRemoteDataSource()
+        return RoutineRepository(remoteDataSource, localDataSource, exerciseLocal, routineExLocal, recentRoutineLocal, groupRemote, context)
     }
 
     fun getUserMissionsRepository(context: Context): UserMissionsRepository {
@@ -55,5 +56,14 @@ object RepositoryProvider {
         val localDataSource = UserLocalDataSource(database.userDao())
         val remoteDataSource = edu.gymtonic_app.data.remote.remoteDatasource.AuthRemoteDataSource()
         return AuthRepository(remoteDataSource, localDataSource)
+    }
+
+    fun getAdminRepository(context: Context): AdminRepository {
+        val database = GymTonicDatabase.getInstance(context)
+        val routineLocal = RoutineLocalDataSource(database.routineDao())
+        val routineExLocal = RoutineExerciseLocalDataSource(database.routineExerciseDao())
+        val recentRoutineLocal = RecentRoutineLocalDataSource(database.recentRoutineDao())
+        val exerciseLocal = ExerciseLocalDataSource(database.exerciseDao())
+        return AdminRepository(routineLocal, routineExLocal, recentRoutineLocal, exerciseLocal)
     }
 }

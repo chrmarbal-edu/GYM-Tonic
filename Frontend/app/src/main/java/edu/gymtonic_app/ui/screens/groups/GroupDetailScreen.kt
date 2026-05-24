@@ -19,15 +19,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,6 +44,7 @@ import edu.gymtonic_app.ui.components.BottomNavItem
 import edu.gymtonic_app.ui.components.ObserveToastMessage
 import edu.gymtonic_app.ui.components.ToastErrorRetryContent
 import edu.gymtonic_app.ui.i18n.LocalStrings
+import edu.gymtonic_app.ui.screens.admin.groupRoleLabel
 import edu.gymtonic_app.ui.screens.exercise.TrainingShellScreen
 import edu.gymtonic_app.ui.theme.LocalColors
 import edu.gymtonic_app.ui.viewmodel.GroupDetailUiState
@@ -62,6 +58,7 @@ fun GroupDetailScreen(
     onAddRoutine: (Int) -> Unit,
     onOpenRoutine: (Int) -> Unit,
     onEditRoutine: (Int) -> Unit = {},
+    onOpenMember: (Int) -> Unit = {},
     onOpenTraining: () -> Unit,
     onOpenGroups: () -> Unit,
     onOpenFriends: () -> Unit,
@@ -151,14 +148,18 @@ fun GroupDetailScreen(
                                         text = group.group_name ?: "Grupo",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 22.sp,
-                                        color = colors.textOnAccent
+                                        color = colors.textOnAccent,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     if (!group.group_description.isNullOrBlank()) {
                                         Spacer(modifier = Modifier.height(6.dp))
                                         Text(
                                             text = group.group_description,
                                             fontSize = 14.sp,
-                                            color = colors.textOnAccent.copy(alpha = 0.9f)
+                                            color = colors.textOnAccent.copy(alpha = 0.9f),
+                                            maxLines = 3,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -234,6 +235,26 @@ fun GroupDetailScreen(
                                     )
                                 }
                             }
+
+                            item {
+                                Text(
+                                    text = strings.adminMembersSection,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = colors.textPrimary,
+                                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                                )
+                            }
+
+                            items(data.members) { member ->
+                                MemberRow(
+                                    member = member,
+                                    currentUserId = data.currentUserId,
+                                    pointsLabel = strings.adminPoints,
+                                    roleLabel = strings.adminRole,
+                                    onOpenMember = onOpenMember
+                                )
+                            }
                         }
 
                         item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -287,15 +308,104 @@ private fun GroupRoutineRow(
             )
             if (showEdit) {
                 TextButton(onClick = onEdit) {
-                    Text(editLabel, fontSize = 11.sp)
+                    Text(
+                        text = editLabel,
+                        fontSize = 11.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
             Text(
                 text = openLabel,
                 fontSize = 11.sp,
                 color = colors.textSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.clickable(onClick = onClick)
             )
+        }
+    }
+}
+
+@Composable
+private fun MemberRow(
+    member: edu.gymtonic_app.data.remote.remoteModel.group.GroupUserDto,
+    currentUserId: Int?,
+    pointsLabel: String,
+    roleLabel: String,
+    onOpenMember: (Int) -> Unit
+) {
+    val colors = LocalColors.current
+    val isMe = member.userId == currentUserId
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = colors.surfaceCard,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(enabled = !isMe) { onOpenMember(member.userId) }
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                color = colors.surfaceMain
+            ) {
+                if (!member.userPicture.isNullOrBlank()) {
+                    AsyncImage(
+                        model = edu.gymtonic_app.core.MediaUtils.resolveBackendMediaUrl(member.userPicture),
+                        contentDescription = member.userUsername ?: member.userName,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            tint = colors.textSecondary.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = member.userName ?: member.userUsername ?: "Usuario ${member.userId}",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = colors.textPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = groupRoleLabel(member.range),
+                    fontSize = 12.sp,
+                    color = colors.textSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (member.userPoints != null) {
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = member.userPoints.toString(),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp,
+                        color = colors.accent
+                    )
+                    Text(
+                        text = pointsLabel,
+                        fontSize = 10.sp,
+                        color = colors.textSecondary
+                    )
+                }
+            }
         }
     }
 }

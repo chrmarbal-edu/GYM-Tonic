@@ -50,4 +50,8 @@ class RoutineLocalDataSource(
     suspend fun deleteRoutineByIdForOwner(id: Int, ownerUserId: Int): Int {
         return routineDao.deleteRoutineByIdForOwner(id, ownerUserId)
     }
+
+    suspend fun deleteRoutineById(id: Int): Int {
+        return routineDao.deleteRoutineById(id)
+    }
 }

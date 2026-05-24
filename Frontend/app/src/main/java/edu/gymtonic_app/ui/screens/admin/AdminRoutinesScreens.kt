@@ -314,10 +314,14 @@ fun AdminRoutineEditScreen(
                         exercise = ex,
                         onRemove = { selectedExercises.removeAt(index) },
                         onUpdateReps = { newReps ->
-                            selectedExercises[index] = selectedExercises[index].copy(reps = newReps)
+                            if (newReps.all { it.isDigit() } || newReps.isEmpty()) {
+                                selectedExercises[index] = selectedExercises[index].copy(reps = newReps)
+                            }
                         },
                         onUpdateSeries = { newSeries ->
-                            selectedExercises[index] = selectedExercises[index].copy(series = newSeries.toIntOrNull())
+                            if (newSeries.all { it.isDigit() } || newSeries.isEmpty()) {
+                                selectedExercises[index] = selectedExercises[index].copy(series = newSeries.toIntOrNull())
+                            }
                         }
                     )
                 }
@@ -349,7 +353,14 @@ fun AdminSelectedExerciseItem(
     onUpdateReps: (String) -> Unit,
     onUpdateSeries: (String) -> Unit
 ) {
+    val strings = LocalStrings.current
     val colors = LocalColors.current
+    val seriesInt = exercise.series ?: 0
+    val repsInt = exercise.reps?.toIntOrNull() ?: 0
+    
+    val isSeriesValid = seriesInt in 1..10
+    val isRepsValid = repsInt in 1..100
+
     Surface(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
@@ -373,29 +384,42 @@ fun AdminSelectedExerciseItem(
                 Modifier.fillMaxWidth().padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(
-                    value = exercise.series?.toString() ?: "",
-                    onValueChange = onUpdateSeries,
-                    label = { Text("Series", fontSize = 11.sp) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colors.accent,
-                        unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
+                Column(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = exercise.series?.toString() ?: "",
+                        onValueChange = onUpdateSeries,
+                        label = { Text("Series (1-10)", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        isError = exercise.series != null && !isSeriesValid,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = colors.accent,
+                            unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
+                        )
                     )
-                )
-                OutlinedTextField(
-                    value = exercise.reps ?: "",
-                    onValueChange = onUpdateReps,
-                    label = { Text("Reps", fontSize = 11.sp) },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colors.accent,
-                        unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
+                    if (exercise.series != null && !isSeriesValid) {
+                        Text(strings.invalidSeriesRange, color = Color.Red, fontSize = 10.sp, modifier = Modifier.padding(start = 4.dp))
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = exercise.reps ?: "",
+                        onValueChange = onUpdateReps,
+                        label = { Text("Reps (1-100)", fontSize = 11.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        isError = !exercise.reps.isNullOrEmpty() && !isRepsValid,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = colors.accent,
+                            unfocusedBorderColor = colors.fieldIndicator.copy(alpha = 0.3f)
+                        )
                     )
-                )
+                    if (!exercise.reps.isNullOrEmpty() && !isRepsValid) {
+                        Text(strings.invalidRepsRange, color = Color.Red, fontSize = 10.sp, modifier = Modifier.padding(start = 4.dp))
+                    }
+                }
             }
         }
     }
@@ -409,6 +433,14 @@ fun AdminExerciseSelectionScreen(
     viewModel: AdminExercisesViewModel = viewModel()
 ) {
     val strings = LocalStrings.current
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val application = context.applicationContext as android.app.Application
+    val exerciseViewModel: edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel = 
+        viewModel(factory = edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory(application))
+    
+    val favoriteExercises by exerciseViewModel.favoriteExercises.collectAsState()
+    val favoriteIds = remember(favoriteExercises) { favoriteExercises.map { it.exercise_id }.toSet() }
+
     val state by viewModel.listState.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf<Int?>(null) }
@@ -458,6 +490,7 @@ fun AdminExerciseSelectionScreen(
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(filteredItems) { exercise ->
                         val isAdded = alreadySelectedIds.contains(exercise.exercise_id)
+                        val isFav = favoriteIds.contains(exercise.exercise_id)
                         AdminExerciseListItem(
                             title = exercise.exercise_name,
                             subtitle = if (isAdded) {
@@ -466,6 +499,18 @@ fun AdminExerciseSelectionScreen(
                                 exerciseTypeLabel(exercise.exercise_type)
                             },
                             imageUrl = resolveBackendMediaUrl(exercise.exercise_image),
+                            isFavorite = isFav,
+                            onToggleFavorite = {
+                                exerciseViewModel.onToggleFavorite(
+                                    edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload(
+                                        id = exercise.exercise_id,
+                                        name = exercise.exercise_name,
+                                        description = exercise.exercise_description,
+                                        type = exercise.exercise_type,
+                                        image = exercise.exercise_image
+                                    )
+                                )
+                            },
                             onClick = { exerciseToConfigure = exercise }
                         )
                     }
@@ -481,9 +526,16 @@ fun AddExerciseDetailsDialog(
     onDismiss: () -> Unit,
     onConfirm: (reps: String, series: Int) -> Unit
 ) {
+    val strings = LocalStrings.current
     var reps by remember { mutableStateOf("10") }
     var series by remember { mutableStateOf("3") }
     val colors = LocalColors.current
+
+    val seriesInt = series.toIntOrNull() ?: 0
+    val repsInt = reps.toIntOrNull() ?: 0
+    
+    val isSeriesValid = seriesInt in 1..10
+    val isRepsValid = repsInt in 1..100
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -492,32 +544,45 @@ fun AddExerciseDetailsDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(exerciseName, fontSize = 14.sp, color = colors.textSecondary)
                 
-                OutlinedTextField(
-                    value = series,
-                    onValueChange = { if (it.all { c -> c.isDigit() }) series = it },
-                    label = { Text("Series") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
-                )
-                OutlinedTextField(
-                    value = reps,
-                    onValueChange = { reps = it },
-                    label = { Text("Repeticiones") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
+                Column {
+                    OutlinedTextField(
+                        value = series,
+                        onValueChange = { if (it.all { c -> c.isDigit() }) series = it },
+                        label = { Text("Series (1-10)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = series.isNotEmpty() && !isSeriesValid
+                    )
+                    if (series.isNotEmpty() && !isSeriesValid) {
+                        Text(strings.invalidSeriesRange, color = Color.Red, fontSize = 12.sp)
+                    }
+                }
+
+                Column {
+                    OutlinedTextField(
+                        value = reps,
+                        onValueChange = { if (it.all { c -> c.isDigit() }) reps = it },
+                        label = { Text("Repeticiones (1-100)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = reps.isNotEmpty() && !isRepsValid
+                    )
+                    if (reps.isNotEmpty() && !isRepsValid) {
+                        Text(strings.invalidRepsRange, color = Color.Red, fontSize = 12.sp)
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    val s = series.toIntOrNull() ?: 0
-                    if (s > 0 && reps.isNotBlank()) {
-                        onConfirm(reps, s)
+                    if (isSeriesValid && isRepsValid) {
+                        onConfirm(reps, seriesInt)
                     }
                 },
-                enabled = (series.toIntOrNull() ?: 0) > 0 && reps.isNotBlank()
+                enabled = isSeriesValid && isRepsValid
             ) {
                 Text("Añadir")
             }

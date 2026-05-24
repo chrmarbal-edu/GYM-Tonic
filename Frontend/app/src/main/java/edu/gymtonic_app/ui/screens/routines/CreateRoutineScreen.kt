@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -25,17 +27,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -68,6 +60,9 @@ import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel
 import edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory
 import edu.gymtonic_app.ui.screens.admin.uriToUploadFile
 import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
+import edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload
+import edu.gymtonic_app.ui.screens.admin.exerciseTypeOptions
+import edu.gymtonic_app.ui.screens.admin.AdminTypeFilter
 import java.io.File
 import kotlinx.coroutines.launch
 
@@ -100,6 +95,7 @@ fun CreateRoutineScreen(
     var routineImageLabel by remember { mutableStateOf<String?>(null) }
     val selectedExercises = remember { mutableStateListOf<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>() }
     var searchQuery by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf<Int?>(null) }
     
     var exerciseToConfigure by remember { mutableStateOf<edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto?>(null) }
     var favoritesExpanded by rememberSaveable { mutableStateOf(true) }
@@ -176,16 +172,24 @@ fun CreateRoutineScreen(
         favoriteExercises.map { it.exercise_id }.toSet()
     }
 
-    val filteredFavorites = remember(allExercises, searchQuery, favoriteIds) {
-        val base = if (searchQuery.isBlank()) allExercises
-        else allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
-        base.filter { it.exercise_id in favoriteIds }
+    val filteredExercises = remember(allExercises, searchQuery, selectedType) {
+        allExercises.filter { exercise ->
+            val matchesSearch = if (searchQuery.isBlank()) true
+            else exercise.exercise_name.contains(searchQuery, ignoreCase = true)
+            
+            val matchesType = if (selectedType == null) true
+            else exercise.exercise_type == selectedType
+            
+            matchesSearch && matchesType
+        }
     }
 
-    val filteredOthers = remember(allExercises, searchQuery, favoriteIds) {
-        val base = if (searchQuery.isBlank()) allExercises
-        else allExercises.filter { it.exercise_name.contains(searchQuery, ignoreCase = true) }
-        base.filter { it.exercise_id !in favoriteIds }
+    val filteredFavorites = remember(filteredExercises, favoriteIds) {
+        filteredExercises.filter { it.exercise_id in favoriteIds }
+    }
+
+    val filteredOthers = remember(filteredExercises, favoriteIds) {
+        filteredExercises.filter { it.exercise_id !in favoriteIds }
     }
 
     TrainingShellScreen(
@@ -259,6 +263,12 @@ fun CreateRoutineScreen(
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    AdminTypeFilter(
+                        selectedType = selectedType,
+                        onTypeSelected = { selectedType = it },
+                        options = exerciseTypeOptions
+                    )
                 }
 
                 if (filteredFavorites.isNotEmpty()) {
@@ -290,10 +300,23 @@ fun CreateRoutineScreen(
                             key = { "fav_${it.exercise_id}" }
                         ) { exercise ->
                             val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
-                            ExerciseRow(
-                                exercise = exercise,
+                            edu.gymtonic_app.ui.components.SelectableExerciseRow(
+                                name = exercise.exercise_name,
+                                image = exercise.exercise_image,
                                 selected = isSelected,
-                                onToggle = { toggleSelection(exercise) }
+                                isFavorite = true,
+                                onToggle = { toggleSelection(exercise) },
+                                onToggleFavorite = { 
+                                    exerciseViewModel.onToggleFavorite(
+                                        FavoriteExercisePayload(
+                                            id = exercise.exercise_id,
+                                            name = exercise.exercise_name,
+                                            description = exercise.exercise_description,
+                                            type = exercise.exercise_type,
+                                            image = exercise.exercise_image
+                                        )
+                                    ) 
+                                }
                             )
                         }
                     }
@@ -313,10 +336,23 @@ fun CreateRoutineScreen(
                         key = { it.exercise_id }
                     ) { exercise ->
                         val isSelected = selectedExercises.any { it.exercise_id == exercise.exercise_id }
-                        ExerciseRow(
-                            exercise = exercise,
+                        edu.gymtonic_app.ui.components.SelectableExerciseRow(
+                            name = exercise.exercise_name,
+                            image = exercise.exercise_image,
                             selected = isSelected,
-                            onToggle = { toggleSelection(exercise) }
+                            isFavorite = false,
+                            onToggle = { toggleSelection(exercise) },
+                            onToggleFavorite = { 
+                                exerciseViewModel.onToggleFavorite(
+                                    FavoriteExercisePayload(
+                                        id = exercise.exercise_id,
+                                        name = exercise.exercise_name,
+                                        description = exercise.exercise_description,
+                                        type = exercise.exercise_type,
+                                        image = exercise.exercise_image
+                                    )
+                                )
+                            }
                         )
                     }
                 }
@@ -358,69 +394,21 @@ fun CreateRoutineScreen(
 }
 
 @Composable
-private fun ExerciseRow(
-    exercise: ExerciseDto,
-    selected: Boolean,
-    onToggle: () -> Unit
-) {
-    val colors = LocalColors.current
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = colors.surfaceCard,
-        shadowElevation = 2.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Surface(
-                modifier = Modifier.size(64.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = colors.surfaceMain
-            ) {
-                AsyncImage(
-                    model = edu.gymtonic_app.core.MediaUtils.resolveBackendMediaUrl(exercise.exercise_image),
-                    contentDescription = exercise.exercise_name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = exercise.exercise_name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = colors.textPrimary
-                )
-            }
-
-            TextButton(onClick = onToggle) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = if (selected) colors.accent else Color(0xFF9EA3AF)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(text = if (selected) "Añadido" else "Añadir")
-            }
-        }
-    }
-}
-
-@Composable
 fun AddExerciseDetailsDialog(
     exerciseName: String,
     onDismiss: () -> Unit,
     onConfirm: (reps: String, series: Int) -> Unit
 ) {
+    val strings = LocalStrings.current
     var reps by remember { mutableStateOf("10") }
     var series by remember { mutableStateOf("3") }
     val colors = LocalColors.current
+
+    val seriesInt = series.toIntOrNull() ?: 0
+    val repsInt = reps.toIntOrNull() ?: 0
+    
+    val isSeriesValid = seriesInt in 1..10
+    val isRepsValid = repsInt in 1..100
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -429,34 +417,57 @@ fun AddExerciseDetailsDialog(
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(exerciseName, fontSize = 14.sp, color = colors.textSecondary)
                 
-                OutlinedTextField(
-                    value = series,
-                    onValueChange = { if (it.all { c -> c.isDigit() }) series = it },
-                    label = { Text("Series") },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
-                )
-                OutlinedTextField(
-                    value = reps,
-                    onValueChange = { reps = it },
-                    label = { Text("Repeticiones") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp)
-                )
+                Column {
+                    OutlinedTextField(
+                        value = series,
+                        onValueChange = { if (it.all { c -> c.isDigit() }) series = it },
+                        label = { Text("Series (1-10)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = series.isNotEmpty() && !isSeriesValid,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    if (series.isNotEmpty() && !isSeriesValid) {
+                        Text(
+                            text = strings.invalidSeriesRange,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                        )
+                    }
+                }
+
+                Column {
+                    OutlinedTextField(
+                        value = reps,
+                        onValueChange = { if (it.all { c -> c.isDigit() }) reps = it },
+                        label = { Text("Repeticiones (1-100)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        isError = reps.isNotEmpty() && !isRepsValid,
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    if (reps.isNotEmpty() && !isRepsValid) {
+                        Text(
+                            text = strings.invalidRepsRange,
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    val s = series.toIntOrNull() ?: 0
-                    if (s > 0 && reps.isNotBlank()) {
-                        onConfirm(reps, s)
+                    if (isSeriesValid && isRepsValid) {
+                        onConfirm(reps, seriesInt)
                     }
                 },
-                enabled = (series.toIntOrNull() ?: 0) > 0 && reps.isNotBlank(),
+                enabled = isSeriesValid && isRepsValid,
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text("Añadir")

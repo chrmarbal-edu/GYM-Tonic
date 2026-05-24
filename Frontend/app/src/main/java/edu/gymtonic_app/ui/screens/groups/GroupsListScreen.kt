@@ -76,7 +76,13 @@ fun GroupsListScreen(
     if (showCreateDialog) {
         AlertDialog(
             onDismissRequest = { showCreateDialog = false },
-            title = { Text(strings.groupsCreateTitle) },
+            title = {
+                Text(
+                    text = strings.groupsCreateTitle,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
@@ -105,12 +111,20 @@ fun GroupsListScreen(
                     },
                     enabled = groupName.isNotBlank()
                 ) {
-                    Text(strings.groupsCreateConfirm)
+                    Text(
+                        text = strings.groupsCreateConfirm,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCreateDialog = false }) {
-                    Text(strings.groupsCancel)
+                    Text(
+                        text = strings.groupsCancel,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
         )
@@ -154,14 +168,18 @@ fun GroupsListScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item {
-                            Button(
-                                onClick = { showCreateDialog = true },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 8.dp)
-                            ) {
-                                Text(strings.groupsCreateButton)
-                            }
+                                Button(
+                                    onClick = { showCreateDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp)
+                                ) {
+                                    Text(
+                                        text = strings.groupsCreateButton,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                         }
 
                         item {
@@ -266,7 +284,12 @@ private fun GroupListRow(
                 )
             }
             TextButton(onClick = onAction) {
-                Text(text = actionLabel, fontSize = 12.sp)
+                Text(
+                    text = actionLabel,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

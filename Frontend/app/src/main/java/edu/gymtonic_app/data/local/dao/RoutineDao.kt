@@ -45,4 +45,7 @@ interface RoutineDao {
 
     @Query("DELETE FROM routines WHERE routine_id = :id AND owner_user_id = :ownerUserId")
     suspend fun deleteRoutineByIdForOwner(id: Int, ownerUserId: Int): Int
+
+    @Query("DELETE FROM routines WHERE routine_id = :id")
+    suspend fun deleteRoutineById(id: Int): Int
 }

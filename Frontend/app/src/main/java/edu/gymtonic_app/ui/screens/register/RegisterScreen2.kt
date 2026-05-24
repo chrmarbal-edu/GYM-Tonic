@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -187,6 +188,19 @@ fun RegisterScreen2(
             LanguageButton(tint = Color.White)
         }
 
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(top = 4.dp)
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Atrás",
+                tint = Color.White
+            )
+        }
+
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
@@ -292,8 +306,9 @@ fun RegisterScreen2(
                         label = strings.birthDate,
                         formatHint = when {
                             fechaNacimientoValue.text.isBlank() -> strings.requiredField
-                            !fechaNacimientoValue.text.matches(if (isSpanish) Regex("""\d{2}/\d{2}/\d{4}""") else Regex("""\d{4}-\d{2}-\d{2}""")) -> strings.birthDateFormat
-                            else -> strings.invalidAge
+                            !fechaNacimientoValue.text.matches(if (isSpanish) Regex("""\d{2}/\d{2}/\d{4}""") else Regex("""\d{4}-\d{2}-\d{2}""")) -> strings.invalidDate
+                            fechaError -> strings.invalidAge
+                            else -> strings.invalidDate
                         },
                         fechaValue = fechaNacimientoValue,
                         onFechaValueChange = { 

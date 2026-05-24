@@ -9,6 +9,7 @@ import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDetailDto
 import edu.gymtonic_app.data.remote.remoteModel.routine.RoutineDto
 import edu.gymtonic_app.data.repository.AdminRepository
 import edu.gymtonic_app.data.repository.GroupRepository
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +19,7 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 class AdminRoutinesViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = AdminRepository()
+    private val repository = RepositoryProvider.getAdminRepository(application)
     private val groupRepository = GroupRepository()
     private val sessionManager = SessionManager(application.sessionDataStore)
 
@@ -80,7 +81,8 @@ class AdminRoutinesViewModel(application: Application) : AndroidViewModel(applic
     ) {
         viewModelScope.launch {
             _detailState.update { it.copy(isSaving = true, error = null) }
-            repository.saveRoutineWithFiles(id, name, exercises, imageFile)
+            val groupId = _detailState.value.item?.routine_groupid
+            repository.saveRoutineWithFiles(id, name, exercises, imageFile, groupId)
                 .onSuccess { routine ->
                     _detailState.update {
                         it.copy(

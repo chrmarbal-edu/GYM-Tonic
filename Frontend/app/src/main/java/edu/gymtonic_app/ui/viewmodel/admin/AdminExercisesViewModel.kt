@@ -1,9 +1,10 @@
 package edu.gymtonic_app.ui.viewmodel.admin
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
-import edu.gymtonic_app.data.repository.AdminRepository
+import edu.gymtonic_app.data.repository.RepositoryProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,8 +12,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
 
-class AdminExercisesViewModel : ViewModel() {
-    private val repository = AdminRepository()
+class AdminExercisesViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = RepositoryProvider.getAdminRepository(application)
 
     private val _listState = MutableStateFlow(AdminListUiState<ExerciseDto>())
     val listState: StateFlow<AdminListUiState<ExerciseDto>> = _listState.asStateFlow()

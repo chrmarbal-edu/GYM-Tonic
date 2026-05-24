@@ -50,6 +50,14 @@ fun AdminExercisesListScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf<Int?>(null) }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val application = context.applicationContext as android.app.Application
+    val exerciseViewModel: edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModel = 
+        viewModel(factory = edu.gymtonic_app.ui.viewmodel.exercise.ExerciseViewModelFactory(application))
+    
+    val favoriteExercises by exerciseViewModel.favoriteExercises.collectAsState()
+    val favoriteIds = remember(favoriteExercises) { favoriteExercises.map { it.exercise_id }.toSet() }
+
     LaunchedEffect(Unit) { viewModel.loadList() }
 
     AdminShellScreen(
@@ -81,10 +89,23 @@ fun AdminExercisesListScreen(
             ) {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(filteredItems) { exercise ->
+                        val isFav = favoriteIds.contains(exercise.exercise_id)
                         AdminExerciseListItem(
                             title = exercise.exercise_name,
                             subtitle = "${exerciseTypeLabel(exercise.exercise_type)} · ID ${exercise.exercise_id}",
                             imageUrl = resolveBackendMediaUrl(exercise.exercise_image),
+                            isFavorite = isFav,
+                            onToggleFavorite = {
+                                exerciseViewModel.onToggleFavorite(
+                                    edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload(
+                                        id = exercise.exercise_id,
+                                        name = exercise.exercise_name,
+                                        description = exercise.exercise_description,
+                                        type = exercise.exercise_type,
+                                        image = exercise.exercise_image
+                                    )
+                                )
+                            },
                             onClick = { onOpenDetail(exercise.exercise_id) }
                         )
                     }

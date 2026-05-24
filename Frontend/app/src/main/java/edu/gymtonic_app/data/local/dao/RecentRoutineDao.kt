@@ -18,6 +18,9 @@ interface RecentRoutineDao {
     @Query("DELETE FROM recent_routines WHERE userId = :userId AND routineId = :routineId")
     suspend fun deleteExisting(userId: Int, routineId: Int)
 
+    @Query("DELETE FROM recent_routines WHERE routineId = :routineId")
+    suspend fun deleteByRoutineId(routineId: Int)
+
     @Query("DELETE FROM recent_routines WHERE userId = :userId")
     suspend fun clearHistory(userId: Int)
 }

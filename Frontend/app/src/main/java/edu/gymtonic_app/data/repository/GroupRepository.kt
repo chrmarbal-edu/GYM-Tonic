@@ -92,10 +92,20 @@ class GroupRepository(
 	): Result<RoutineDto> {
 		return runCatching {
 			val gson = com.google.gson.Gson()
-			// El backend para grupos espera solo una lista de IDs de ejercicios
-			val exercisesJson = gson.toJson(exercises.map { it.exercise_id })
+			// Enviamos la lista completa de ejercicios con sus series (sets) y repeticiones
+			val exercisesJson = gson.toJson(exercises.map {
+				mapOf(
+					"exercise_id" to it.exercise_id,
+					"exerciseId" to it.exercise_id,
+					"id" to it.exercise_id,
+					"series" to (it.series ?: 0),
+					"sets" to (it.series ?: 0),
+					"reps" to (it.reps ?: ""),
+					"repetitions" to (it.reps ?: "")
+				)
+			})
 			val exercisesBody =
-				exercisesJson.toRequestBody("text/plain".toMediaTypeOrNull())
+				exercisesJson.toRequestBody("application/json".toMediaTypeOrNull())
 
 			val imagePart = imageFile?.let {
 				okhttp3.MultipartBody.Part.createFormData(
@@ -109,7 +119,7 @@ class GroupRepository(
 				groupRemoteDataSource.addGroupRoutineMultipart(
 					id = groupId,
 					name = name.trim().toRequestBody("text/plain".toMediaTypeOrNull()),
-					exerciseIds = exercisesBody,
+					exercises = exercisesBody,
 					image = imagePart
 				),
 				"No se pudo añadir la rutina al grupo"

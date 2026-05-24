@@ -24,4 +24,8 @@ class RecentRoutineLocalDataSource(private val recentRoutineDao: RecentRoutineDa
         )
         recentRoutineDao.insertRecent(recent)
     }
+
+    suspend fun deleteRecentByRoutineId(routineId: Int) {
+        recentRoutineDao.deleteByRoutineId(routineId)
+    }
 }

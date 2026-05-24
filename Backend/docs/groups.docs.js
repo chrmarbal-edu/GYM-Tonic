@@ -303,7 +303,7 @@
 
 /**
  * @swagger
- * /groups/{id}/add-routine:
+ * /groups/{id}/routines:
  *   post:
  *     summary: Añadir una rutina al grupo
  *     tags: [Grupos]
@@ -324,11 +324,60 @@
  *             properties:
  *               name:
  *                 type: string
- *               exercise_ids:
- *                 type: array
- *                 items:
- *                   type: integer
+ *               exercises:
+ *                 type: string
+ *                 description: Array JSON de objetos con exercise_id, reps y sets.
  *     responses:
  *       201:
  *         description: Rutina creada y asignada a miembros
+ */
+
+/**
+ * @swagger
+ * /groups/{id}/routines/{routineId}:
+ *   patch:
+ *     summary: Actualizar una rutina de grupo
+ *     tags: [Grupos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: ID del grupo
+ *         schema:
+ *           type: integer
+ *       - in: path
+ *         name: routineId
+ *         required: true
+ *         description: ID de la rutina a editar
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nuevo nombre de la rutina
+ *               exercises:
+ *                 type: string
+ *                 description: Array JSON de objetos con exercise_id, reps y sets.
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Nueva imagen para la rutina
+ *     responses:
+ *       200:
+ *         description: Rutina actualizada correctamente
+ *       400:
+ *         description: Datos de entrada inválidos
+ *       403:
+ *         description: No tienes permisos (solo el creador del grupo puede editar)
+ *       404:
+ *         description: Grupo o rutina no encontrados
+ *       500:
+ *         description: Error interno del servidor
  */

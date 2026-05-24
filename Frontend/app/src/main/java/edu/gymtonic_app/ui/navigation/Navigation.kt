@@ -70,6 +70,8 @@ import edu.gymtonic_app.ui.viewmodel.HomeViewModel
 import edu.gymtonic_app.ui.viewmodel.LoginViewModel
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 import edu.gymtonic_app.ui.viewmodel.TrainingScreenViewModel
+import edu.gymtonic_app.ui.viewmodel.GroupViewModel
+import edu.gymtonic_app.ui.viewmodel.routine.RoutineCatalogViewModel
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -259,6 +261,7 @@ fun Navigation(navController: NavHostController) {
                             picture = socialData.picture,
                             oauth = socialData.oauth
                         )
+                        loginViewModel.resetLoginState()
                         navController.navigate(Routes.REGISTER)
                     }
                     is LoginState.Error -> {
@@ -593,22 +596,52 @@ fun Navigation(navController: NavHostController) {
         ) { backStackEntry ->
             val routineId = backStackEntry.arguments?.getString("routineId").orEmpty()
             val isLocal = backStackEntry.arguments?.getBoolean("local") ?: false
+            val routineViewModel: RoutineCatalogViewModel = viewModel()
+
+            // Observe the refresh signal
+            val refreshRequested by navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.getStateFlow("refresh_routine", false)
+                ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+            LaunchedEffect(refreshRequested) {
+                if (refreshRequested) {
+                    routineViewModel.loadRoutine(routineId, isLocal)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("refresh_routine", false)
+                }
+            }
 
             RoutineCatalogScreen(
                 routineId = routineId,
                 isLocal = isLocal,
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    // Propagate refresh signals to parent if we were updated from an edit
+                    val h = navController.currentBackStackEntry?.savedStateHandle
+                    if (h?.get<Boolean>("refresh_training") == true) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_training", true)
+                    }
+                    if (h?.get<Boolean>("refresh_group") == true) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_group", true)
+                    }
+                    navController.popBackStack()
+                },
                 onExerciseClick = { exerciseId, reps, series ->
                     navController.navigate(Routes.exercise(exerciseId, reps, series))
                 },
-                onEdit = { id, local ->
-                    navController.navigate(Routes.editRoutine(id, local))
+                onEdit = { id, local, groupId ->
+                    navController.navigate(Routes.editRoutine(id, local, groupId))
+                },
+                onDeleted = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_training", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_group", true)
+                    navController.popBackStack()
                 },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
-                onOpenProfile = onOpenProfileGlobal
+                onOpenProfile = onOpenProfileGlobal,
+                viewModel = routineViewModel
             )
         }
 
@@ -619,17 +652,29 @@ fun Navigation(navController: NavHostController) {
                 navArgument("local") {
                     type = NavType.BoolType
                     defaultValue = false
+                },
+                navArgument("groupId") {
+                    type = NavType.StringType // Usamos String porque el NavType.IntType opcional es más complejo
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getInt("routineId") ?: return@composable
             val isLocal = backStackEntry.arguments?.getBoolean("local") ?: false
+            val groupId = backStackEntry.arguments?.getString("groupId")?.toIntOrNull()
 
             RoutineEditScreen(
                 routineId = id,
                 isLocal = isLocal,
+                groupId = groupId,
                 onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() },
+                onSaved = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_routine", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_training", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_group", true)
+                    navController.popBackStack()
+                },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
@@ -734,22 +779,46 @@ fun Navigation(navController: NavHostController) {
             arguments = listOf(navArgument("groupId") { type = NavType.IntType })
         ) { backStackEntry ->
             val groupId = backStackEntry.arguments?.getInt("groupId") ?: return@composable
+            val groupViewModel: GroupViewModel = viewModel()
+
+            // Observe the refresh signal
+            val refreshRequested by navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.getStateFlow("refresh_group", false)
+                ?.collectAsState() ?: remember { mutableStateOf(false) }
+
+            LaunchedEffect(refreshRequested) {
+                if (refreshRequested) {
+                    groupViewModel.loadGroupDetail(groupId)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("refresh_group", false)
+                }
+            }
 
             GroupDetailScreen(
                 groupId = groupId,
-                onBack = { navController.popBackStack() },
+                onBack = {
+                    val h = navController.currentBackStackEntry?.savedStateHandle
+                    if (h?.get<Boolean>("refresh_training") == true) {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_training", true)
+                    }
+                    navController.popBackStack()
+                },
                 onAddRoutine = { id -> navController.navigate(Routes.groupAddRoutine(id)) },
                 onOpenRoutine = { routineId ->
                     navController.navigate(Routes.routine(routineId.toString(), isLocal = false))
                 },
                 onEditRoutine = { routineId ->
-                    navController.navigate(Routes.editRoutine(routineId, isLocal = false))
+                    navController.navigate(Routes.editRoutine(routineId, isLocal = false, groupId = groupId))
+                },
+                onOpenMember = { userId ->
+                    navController.navigate(Routes.friendDetail(userId))
                 },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,
                 onOpenChallenges = onOpenChallengesGlobal,
-                onOpenProfile = onOpenProfileGlobal
+                onOpenProfile = onOpenProfileGlobal,
+                viewModel = groupViewModel
             )
         }
 
@@ -762,7 +831,11 @@ fun Navigation(navController: NavHostController) {
             AddGroupRoutineScreen(
                 groupId = groupId,
                 onBack = { navController.popBackStack() },
-                onRoutineAdded = { navController.popBackStack() },
+                onRoutineAdded = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_group", true)
+                    navController.previousBackStackEntry?.savedStateHandle?.set("refresh_training", true)
+                    navController.popBackStack()
+                },
                 onOpenTraining = onOpenTrainingGlobal,
                 onOpenGroups = onOpenGroupsGlobal,
                 onOpenFriends = onOpenFriendsGlobal,

@@ -194,7 +194,8 @@ interface ApiService {
     suspend fun updateUserWithFile(
         @Path("id") id: Int,
         @Part("username") username: okhttp3.RequestBody?,
-        @Part("password") password: okhttp3.RequestBody?,
+        @Part("currentPassword") currentPassword: okhttp3.RequestBody?,
+        @Part("newPassword") newPassword: okhttp3.RequestBody?,
         @Part("height") height: okhttp3.RequestBody?,
         @Part("weight") weight: okhttp3.RequestBody?,
         @Part("objective") objective: okhttp3.RequestBody?,
@@ -381,11 +382,21 @@ interface ApiService {
     ): Response<RoutineDto>
 
     @Multipart
+    @PATCH("groups/{id}/routines/{routineId}")
+    suspend fun updateGroupRoutineMultipart(
+        @Path("id") id: Int,
+        @Path("routineId") routineId: Int,
+        @Part("name") name: okhttp3.RequestBody?,
+        @Part("exercises") exercises: okhttp3.RequestBody?,
+        @Part image: okhttp3.MultipartBody.Part?
+    ): Response<RoutineDetailDto>
+
+    @Multipart
     @POST("groups/{id}/routines")
     suspend fun addGroupRoutineMultipart(
         @Path("id") id: Int,
         @Part("name") name: okhttp3.RequestBody,
-        @Part("exercise_ids") exerciseIds: okhttp3.RequestBody,
+        @Part("exercises") exercises: okhttp3.RequestBody,
         @Part image: okhttp3.MultipartBody.Part?
     ): Response<RoutineDto>
 

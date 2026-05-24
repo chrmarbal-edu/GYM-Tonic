@@ -2,12 +2,14 @@
 
 package edu.gymtonic_app.ui.screens.register
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -44,13 +46,27 @@ fun RegisterScreen(
     val colors = LocalColors.current
     val registerState by registerViewModel.registerState.collectAsState()
 
+    // Datos iniciales desde registro social si existen
+    val socialData = registerViewModel.socialUserData
+    var showStep2 by remember { mutableStateOf(socialData != null) }
+
     ObserveToastMessage(
         message = (registerState as? RegisterState.Error)?.message
     )
 
-    // Datos iniciales desde registro social si existen
-    val socialData = registerViewModel.socialUserData
-    var showStep2 by remember { mutableStateOf(socialData != null) }
+    BackHandler {
+        if (showStep2) {
+            val socialDataOnBack = registerViewModel.socialUserData
+            if (socialDataOnBack != null) {
+                registerViewModel.clearSocialData()
+                onBack()
+            } else {
+                showStep2 = false
+            }
+        } else {
+            onBack()
+        }
+    }
 
     val bg = Brush.verticalGradient(colors.gradientColors)
 
@@ -159,6 +175,19 @@ fun RegisterScreen(
                     ) {
                         ThemeButton(tint = Color.White)
                         LanguageButton(tint = Color.White)
+                    }
+
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(top = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Atrás",
+                            tint = Color.White
+                        )
                     }
 
                     Column(

@@ -34,6 +34,7 @@ class RoutineRepository(
     private val exerciseLocalDataSource: ExerciseLocalDataSource? = null,
     private val routineExerciseLocalDataSource: RoutineExerciseLocalDataSource? = null,
     private val recentRoutineLocalDataSource: RecentRoutineLocalDataSource? = null,
+    private val groupRemoteDataSource: edu.gymtonic_app.data.remote.remoteDatasource.GroupRemoteDataSource? = null,
     private val context: Context? = null
 ) {
 
@@ -281,19 +282,24 @@ class RoutineRepository(
         exercises: List<edu.gymtonic_app.data.remote.remoteModel.routine.RoutineExerciseDto>,
         imageFile: File?,
         isPersonal: Boolean = true,
-        userId: Int? = null
+        userId: Int? = null,
+        groupId: Int? = null
     ): Result<RoutineDetailDto> {
         return runCatching {
             val gson = Gson()
             val exercisesJson = gson.toJson(exercises.map {
                 mapOf(
                     "exercise_id" to it.exercise_id,
+                    "exerciseId" to it.exercise_id,
+                    "id" to it.exercise_id,
+                    "series" to (it.series ?: 0),
                     "sets" to (it.series ?: 0),
-                    "reps" to (it.reps ?: "")
+                    "reps" to (it.reps ?: ""),
+                    "repetitions" to (it.reps ?: "")
                 )
             })
             val exercisesBody =
-                exercisesJson.toRequestBody("text/plain".toMediaTypeOrNull())
+                exercisesJson.toRequestBody("application/json".toMediaTypeOrNull())
             val imagePart = imageFile?.let {
                 MultipartBody.Part.createFormData(
                     "image",
@@ -302,7 +308,7 @@ class RoutineRepository(
                 )
             }
             val isPersonalBody = (if (isPersonal) "1" else "0")
-                .toRequestBody("text/plain".toMediaTypeOrNull())
+                .toRequestBody("text/plain".toRequestBody().contentType())
 
             if (id == null) {
                 unwrapOne(
@@ -322,13 +328,25 @@ class RoutineRepository(
                     }
                 }
             } else {
-                unwrapOne(
-                    response = routineRemoteDataSource.updateRoutineMultipart(
+                val response = if (groupId != null && groupRemoteDataSource != null) {
+                    groupRemoteDataSource.updateGroupRoutineMultipart(
+                        groupId = groupId,
                         routineId = id,
                         name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
                         exercises = exercisesBody,
                         image = imagePart
-                    ),
+                    )
+                } else {
+                    routineRemoteDataSource.updateRoutineMultipart(
+                        routineId = id,
+                        name = name.toRequestBody("text/plain".toMediaTypeOrNull()),
+                        exercises = exercisesBody,
+                        image = imagePart
+                    )
+                }
+
+                unwrapOne(
+                    response = response,
                     defaultMessage = "No se pudo actualizar la rutina con id=$id"
                 ).also { detail ->
                     // Cache the updated routine
@@ -348,6 +366,10 @@ class RoutineRepository(
             if (!response.isSuccessful) {
                 throw Exception(ErrorManager.parseResponseError(response))
             }
+            // Cleanup local DB
+            routineLocalDataSource?.deleteRoutineById(routineId)
+            routineExerciseLocalDataSource?.deleteAllExercisesForRoutine(routineId)
+            recentRoutineLocalDataSource?.deleteRecentByRoutineId(routineId)
             Unit
         }
     }

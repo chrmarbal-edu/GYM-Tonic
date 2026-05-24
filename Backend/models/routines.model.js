@@ -274,7 +274,6 @@ routine.findByGroupId = async function (groupId, result) {
 /* <=============================== FIND BY ID ===============================> */
 routine.findById = async function (id, result) {
     try {
-        console.log(id)
         const pool = await sql.connect(dbConn)
         const response = await pool.request()
             .input("id", sql.Int, id)

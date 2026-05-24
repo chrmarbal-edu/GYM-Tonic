@@ -56,7 +56,8 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
 
     fun updateAccount(
         username: String,
-        password: String,
+        currentPassword: String?,
+        newPassword: String,
         height: Double?,
         weight: Double?,
         objective: Int? = null,
@@ -74,8 +75,9 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
             val result = if (pictureFile != null) {
                 userRepository.updateUserWithFile(
                     id = userId,
-                    username = if (username != currentUser?.userUsername) username else null,
-                    password = if (password.isNotBlank()) password else null,
+                    username = username,
+                    currentPassword = currentPassword,
+                    newPassword = if (newPassword.isNotBlank()) newPassword else null,
                     height = height,
                     weight = weight,
                     objective = objective,
@@ -85,8 +87,9 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
                 // Si no hay archivo, mandamos JSON. 
                 // Si isDefaultPicture es true, mandamos "default" en el campo picture.
                 val data = mutableMapOf<String, Any?>()
-                if (username != currentUser?.userUsername) data["username"] = username
-                if (password.isNotBlank()) data["password"] = password
+                data["username"] = username
+                if (currentPassword?.isNotBlank() == true) data["currentPassword"] = currentPassword
+                if (newPassword.isNotBlank()) data["newPassword"] = newPassword
                 data["height"] = height
                 data["weight"] = weight
                 if (objective != null) data["objective"] = objective

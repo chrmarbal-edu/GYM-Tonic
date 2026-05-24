@@ -156,7 +156,7 @@ exports.findUserById = wrapAsync(async function (req,res,next){
 /* <=============================== UPDATE USER ===============================> */
 exports.updateUser = wrapAsync(async function (req,res, next) {    
     const {id} = req.params
-    let { username, name, currentPassword = "", newPassword = "", email, height, weight, objective, picture} = req.body
+    let { username, name, currentPassword = "", newPassword = "", height, weight, objective, picture} = req.body
     
     // BUSCAMOS USUARIO
     await userModel.findById(id, async function(err,userFounded){
@@ -171,21 +171,21 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             // PASSWORD
             if(newPassword){
                 if(newPassword.length < 8){
-                    next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
+                    return next(new AppError("Aumenta la longitud de la contraseña en 8 caracteres como mínimo",400))
                 } else if(!newPassword.match(/[A-Z]/)){
-                    next(new AppError("La contraseña debe tener al menos una mayúscula",400))
+                    return next(new AppError("La contraseña debe tener al menos una mayúscula",400))
                 } else if(!newPassword.match(/[a-z]/)){
-                    next(new AppError("La contraseña debe tener al menos una minúscula",400))
+                    return next(new AppError("La contraseña debe tener al menos una minúscula",400))
                 } else if(!newPassword.match(/[/\d/]/)){
-                    next(new AppError("La contraseña debe tener al menos un número",400))
+                    return next(new AppError("La contraseña debe tener al menos un número",400))
                 } else if(!newPassword.match(/^(?=.*[!@#$%^&*(),.?":{}|<>_=+-])/)){
-                    next(new AppError("La contraseña debe tener al menos un carácter especial",400))
+                    return next(new AppError("La contraseña debe tener al menos un carácter especial",400))
                 } else{
                     const validado = await bcrypt.compareLogin(currentPassword, userFounded.user_password)
                     if(validado){
                         userFounded.user_password = await bcrypt.hashPassword(newPassword)
                     } else{
-                        next(new AppError("La contraseña actual es incorrecta", 400))
+                        return next(new AppError("La contraseña actual es incorrecta", 400))
                     }
                 }
             }
@@ -193,11 +193,6 @@ exports.updateUser = wrapAsync(async function (req,res, next) {
             // NAME 
             if(name && name != ""){
                 userFounded.user_name = name
-            }
-
-            // EMAIL
-            if(email && email != ""){
-                userFounded.user_email = email
             }
 
             // WEIGHT

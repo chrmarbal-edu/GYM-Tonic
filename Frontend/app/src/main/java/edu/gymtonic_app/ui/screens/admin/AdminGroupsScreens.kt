@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import edu.gymtonic_app.ui.i18n.LocalStrings
 import edu.gymtonic_app.ui.viewmodel.admin.AdminGroupsViewModel
+import edu.gymtonic_app.core.MediaUtils
 
 @Composable
 fun AdminGroupsListScreen(
@@ -106,12 +107,13 @@ fun AdminGroupDetailScreen(
                     modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
                 )
                 state.members.forEach { member ->
-                    AdminListItem(
+                    AdminUserListItem(
                         title = member.displayName,
-                        subtitle = groupRoleLabel(member.range)
-                    ) {
-                        onOpenUser(member.userId)
-                    }
+                        subtitle = groupRoleLabel(member.range),
+                        imageUrl = MediaUtils.resolveBackendMediaUrl(member.profilePicture) ?: "",
+                        points = member.points,
+                        onClick = { onOpenUser(member.userId) }
+                    )
                 }
                 state.error?.let { Text(it, modifier = Modifier.padding(top = 8.dp)) }
             }

@@ -19,7 +19,8 @@ class UsersRemoteDataSource {
     suspend fun updateUserWithFile(
         id: Int,
         username: String?,
-        password: String?,
+        currentPassword: String?,
+        newPassword: String?,
         height: Double?,
         weight: Double?,
         objective: Int?,
@@ -27,7 +28,8 @@ class UsersRemoteDataSource {
     ) = api.updateUserWithFile(
         id = id,
         username = username?.toRequestBody(),
-        password = password?.toRequestBody(),
+        currentPassword = currentPassword?.toRequestBody(),
+        newPassword = newPassword?.toRequestBody(),
         height = height?.toString()?.toRequestBody(),
         weight = weight?.toString()?.toRequestBody(),
         objective = objective?.toString()?.toRequestBody(),

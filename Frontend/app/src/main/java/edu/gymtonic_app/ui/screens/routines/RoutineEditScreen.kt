@@ -60,6 +60,7 @@ fun RoutineEditScreen(
     isLocal: Boolean,
     onBack: () -> Unit,
     onSaved: () -> Unit,
+    groupId: Int? = null,
     onOpenTraining: () -> Unit = {},
     onOpenGroups: () -> Unit = {},
     onOpenFriends: () -> Unit = {},
@@ -208,10 +209,14 @@ fun RoutineEditScreen(
                                 exercise = exercise,
                                 onRemove = { selectedRemoteExercises.removeAt(index) },
                                 onUpdateReps = { newReps ->
-                                    selectedRemoteExercises[index] = exercise.copy(reps = newReps)
+                                    if (newReps.all { it.isDigit() } || newReps.isEmpty()) {
+                                        selectedRemoteExercises[index] = exercise.copy(reps = newReps)
+                                    }
                                 },
                                 onUpdateSeries = { newSeries ->
-                                    selectedRemoteExercises[index] = exercise.copy(series = newSeries.toIntOrNull())
+                                    if (newSeries.all { it.isDigit() } || newSeries.isEmpty()) {
+                                        selectedRemoteExercises[index] = exercise.copy(series = newSeries.toIntOrNull())
+                                    }
                                 }
                             )
                         }
@@ -228,6 +233,7 @@ fun RoutineEditScreen(
                                 name = name.trim(),
                                 exercises = selectedRemoteExercises.toList(),
                                 imageFile = imageFile,
+                                groupId = groupId,
                                 onSuccess = onSaved
                             )
                         }

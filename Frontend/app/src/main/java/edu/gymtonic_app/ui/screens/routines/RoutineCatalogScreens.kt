@@ -53,7 +53,8 @@ fun RoutineCatalogScreen(
     onOpenFriends: () -> Unit = {},
     onOpenChallenges: () -> Unit = {},
     onOpenProfile: () -> Unit = {},
-    onEdit: (Int, Boolean) -> Unit = { _, _ -> },
+    onEdit: (Int, Boolean, Int?) -> Unit = { _, _, _ -> },
+    onDeleted: () -> Unit = {},
     viewModel: RoutineCatalogViewModel = viewModel()
 ) {
     val strings = LocalStrings.current
@@ -77,7 +78,8 @@ fun RoutineCatalogScreen(
     val editRoutineId = routineId.toIntOrNull()
     val onEditClick =
         if (canEditRoutine && editRoutineId != null) {
-            { onEdit(editRoutineId, isLocal) }
+            val gid = (uiState as? RoutineCatalogUiState.Success)?.routine?.routine_groupid
+            { onEdit(editRoutineId, isLocal, gid) }
         } else {
             null
         }
@@ -102,7 +104,7 @@ fun RoutineCatalogScreen(
                             onSuccess = {
                                 showDeleteDialog.value = false
                                 showAppToast(snackbarHostState, scope, strings.routineDeleted)
-                                onBack()
+                                onDeleted()
                             },
                             onError = { message ->
                                 showDeleteDialog.value = false

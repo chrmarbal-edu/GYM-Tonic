@@ -50,17 +50,21 @@ router.post("/new", jwtMW.authenticate, groupController.createGroupCSR)
 
 // Miembros y rutinas de grupo
 router.get("/:id/members", jwtMW.authenticate, groupController.findGroupMembersCSR)
+
 router.get("/:id/routines", jwtMW.authenticate, groupController.findGroupRoutinesCSR)
+
 router.post("/:id/join", jwtMW.authenticate, groupController.joinGroupCSR)
+
 router.delete("/:id/leave", jwtMW.authenticate, groupController.leaveGroupCSR)
+
 router.post("/:id/members", jwtMW.authenticate, groupController.addUserToGroupCSR)
+
 router.delete("/:id/members/:userId", jwtMW.authenticate, groupController.removeUserFromGroupCSR)
-router.post(
-    "/:id/routines",
-    jwtMW.authenticate,
-    optionalMultipart(groupRoutineUpload),
-    groupController.addGroupRoutineCSR
-)
+
+router.post("/:id/routines", jwtMW.authenticate, optionalMultipart(groupRoutineUpload), groupController.addGroupRoutineCSR)
+
+router.patch("/:id/routines/:routineId", jwtMW.authenticate, optionalMultipart(groupRoutineUpload), groupController.updateGroupRoutineCSR)
+
 router.delete("/:id/routines/:routineId", jwtMW.authenticate, groupController.deleteGroupRoutineCSR)
 
 module.exports = router

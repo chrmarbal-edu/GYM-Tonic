@@ -100,12 +100,14 @@ fun AccountScreen(
                 val isOAuth = !user.userOauth.isNullOrBlank()
                 
                 var username by remember(user.userId) { mutableStateOf(user.userUsername) }
-                var password by remember { mutableStateOf("") }
+                var currentPassword by remember { mutableStateOf("") }
+                var newPassword by remember { mutableStateOf("") }
                 var confirmPassword by remember { mutableStateOf("") }
                 var height by remember(user.userId) { mutableStateOf(user.userHeight.toInt().toString()) }
                 var weight by remember(user.userId) { mutableStateOf(user.userWeight.toInt().toString()) }
                 
                 var passwordError by remember { mutableStateOf(false) }
+                var passwordSameError by remember { mutableStateOf(false) }
                 var heightError by remember { mutableStateOf(false) }
                 var weightError by remember { mutableStateOf(false) }
                 var passwordWeakError by remember { mutableStateOf(false) }
@@ -206,24 +208,38 @@ fun AccountScreen(
                             if (!isOAuth) {
                                 Spacer(Modifier.height(12.dp))
                                 EditableField(
-                                    label = strings.password,
-                                    value = password,
+                                    label = "Contraseña Actual",
+                                    value = currentPassword,
+                                    onValueChange = { currentPassword = it.trim() },
+                                    isPassword = true
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                EditableField(
+                                    label = "Nueva Contraseña",
+                                    value = newPassword,
                                     onValueChange = {
-                                        password = it
-                                        passwordWeakError = it.isNotBlank() && !ValidationUtils.isPasswordStrong(it)
-                                        passwordError = confirmPassword.isNotBlank() && it != confirmPassword
+                                        val trimmed = it.trim()
+                                        newPassword = trimmed
+                                        passwordWeakError = trimmed.isNotBlank() && !ValidationUtils.isPasswordStrong(trimmed)
+                                        passwordSameError = trimmed.isNotBlank() && currentPassword.isNotBlank() && trimmed == currentPassword
+                                        passwordError = confirmPassword.isNotBlank() && trimmed != confirmPassword
                                     },
                                     isPassword = true,
-                                    isError = passwordWeakError,
-                                    errorText = strings.passwordTooWeak
+                                    isError = passwordWeakError || passwordSameError,
+                                    errorText = when {
+                                        passwordWeakError -> strings.passwordTooWeak
+                                        passwordSameError -> "La nueva contraseña debe ser diferente a la actual"
+                                        else -> ""
+                                    }
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 EditableField(
                                     label = strings.confirmPassword,
                                     value = confirmPassword,
                                     onValueChange = {
-                                        confirmPassword = it
-                                        passwordError = password.isNotBlank() && it != password
+                                        val trimmed = it.trim()
+                                        confirmPassword = trimmed
+                                        passwordError = newPassword.isNotBlank() && trimmed != newPassword
                                     },
                                     isPassword = true,
                                     isError = passwordError,
@@ -271,7 +287,7 @@ fun AccountScreen(
                                     weightError = !isWValid
 
                                     if (!isHValid || !isWValid) return@Button
-                                    if (passwordError || passwordWeakError) return@Button
+                                    if (passwordError || passwordWeakError || passwordSameError) return@Button
                                     
                                     val imgFile = when {
                                         pictureBitmap != null -> createTempFile(context, pictureBitmap!!)
@@ -280,14 +296,15 @@ fun AccountScreen(
                                     }
                                     viewModel.updateAccount(
                                         username = username,
-                                        password = password,
+                                        currentPassword = if (currentPassword.isNotBlank()) currentPassword else null,
+                                        newPassword = newPassword,
                                         height = hValue,
                                         weight = wValue,
                                         pictureFile = imgFile,
                                         isDefaultPicture = isDefaultPicture
                                     )
                                 },
-                                enabled = !passwordError && !passwordWeakError,
+                                enabled = !passwordError && !passwordWeakError && !passwordSameError,
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = colors.accent)
@@ -431,7 +448,9 @@ fun AccountSectionCard(
                 text = title,
                 color = colors.textOnAccent,
                 fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.height(12.dp))
             content()
@@ -453,7 +472,14 @@ private fun EditableField(
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = colors.textPrimary)
+        Text(
+            text = label,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textPrimary,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
         TextField(
             value = value,
             onValueChange = onValueChange,
@@ -489,8 +515,21 @@ private fun EditableField(
 private fun ReadOnlyField(label: String, value: String) {
     val colors = LocalColors.current
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Text(text = label, fontSize = 12.sp, color = colors.textSecondary)
-        Text(text = value, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = colors.textPrimary)
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = colors.textSecondary,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = colors.textPrimary,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+        )
         HorizontalDivider(modifier = Modifier.padding(top = 4.dp), color = colors.fieldIndicator.copy(alpha = 0.2f))
     }
 }

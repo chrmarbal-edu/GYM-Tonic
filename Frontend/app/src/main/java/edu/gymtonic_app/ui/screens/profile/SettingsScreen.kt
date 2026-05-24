@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gymtonic_app.ui.components.BottomNavItem
@@ -149,13 +150,18 @@ fun SettingsOptionRow(
         Text(
             text = label,
             fontSize = 15.sp,
-            color = colors.textOnAccent
+            color = colors.textOnAccent,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f)
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = currentValue,
                 fontSize = 15.sp,
                 color = colors.textOnAccent.copy(alpha = 0.7f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(end = 4.dp)
             )
             Icon(

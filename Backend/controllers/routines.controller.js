@@ -12,6 +12,7 @@ const jwtMW = require("../middlewares/jwt.mw")
 const sql = require("mssql")
 const dbConn = require("../utils/mssql.config")
 const { log } = require("console")
+const { handleSqlError } = require("../utils/sqlErrors")
 const { deleteResourceFile } = require("../utils/fileUtils") // Import the new utility
 const {
     normalizeRoutineImageForClient,

@@ -63,6 +63,7 @@ data class RegisterStrings(
     val invalidWeight: String,
     val invalidAge: String,
     val invalidEmail: String,
+    val invalidDate: String,
     val shortPassword: String,
     val signUpButton: String,
     val errorUsernameExists: String,
@@ -104,7 +105,9 @@ data class TrainingStrings(
     val trainingGroupRoutines: String,
     val trainingMyRoutines: String,
     val trainingRecent: String,
-    val trainingAll: String
+    val trainingAll: String,
+    val invalidSeriesRange: String,
+    val invalidRepsRange: String
 )
 
 data class ProfileStrings(
@@ -353,6 +356,7 @@ data class AppStrings(
     val invalidWeight get() = register.invalidWeight
     val invalidAge get() = register.invalidAge
     val invalidEmail get() = register.invalidEmail
+    val invalidDate get() = register.invalidDate
     val shortPassword get() = register.shortPassword
     val errorUsernameExists get() = register.errorUsernameExists
     val errorEmailExists get() = register.errorEmailExists
@@ -392,6 +396,8 @@ data class AppStrings(
     val trainingMyRoutines get() = training.trainingMyRoutines
     val trainingRecent get() = training.trainingRecent
     val trainingAll get() = training.trainingAll
+    val invalidSeriesRange get() = training.invalidSeriesRange
+    val invalidRepsRange get() = training.invalidRepsRange
 
     val profileTitle get() = profile.profileTitle
     val profileGreeting get() = profile.profileGreeting

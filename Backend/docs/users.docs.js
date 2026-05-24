@@ -345,10 +345,6 @@
  *                 type: string
  *                 format: password
  *                 description: Nueva contraseña (mínimo 8 caracteres, con mayúscula, minúscula, número y carácter especial)
- *               email:
- *                 type: string
- *                 format: email
- *                 description: Correo electrónico
  *               height:
  *                 type: number
  *                 description: Altura en cm (130-230)
