@@ -45,6 +45,8 @@ import edu.gymtonic_app.ui.viewmodel.RegisterState
 import edu.gymtonic_app.ui.viewmodel.RegisterViewModel
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.time.LocalDate
+import java.time.Period
 
 @Composable
 fun RegisterScreen2(
@@ -128,11 +130,45 @@ fun RegisterScreen2(
         } else {
             Regex("""\d{4}-\d{2}-\d{2}""")
         }
-        fechaError = !rawDate.matches(fechaRegex)
-        alturaError = altura.isBlank()
-        pesoError = peso.isBlank()
-        objetivoError = objetivo.isBlank()
-        return !fechaError && !alturaError && !pesoError && !objetivoError
+
+        var isDateValid = rawDate.matches(fechaRegex)
+        
+        if (isDateValid) {
+            try {
+                val birthDate = if (isSpanish) {
+                    val parts = rawDate.split("/")
+                    LocalDate.of(parts[2].toInt(), parts[1].toInt(), parts[0].toInt())
+                } else {
+                    LocalDate.parse(rawDate)
+                }
+                val age = Period.between(birthDate, LocalDate.now()).years
+                if (age !in 14..100) {
+                    isDateValid = false
+                }
+            } catch (e: Exception) {
+                isDateValid = false
+            }
+        }
+
+        // Normalizar altura y peso (reemplazar coma por punto)
+        val normalizedAltura = altura.replace(',', '.')
+        val normalizedPeso = peso.replace(',', '.')
+
+        val h = normalizedAltura.toDoubleOrNull()
+        val isAlturaValid = h != null && h in 130.0..230.0
+
+        val w = normalizedPeso.toDoubleOrNull()
+        val isPesoValid = w != null && w in 40.0..200.0
+
+        val isObjetivoValid = objetivo.isNotBlank()
+
+        // Actualizar estados para la UI
+        fechaError = !isDateValid
+        alturaError = !isAlturaValid
+        pesoError = !isPesoValid
+        objetivoError = !isObjetivoValid
+
+        return isDateValid && isAlturaValid && isPesoValid && isObjetivoValid
     }
 
     Box(
@@ -254,7 +290,11 @@ fun RegisterScreen2(
 
                     FechaNacimientoField(
                         label = strings.birthDate,
-                        formatHint = strings.birthDateFormat,
+                        formatHint = when {
+                            fechaNacimientoValue.text.isBlank() -> strings.requiredField
+                            !fechaNacimientoValue.text.matches(if (isSpanish) Regex("""\d{2}/\d{2}/\d{4}""") else Regex("""\d{4}-\d{2}-\d{2}""")) -> strings.birthDateFormat
+                            else -> strings.invalidAge
+                        },
                         fechaValue = fechaNacimientoValue,
                         onFechaValueChange = { 
                             fechaNacimientoValue = it
@@ -272,7 +312,7 @@ fun RegisterScreen2(
                         onValueChange = { altura = it; alturaError = false },
                         placeholder = "185",
                         isError = alturaError,
-                        errorText = strings.requiredField,
+                        errorText = if (altura.isBlank()) strings.requiredField else strings.invalidHeight,
                         keyboardType = KeyboardType.Number
                     )
 
@@ -284,7 +324,7 @@ fun RegisterScreen2(
                         onValueChange = { peso = it; pesoError = false },
                         placeholder = "79",
                         isError = pesoError,
-                        errorText = strings.requiredField,
+                        errorText = if (peso.isBlank()) strings.requiredField else strings.invalidWeight,
                         keyboardType = KeyboardType.Number
                     )
 
@@ -345,14 +385,17 @@ fun RegisterScreen2(
                                     else -> null
                                 }
 
+                                val finalHeight = altura.replace(',', '.').toDouble()
+                                val finalWeight = peso.replace(',', '.').toDouble()
+
                                 registerViewModel.register(
                                     username = username,
                                     name = fullName,
                                     password = password.trim(),
                                     birthdate = dateToSubmit,
                                     email = email,
-                                    height = altura.toDouble(),
-                                    weight = peso.toDouble(),
+                                    height = finalHeight,
+                                    weight = finalWeight,
                                     objective = objetivoValue,
                                     oauth = registerViewModel.socialUserData?.oauth,
                                     pictureFile = imageFile,

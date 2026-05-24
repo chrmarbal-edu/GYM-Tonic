@@ -60,6 +60,12 @@ data class RegisterStrings(
     val goalBuildMuscle: String,
     val goalPerformance: String,
     val signUpButton: String,
+    val invalidHeight: String,
+    val invalidWeight: String,
+    val invalidAge: String,
+    val invalidEmail: String,
+    val shortPassword: String
+    val signUpButton: String,
     val errorUsernameExists: String,
     val errorEmailExists: String
 )
@@ -344,6 +350,11 @@ data class AppStrings(
     val goalBuildMuscle get() = register.goalBuildMuscle
     val goalPerformance get() = register.goalPerformance
     val signUpButton get() = register.signUpButton
+    val invalidHeight get() = register.invalidHeight
+    val invalidWeight get() = register.invalidWeight
+    val invalidAge get() = register.invalidAge
+    val invalidEmail get() = register.invalidEmail
+    val shortPassword get() = register.shortPassword
     val errorUsernameExists get() = register.errorUsernameExists
     val errorEmailExists get() = register.errorEmailExists
 

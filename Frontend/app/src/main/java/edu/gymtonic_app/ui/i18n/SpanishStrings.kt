@@ -60,6 +60,12 @@ val SpanishStrings = AppStrings(
         goalBuildMuscle = "Ganancia muscular",
         goalPerformance = "Rendimiento / Resistencia",
         signUpButton = "ENTRAR",
+        invalidHeight = "La altura debe estar entre 130 y 230 cm",
+        invalidWeight = "El peso debe estar entre 40 y 200 kg",
+        invalidAge = "Debes tener entre 14 y 100 años",
+        invalidEmail = "Email inválido",
+        shortPassword = "La contraseña debe tener al menos 6 caracteres"
+        signUpButton = "ENTRAR",
         errorUsernameExists = "El nombre de usuario ya existe",
         errorEmailExists = "El email ya está registrado"
     ),

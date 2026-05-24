@@ -60,6 +60,12 @@ val EnglishStrings = AppStrings(
         goalBuildMuscle = "Muscle gain",
         goalPerformance = "Performance / Endurance",
         signUpButton = "SIGN UP",
+        invalidHeight = "Height must be between 130 and 230 cm",
+        invalidWeight = "Weight must be between 40 and 200 kg",
+        invalidAge = "You must be between 14 and 100 years old",
+        invalidEmail = "Invalid email",
+        shortPassword = "Password must be at least 6 characters"
+        signUpButton = "SIGN UP",
         errorUsernameExists = "Username already exists",
         errorEmailExists = "Email is already registered"
     ),
