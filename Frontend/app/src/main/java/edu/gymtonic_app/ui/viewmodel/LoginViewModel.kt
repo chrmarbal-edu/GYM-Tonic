@@ -14,7 +14,6 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.SocialLoginResponse
 import com.google.gson.Gson
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
-import edu.gymtonic_app.data.remote.remoteModel.user.RegisterResponse
 import edu.gymtonic_app.core.network.ErrorManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

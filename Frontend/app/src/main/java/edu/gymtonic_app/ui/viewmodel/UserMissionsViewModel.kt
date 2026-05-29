@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.repository.RepositoryProvider
-import edu.gymtonic_app.data.repository.UserMissionsRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +17,7 @@ import kotlinx.coroutines.launch
 data class WeeklyGoalUi(
 	val userMissionId: Int,
 	val missionId: Int,
-	val title: String,
+	val title: String?,
 	val progressLabel: String,
 	val pointsLabel: String,
 	val progress: Float,

@@ -123,7 +123,7 @@ fun AddGroupRoutineScreen(
 
     if (exerciseToConfigure != null) {
         AddExerciseDetailsDialog(
-            exerciseName = exerciseToConfigure!!.exercise_name,
+            exerciseName = exerciseToConfigure?.exercise_name,
             onDismiss = { exerciseToConfigure = null },
             onConfirm = { reps, series ->
                 selectedExercises.add(
@@ -186,7 +186,7 @@ fun AddGroupRoutineScreen(
     val filteredExercises = remember(allExercises, searchQuery, selectedType) {
         allExercises.filter { exercise ->
             val matchesSearch = if (searchQuery.isBlank()) true
-            else exercise.exercise_name.contains(searchQuery, ignoreCase = true)
+            else exercise.exercise_name?.contains(searchQuery, ignoreCase = true) == true
             
             val matchesType = if (selectedType == null) true
             else exercise.exercise_type == selectedType

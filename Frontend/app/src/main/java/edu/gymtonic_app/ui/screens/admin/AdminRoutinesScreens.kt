@@ -451,7 +451,7 @@ fun AdminExerciseSelectionScreen(
 
     if (exerciseToConfigure != null) {
         AddExerciseDetailsDialog(
-            exerciseName = exerciseToConfigure!!.exercise_name,
+            exerciseName = exerciseToConfigure!!.exercise_name.orEmpty(),
             onDismiss = { exerciseToConfigure = null },
             onConfirm = { reps, series ->
                 onSelected(exerciseToConfigure!!, reps, series)
@@ -467,7 +467,7 @@ fun AdminExerciseSelectionScreen(
 // ... resto del componente
         val filteredItems = remember(state.items, searchQuery, selectedType) {
             state.items.filter { 
-                it.exercise_name.contains(searchQuery, ignoreCase = true) &&
+                it.exercise_name.orEmpty().contains(searchQuery, ignoreCase = true) &&
                 (selectedType == null || it.exercise_type == selectedType)
             }
         }
@@ -492,7 +492,7 @@ fun AdminExerciseSelectionScreen(
                         val isAdded = alreadySelectedIds.contains(exercise.exercise_id)
                         val isFav = favoriteIds.contains(exercise.exercise_id)
                         AdminExerciseListItem(
-                            title = exercise.exercise_name,
+                            title = exercise.exercise_name.orEmpty(),
                             subtitle = if (isAdded) {
                                 "${exerciseTypeLabel(exercise.exercise_type)} · ${strings.groupsAdded}"
                             } else {
@@ -504,8 +504,8 @@ fun AdminExerciseSelectionScreen(
                                 exerciseViewModel.onToggleFavorite(
                                     edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload(
                                         id = exercise.exercise_id,
-                                        name = exercise.exercise_name,
-                                        description = exercise.exercise_description,
+                                        name = exercise.exercise_name.orEmpty(),
+                                        description = exercise.exercise_description.orEmpty(),
                                         type = exercise.exercise_type,
                                         image = exercise.exercise_image
                                     )
@@ -522,7 +522,7 @@ fun AdminExerciseSelectionScreen(
 
 @Composable
 fun AddExerciseDetailsDialog(
-    exerciseName: String,
+    exerciseName: String?,
     onDismiss: () -> Unit,
     onConfirm: (reps: String, series: Int) -> Unit
 ) {
@@ -542,7 +542,7 @@ fun AddExerciseDetailsDialog(
         title = { Text("Detalles del ejercicio", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(exerciseName, fontSize = 14.sp, color = colors.textSecondary)
+                Text(exerciseName ?: "Sin nombre", fontSize = 14.sp, color = colors.textSecondary)
                 
                 Column {
                     OutlinedTextField(

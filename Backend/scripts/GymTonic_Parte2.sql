@@ -249,14 +249,14 @@ GO
 -- mission_objective: 0=Mantenimiento 1=Pérdida de peso 2=Ganancia muscular 3=Rendimiento
 INSERT INTO dbo.Missions (mission_name, mission_type, mission_points, mission_objective, mission_goal)
 VALUES
-    ('Primera sesión',            0,  10,  0, 0),
+    ('Primera sesión',            0,  10,  0, 1),
     ('Racha de 3 días',           0,  30,  0, 3),
     ('Completa 5 entrenamientos', 1,  75,  1, 5),
     ('10 km en una semana',       1, 100,  1, 10),
     ('30 sesiones en un mes',     2, 500,  2, 30),
-    ('Quema 10 000 kcal',         2, 300,  2, 10000),
-    ('Primer ejercicio de fuerza',0,  10,  3, 0),
-    ('Semana de cardio completa', 1,  80,  3, 0);
+    ('Quema 10 000 kcal',         2, 300,  2, 1),
+    ('Primer ejercicio de fuerza',0,  10,  3, 1),
+    ('Semana de cardio completa', 1,  80,  3, 7);
 GO
 
 -- Grupos

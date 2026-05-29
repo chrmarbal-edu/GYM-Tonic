@@ -7,7 +7,7 @@ data class MissionDto(
     val missionId: Int,
 
     @SerializedName("mission_name", alternate = ["name", "missionName"])
-    val missionName: String,
+    val missionName: String? = null,
 
     @SerializedName("mission_type", alternate = ["type", "missionType"])
     val missionType: Int,

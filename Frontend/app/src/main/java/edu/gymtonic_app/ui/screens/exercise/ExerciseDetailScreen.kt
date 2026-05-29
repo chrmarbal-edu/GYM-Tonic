@@ -282,7 +282,7 @@ fun ExerciseDetailScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = exercise.exercise_description,
+                                text = exercise.exercise_description ?: "Sin descripción",
                                 fontSize = 14.sp,
                                 lineHeight = 22.sp,
                                 color = colors.textPrimary,

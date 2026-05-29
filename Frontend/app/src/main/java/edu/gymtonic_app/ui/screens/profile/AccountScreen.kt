@@ -3,7 +3,6 @@
 package edu.gymtonic_app.ui.screens.profile
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -14,20 +13,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -318,9 +313,9 @@ fun AccountScreen(
                     item {
                         AccountSectionCard(title = "Información del perfil") {
                             val formattedDate = try {
-                                val dateStr = user.userBirthdate.take(10)
-                                val parts = dateStr.split("-")
-                                if (parts.size == 3) "${parts[2]}/${parts[1]}/${parts[0]}" else user.userBirthdate
+                                val dateStr = user.userBirthdate?.take(10)
+                                val parts = dateStr?.split("-")
+                                if (parts?.size == 3) "${parts[2]}/${parts[1]}/${parts[0]}" else user.userBirthdate
                             } catch (e: Exception) { user.userBirthdate }
 
                             val objetivosList = listOf(
@@ -461,7 +456,7 @@ fun AccountSectionCard(
 @Composable
 private fun EditableField(
     label: String,
-    value: String,
+    value: String?,
     onValueChange: (String) -> Unit,
     isPassword: Boolean = false,
     isNumber: Boolean = false,
@@ -481,7 +476,7 @@ private fun EditableField(
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
         TextField(
-            value = value,
+            value = value!!,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             isError = isError,
@@ -512,7 +507,7 @@ private fun EditableField(
 }
 
 @Composable
-private fun ReadOnlyField(label: String, value: String) {
+private fun ReadOnlyField(label: String, value: String?) {
     val colors = LocalColors.current
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Text(
@@ -523,7 +518,7 @@ private fun ReadOnlyField(label: String, value: String) {
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
         )
         Text(
-            text = value,
+            text = value!!,
             fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
             color = colors.textPrimary,

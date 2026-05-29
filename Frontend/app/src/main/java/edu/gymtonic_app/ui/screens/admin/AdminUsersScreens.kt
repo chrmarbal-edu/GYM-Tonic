@@ -32,7 +32,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -75,7 +74,7 @@ fun AdminUsersListScreen(
                     items(filteredItems) { user ->
                         AdminUserListItem(
                             title = user.userName ?: user.userUsername ?: "Usuario #${user.userId}",
-                            subtitle = user.userUsername,
+                            subtitle = user.userUsername.orEmpty(),
                             imageUrl = resolveUserPictureUrl(user.userPicture),
                             onClick = { onOpenDetail(user.userId) }
                         )
@@ -97,10 +96,6 @@ fun AdminUserDetailScreen(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId) { viewModel.loadDetail(userId) }
-
-    LaunchedEffect(state.deleted) {
-        if (state.deleted) onBack()
-    }
 
     AdminShellScreen(
         title = strings.adminUserDetail,
@@ -143,9 +138,9 @@ fun AdminUserDetailScreen(
                 }
 
                 AdminDetailRow("ID", user.userId.toString())
-                AdminDetailRow(strings.usernameField, user.userUsername)
-                AdminDetailRow(strings.fullName, user.userName)
-                AdminDetailRow(strings.email, user.userEmail)
+                AdminDetailRow(strings.usernameField, user.userUsername.orEmpty())
+                AdminDetailRow(strings.fullName, user.userName.orEmpty())
+                AdminDetailRow(strings.email, user.userEmail.orEmpty())
                 AdminDetailRow(strings.adminRole, user.userRole.toString())
                 if (oauthLabel != null) {
                     AdminDetailRow(strings.adminOAuthProvider, oauthLabel)

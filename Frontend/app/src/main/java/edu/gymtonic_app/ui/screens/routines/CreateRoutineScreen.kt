@@ -110,7 +110,7 @@ fun CreateRoutineScreen(
 
     if (exerciseToConfigure != null) {
         AddExerciseDetailsDialog(
-            exerciseName = exerciseToConfigure!!.exercise_name,
+            exerciseName = exerciseToConfigure?.exercise_name,
             onDismiss = { exerciseToConfigure = null },
             onConfirm = { reps, series ->
                 selectedExercises.add(
@@ -175,7 +175,7 @@ fun CreateRoutineScreen(
     val filteredExercises = remember(allExercises, searchQuery, selectedType) {
         allExercises.filter { exercise ->
             val matchesSearch = if (searchQuery.isBlank()) true
-            else exercise.exercise_name.contains(searchQuery, ignoreCase = true)
+            else exercise.exercise_name?.contains(searchQuery, ignoreCase = true) == true
             
             val matchesType = if (selectedType == null) true
             else exercise.exercise_type == selectedType
@@ -395,7 +395,7 @@ fun CreateRoutineScreen(
 
 @Composable
 fun AddExerciseDetailsDialog(
-    exerciseName: String,
+    exerciseName: String?,
     onDismiss: () -> Unit,
     onConfirm: (reps: String, series: Int) -> Unit
 ) {
@@ -415,7 +415,7 @@ fun AddExerciseDetailsDialog(
         title = { Text("Detalles del ejercicio", fontWeight = FontWeight.Bold, color = colors.textPrimary) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(exerciseName, fontSize = 14.sp, color = colors.textSecondary)
+                Text(exerciseName ?: "Sin nombre", fontSize = 14.sp, color = colors.textSecondary)
                 
                 Column {
                     OutlinedTextField(

@@ -67,7 +67,7 @@ fun AdminExercisesListScreen(
     ) {
         val filteredItems = remember(state.items, searchQuery, selectedType) {
             state.items.filter {
-                it.exercise_name.contains(searchQuery, ignoreCase = true) &&
+                it.exercise_name.orEmpty().contains(searchQuery, ignoreCase = true) &&
                 (selectedType == null || it.exercise_type == selectedType)
             }
         }
@@ -91,7 +91,7 @@ fun AdminExercisesListScreen(
                     items(filteredItems) { exercise ->
                         val isFav = favoriteIds.contains(exercise.exercise_id)
                         AdminExerciseListItem(
-                            title = exercise.exercise_name,
+                            title = exercise.exercise_name.orEmpty(),
                             subtitle = "${exerciseTypeLabel(exercise.exercise_type)} · ID ${exercise.exercise_id}",
                             imageUrl = resolveBackendMediaUrl(exercise.exercise_image),
                             isFavorite = isFav,
@@ -99,8 +99,8 @@ fun AdminExercisesListScreen(
                                 exerciseViewModel.onToggleFavorite(
                                     edu.gymtonic_app.ui.viewmodel.exercise.FavoriteExercisePayload(
                                         id = exercise.exercise_id,
-                                        name = exercise.exercise_name,
-                                        description = exercise.exercise_description,
+                                        name = exercise.exercise_name.orEmpty(),
+                                        description = exercise.exercise_description.orEmpty(),
                                         type = exercise.exercise_type,
                                         image = exercise.exercise_image
                                     )
@@ -176,8 +176,8 @@ fun AdminExerciseDetailScreen(
                     }
                 }
 
-                AdminDetailRow(strings.adminExerciseName, exercise.exercise_name)
-                AdminDetailRow(strings.routineDescription, exercise.exercise_description)
+                AdminDetailRow(strings.adminExerciseName, exercise.exercise_name.orEmpty())
+                AdminDetailRow(strings.routineDescription, exercise.exercise_description.orEmpty())
                 AdminDetailRow(strings.adminExerciseType, exerciseTypeLabel(exercise.exercise_type))
                 AdminDetailRow("ID", exercise.exercise_id.toString())
 
@@ -241,8 +241,8 @@ fun AdminExerciseEditScreen(
 
     LaunchedEffect(state.item) {
         state.item?.let { ex ->
-            name = ex.exercise_name
-            description = ex.exercise_description
+            name = ex.exercise_name.orEmpty()
+            description = ex.exercise_description.orEmpty()
             type = ex.exercise_type
         }
     }

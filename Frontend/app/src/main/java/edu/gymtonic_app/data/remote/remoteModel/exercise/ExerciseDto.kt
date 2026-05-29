@@ -6,9 +6,9 @@ data class ExerciseDto(
     @SerializedName("exercise_id", alternate = ["id", "exerciseId"])
     val exercise_id: Int,
     @SerializedName("exercise_name", alternate = ["name", "exerciseName"])
-    val exercise_name: String,
+    val exercise_name: String? = null,
     @SerializedName("exercise_description", alternate = ["description", "exerciseDescription"])
-    val exercise_description: String,
+    val exercise_description: String? = null,
     @SerializedName("exercise_type", alternate = ["type", "exerciseType"])
     val exercise_type: Int,
     @SerializedName("exercise_video", alternate = ["video", "exerciseVideo"])

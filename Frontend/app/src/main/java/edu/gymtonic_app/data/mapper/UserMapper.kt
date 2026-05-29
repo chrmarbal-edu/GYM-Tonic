@@ -6,10 +6,10 @@ import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 fun UserDto.toEntity(): UserEntity {
     return UserEntity(
         user_id = userId,
-        user_username = userUsername,
-        user_name = userName,
-        user_birthdate = userBirthdate,
-        user_email = userEmail,
+        user_username = userUsername ?: "",
+        user_name = userName ?: "",
+        user_birthdate = userBirthdate ?: "",
+        user_email = userEmail ?: "",
         user_picture = userPicture,
         user_height = userHeight,
         user_weight = userWeight,

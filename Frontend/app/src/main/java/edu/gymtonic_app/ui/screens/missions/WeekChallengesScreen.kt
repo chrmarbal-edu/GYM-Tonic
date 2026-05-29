@@ -240,7 +240,7 @@ private fun GoalCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = goal.title,
+                        text = goal.title!!,
                         color = colors.textOnAccent,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,

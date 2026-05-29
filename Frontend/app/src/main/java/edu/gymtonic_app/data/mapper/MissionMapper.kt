@@ -6,7 +6,7 @@ import edu.gymtonic_app.data.remote.remoteModel.mission.MissionDto
 fun MissionDto.toEntity(): MissionEntity {
     return MissionEntity(
         missionId = missionId,
-        missionName = missionName,
+        missionName = missionName ?: "",
         missionType = missionType,
         missionPoints = missionPoints,
         missionObjective = missionObjective

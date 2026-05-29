@@ -68,9 +68,13 @@ class AdminRepository(
         // Enviamos la lista completa de objetos para incluir reps y series
         val exercisesJson = gson.toJson(exercises.map {
             mapOf(
+                "exercise_id" to it.exercise_id,
+                "exerciseId" to it.exercise_id,
                 "id" to it.exercise_id,
-                "reps" to it.reps,
-                "series" to it.series
+                "series" to (it.series ?: 0),
+                "sets" to (it.series ?: 0),
+                "reps" to (it.reps ?: ""),
+                "repetitions" to (it.reps ?: "")
             )
         })
         val exercisesBody = exercisesJson.toRequestBody("application/json".toMediaTypeOrNull())

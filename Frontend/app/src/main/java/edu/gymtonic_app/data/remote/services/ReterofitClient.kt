@@ -331,14 +331,14 @@ interface ApiService {
         @Part image: okhttp3.MultipartBody.Part?
     ): Response<RoutineDetailDto>
 
-    @PATCH("routines/{routineId}")
+    @PATCH("routines/routine/{routineId}")
     suspend fun updateRoutine(
         @Path("routineId") routineId: Int,
         @Body request: @JvmSuppressWildcards Map<String, Any?>
     ): Response<RoutineDto>
 
     @Multipart
-    @PATCH("routines/{routineId}")
+    @PATCH("routines/routine/{routineId}")
     suspend fun updateRoutineMultipart(
         @Path("routineId") routineId: Int,
         @Part("name") name: okhttp3.RequestBody?,

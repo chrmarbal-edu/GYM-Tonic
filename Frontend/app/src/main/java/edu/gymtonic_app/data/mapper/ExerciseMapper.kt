@@ -6,8 +6,8 @@ import edu.gymtonic_app.data.remote.remoteModel.exercise.ExerciseDto
 fun ExerciseDto.toEntity(): ExerciseEntity {
     return ExerciseEntity(
         exercise_id = exercise_id,
-        exercise_name = exercise_name,
-        exercise_description = exercise_description,
+        exercise_name = exercise_name ?: "",
+        exercise_description = exercise_description ?: "",
         exercise_type = exercise_type,
         exercise_video = exercise_video,
         exercise_image = exercise_image

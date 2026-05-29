@@ -8,7 +8,6 @@ import edu.gymtonic_app.data.remote.remoteModel.auth.SessionManager
 import edu.gymtonic_app.data.remote.remoteModel.auth.sessionDataStore
 import edu.gymtonic_app.data.remote.remoteModel.user.UserDto
 import edu.gymtonic_app.data.repository.RepositoryProvider
-import edu.gymtonic_app.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,7 +54,7 @@ class AccountViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun updateAccount(
-        username: String,
+        username: String?,
         currentPassword: String?,
         newPassword: String,
         height: Double?,

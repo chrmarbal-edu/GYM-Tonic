@@ -22,7 +22,7 @@ import edu.gymtonic_app.ui.theme.LocalColors
 
 @Composable
 fun SelectableExerciseRow(
-    name: String,
+    name: String?,
     image: String?,
     selected: Boolean,
     isFavorite: Boolean,
@@ -50,7 +50,7 @@ fun SelectableExerciseRow(
             ) {
                 AsyncImage(
                     model = MediaUtils.resolveBackendMediaUrl(image),
-                    contentDescription = name,
+                    contentDescription = name ?: "Ejercicio",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -65,7 +65,7 @@ fun SelectableExerciseRow(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = name,
+                        text = name ?: "Sin nombre",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = colors.textPrimary,

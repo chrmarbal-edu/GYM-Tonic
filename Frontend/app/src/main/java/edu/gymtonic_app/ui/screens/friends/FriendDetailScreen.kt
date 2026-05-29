@@ -110,8 +110,8 @@ fun FriendDetailScreen(
 @Composable
 private fun FriendDetailContent(
     strings: AppStrings,
-    userName: String,
-    userUsername: String,
+    userName: String?,
+    userUsername: String?,
     userPicture: String?,
     points: Int,
     objectiveId: Int,
@@ -146,7 +146,7 @@ private fun FriendDetailContent(
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = userName,
+            text = userName ?: "Sin nombre",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = colors.textPrimary,
@@ -154,7 +154,7 @@ private fun FriendDetailContent(
             overflow = TextOverflow.Ellipsis
         )
         Text(
-            text = "@$userUsername",
+            text = "@${userUsername ?: "usuario"}",
             fontSize = 16.sp,
             color = colors.textSecondary,
             maxLines = 1,

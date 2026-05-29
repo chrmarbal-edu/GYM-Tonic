@@ -39,7 +39,7 @@ fun AdminMissionsListScreen(
         onCreateClick = onCreate
     ) {
         val filteredItems = remember(state.items, searchQuery) {
-            state.items.filter { it.missionName.contains(searchQuery, ignoreCase = true) }
+            state.items.filter { it.missionName.orEmpty().contains(searchQuery, ignoreCase = true) }
         }
 
         Column(Modifier.fillMaxSize()) {
@@ -54,7 +54,7 @@ fun AdminMissionsListScreen(
             ) {
                 AdminSimpleList(
                     items = filteredItems,
-                    titleFor = { it.missionName },
+                    titleFor = { it.missionName.orEmpty() },
                     subtitleFor = {
                         "${missionTypeLabel(it.missionType)} · ${missionObjectiveLabel(it.missionObjective)} · Meta: ${it.missionGoal ?: 0} · ${it.missionPoints} pts"
                     },
@@ -88,7 +88,7 @@ fun AdminMissionEditScreen(
 
     LaunchedEffect(state.item) {
         state.item?.let { m ->
-            name = m.missionName
+            name = m.missionName.orEmpty()
             type = m.missionType
             points = m.missionPoints.toString()
             objective = m.missionObjective

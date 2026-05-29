@@ -6,13 +6,13 @@ data class UserDto(
     @SerializedName("user_id")
     val userId: Int,
     @SerializedName("user_username")
-    val userUsername: String,
+    val userUsername: String? = null,
     @SerializedName("user_name")
-    val userName: String,
+    val userName: String? = null,
     @SerializedName("user_birthdate")
-    val userBirthdate: String,
+    val userBirthdate: String? = null,
     @SerializedName("user_email")
-    val userEmail: String,
+    val userEmail: String? = null,
     @SerializedName("user_picture")
     val userPicture: String? = null,
     @SerializedName("user_height")

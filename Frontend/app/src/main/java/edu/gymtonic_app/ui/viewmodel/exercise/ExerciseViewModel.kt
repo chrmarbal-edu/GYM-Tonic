@@ -21,8 +21,8 @@ import kotlinx.coroutines.launch
 
 data class FavoriteExercisePayload(
     val id: Int,
-    val name: String,
-    val description: String = "",
+    val name: String?,
+    val description: String? = "",
     val type: Int = 0,
     val video: String? = null,
     val image: String? = null
@@ -102,8 +102,8 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
 
         val entity = ExerciseEntity(
             exercise_id = payload.id,
-            exercise_name = payload.name,
-            exercise_description = payload.description.ifBlank { "Sin descripción" },
+            exercise_name = payload.name ?: "Sin nombre",
+            exercise_description = payload.description?.ifBlank { "Sin descripción" } ?: "Sin descripción",
             exercise_type = payload.type,
             exercise_video = payload.video,
             exercise_image = payload.image

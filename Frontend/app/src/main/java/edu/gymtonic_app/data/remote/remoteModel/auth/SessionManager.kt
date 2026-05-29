@@ -43,15 +43,15 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
     suspend fun saveSession(
         token: String,
         userId: Int,
-        username: String,
-        email: String,
+        username: String?,
+        email: String?,
         role: Int
     ) {
         dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
             prefs[USER_ID_KEY] = userId
-            prefs[USERNAME_KEY] = username
-            prefs[EMAIL_KEY] = email
+            prefs[USERNAME_KEY] = username as String
+            prefs[EMAIL_KEY] = email as String
             prefs[ROLE_KEY] = role
         }
     }
