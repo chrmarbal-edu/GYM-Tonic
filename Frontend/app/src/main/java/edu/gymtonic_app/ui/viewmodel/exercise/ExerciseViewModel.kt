@@ -58,11 +58,13 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         exerciseRepository = RepositoryProvider.getExerciseRepository(application)
 
         viewModelScope.launch {
-            val userId = sessionManager.sessionFlow.first().userId ?: 0
-            Log.d(TAG, "INIT: userId=$userId, observando favoritos desde Room")
-            observeFavoritesFromRoom(userId)
-            refreshExercises()
+            sessionManager.sessionFlow.collectLatest { session ->
+                val userId = session.userId ?: 0
+                Log.d(TAG, "SESSION UPDATE: userId=$userId, observando favoritos desde Room")
+                observeFavoritesFromRoom(userId)
+            }
         }
+        refreshExercises()
     }
 
     private fun observeFavoritesFromRoom(userId: Int) {

@@ -134,7 +134,11 @@ fun ExerciseDetailScreen(
 
         is ExerciseUiState.Success -> {
             val exercise = state.exercise
-            val isFavorite = favoritesSet.contains(exercise.exercise_id)
+            val isFavorite = remember(favoritesSet, exercise.exercise_id) {
+                favoritesSet.contains(exercise.exercise_id)
+            }
+
+            Log.d("ExerciseDetail", "ID: ${exercise.exercise_id}, FavSet: $favoritesSet, isFav: $isFavorite")
 
             TrainingShellScreen(
                 title = "",
@@ -232,6 +236,7 @@ fun ExerciseDetailScreen(
                             ) {
                                 IconButton(
                                     onClick = {
+                                        Log.d("ExerciseDetail", "Toggling favorite for ID: ${exercise.exercise_id}")
                                         resolvedViewModel.onToggleFavorite(
                                             FavoriteExercisePayload(
                                                 id = exercise.exercise_id,
@@ -247,7 +252,7 @@ fun ExerciseDetailScreen(
                                     Icon(
                                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                                         contentDescription = if (isFavorite) strings.removeFavorite else strings.markFavorite,
-                                        tint = Color(0xFFE53935)
+                                        tint = if (isFavorite) Color(0xFFE53935) else colors.textPrimary.copy(alpha = 0.3f)
                                     )
                                 }
 
