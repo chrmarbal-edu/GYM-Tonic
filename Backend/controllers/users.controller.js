@@ -494,39 +494,98 @@ exports.changePassword = wrapAsync(async function (req, res, next) {
 /* <=============================== DELETE USER ===============================> */
 exports.deleteUser = wrapAsync(async function (req, res, next) {
     const { id } = req.params
+    const userId = Number(id)
     const userLogued = req.userLogued
 
-    if (userLogued && (userLogued.user_role == 1 || userLogued.user_id == id)) {
-        await userModel.findById(id, async function (err, userFounded) {
-            if (err) {
-                return next(new AppError("Usuario no encontrado", 404))
-            }
-
-            if (!userFounded || userFounded.length == 0) {
-                return next(new AppError("Usuario no encontrado", 404))
-            }
-
-            // Eliminar físicamente la foto de perfil si no es la predeterminada
-            if (userFounded.user_picture && !userFounded.user_picture.startsWith('http')) {
-                await deleteResourceFile(userFounded.user_picture)
-            }
-
-            await userModel.delete(Number(id), function (err, datosUsuarioEliminado) {
-                if (err) {
-                    return next(new AppError(handleSqlError(err), 500))
-                } else{
-                    // Si se elimina a sí mismo, cerrar sesión
-                    if (userLogued.user_id === Number(id)) {
-                        return res.status(200).json({ msg: "Usuario eliminado, sesión destruida" })
-                    } else {
-                        return res.status(200).json(datosUsuarioEliminado)
-                    }
-                }
-                
-            })
-        })
-    } else {
+    if (!userLogued || (userLogued.user_role != 1 && userLogued.user_id != userId)) {
         return next(new AppError("No estás autorizado para eliminar este usuario", 403))
+    }
+
+    // 1. Buscamos al usuario para tener sus datos (especialmente la imagen)
+    const userFounded = await new Promise((resolve, reject) => {
+        userModel.findById(userId, (err, data) => err ? reject(err) : resolve(data))
+    }).catch(() => null)
+
+    if (!userFounded) {
+        return next(new AppError("Usuario no encontrado", 404))
+    }
+
+    const pool = await sql.connect(dbConn)
+    const transaction = new sql.Transaction(pool)
+    await transaction.begin()
+
+    try {
+        const request = new sql.Request(transaction)
+        request.input("userId", sql.Int, userId)
+
+        // 2. Limpiar rastro social (Amigos y Solicitudes)
+        await request.query("DELETE FROM Frequest WHERE frequest_sender = @userId OR frequest_receiver = @userId")
+        await request.query("DELETE FROM Friends WHERE friend_userid1 = @userId OR friend_userid2 = @userId")
+
+        // 3. Limpiar misiones asignadas
+        await request.query("DELETE FROM User_X_Mission WHERE user_x_mission_userid = @userId")
+
+        // 4. Limpiar pertenencia a grupos (donde es miembro, no creador)
+        await request.query("DELETE FROM Group_x_user WHERE Group_x_user_userid = @userId")
+
+        // 5. Limpiar asignaciones de rutinas (donde el usuario tiene la rutina asignada)
+        await request.query("DELETE FROM User_X_Routine WHERE user_x_routine_userid = @userId")
+
+        // 6. Gestionar RUTINAS que el usuario CREÓ
+        const routinesResult = await request.query("SELECT routine_id, routine_image FROM Routines WHERE routine_creator_id = @userId")
+        for (const routine of routinesResult.recordset) {
+            if (routine.routine_image) await deleteResourceFile(routine.routine_image)
+            
+            const routineId = routine.routine_id
+            const subReq = new sql.Request(transaction)
+            subReq.input("rid", sql.Int, routineId)
+            // Borramos ejercicios de la rutina y asignaciones de otros usuarios a esa rutina
+            await subReq.query("DELETE FROM Routine_X_Exercise WHERE routine_x_exercise_routineid = @rid")
+            await subReq.query("DELETE FROM User_X_Routine WHERE user_x_routine_routineid = @rid")
+            await subReq.query("DELETE FROM Routines WHERE routine_id = @rid")
+        }
+
+        // 7. Gestionar GRUPOS que el usuario CREÓ (Disolver el grupo)
+        const groupsResult = await request.query("SELECT group_id, group_image FROM Groups WHERE group_creator_id = @userId")
+        for (const group of groupsResult.recordset) {
+            if (group.group_image) await deleteResourceFile(group.group_image)
+            
+            const groupId = group.group_id
+            const subReq = new sql.Request(transaction)
+            subReq.input("gid", sql.Int, groupId)
+            
+            // Borramos rutinas del grupo primero
+            await subReq.query(`
+                DELETE FROM Routine_X_Exercise WHERE routine_x_exercise_routineid IN (SELECT routine_id FROM Routines WHERE routine_groupid = @gid);
+                DELETE FROM User_X_Routine WHERE user_x_routine_routineid IN (SELECT routine_id FROM Routines WHERE routine_groupid = @gid);
+                DELETE FROM Routines WHERE routine_groupid = @gid;
+                DELETE FROM Group_x_user WHERE Group_x_user_groupid = @gid;
+                DELETE FROM Groups WHERE group_id = @gid;
+            `)
+        }
+
+        // 8. Borrar al Usuario finalmente
+        await request.query("DELETE FROM Users WHERE user_id = @userId")
+
+        // 9. Commit de la base de datos
+        await transaction.commit()
+
+        // 10. Limpieza de archivos físicos (foto perfil)
+        if (userFounded.user_picture && !userFounded.user_picture.startsWith('http') && !userFounded.user_picture.includes('default')) {
+            await deleteResourceFile(userFounded.user_picture)
+        }
+
+        // Respuesta al cliente
+        if (userLogued.user_id === userId) {
+            return res.status(200).json({ msg: "Tu cuenta y todos tus datos han sido eliminados correctamente" })
+        } else {
+            return res.status(200).json({ msg: "Usuario y dependencias eliminados correctamente" })
+        }
+
+    } catch (err) {
+        if (transaction) await transaction.rollback()
+        console.error("Error en borrado en cascada:", err)
+        return next(new AppError(handleSqlError(err), 500))
     }
 })
 
